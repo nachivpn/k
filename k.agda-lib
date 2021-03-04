@@ -1,0 +1,5 @@
+name: k
+depend:
+  standard-library
+include :
+  src

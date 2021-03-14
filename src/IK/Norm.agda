@@ -149,7 +149,11 @@ quot f = reify (f idₛ')
 norm : Tm Γ a → Nf Γ a
 norm t = quot (eval t)
 
+
+----------------------------------
 -- Normalization for substitutions
+----------------------------------
+
 -- (simply "do everything pointwise")
 
 -- normal forms of substitutions

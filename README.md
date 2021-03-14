@@ -32,3 +32,9 @@ If all this goes well, then I'll probably turn to S4 next.
 
 
 Thoughts?
+
+## References
+
+* Ranald Clouston. 2018.[Fitch-Style Modal Lambda Calculi](https://arxiv.org/abs/1710.08326).
+* V.A.J. Borghuis. 1994.[Coming to terms with modal logic : on the interpretation of modalities in typed lambda-calculus](https://research.tue.nl/en/publications/coming-to-terms-with-modal-logic-on-the-interpretation-of-modalit).
+

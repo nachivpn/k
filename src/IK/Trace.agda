@@ -151,7 +151,6 @@ private
   unboxPresRt {t = t} {box x} e (u , uRx , r) =
     Rt-prepend (multi (cong-unbox* r) (one red-box)) (invRt (wᵣ e) uRx)
 
-
 -- proof of the Fundamental theorem
 fund : (t : Tm Γ a) → R t (eval t)
 fund (var x)     {s = s} {s'} sRs'
@@ -168,6 +167,13 @@ fund (unbox t nil) {s = lock s e} {lock s' .e} (lock sRs' .e)
   = unboxPresRt e (fund t sRs')
 fund (unbox t (ext e)) {s = s `, _} {s' , _} (sRs' `, _)
   = fund (unbox t e) sRs'
+
+-- fundamental theorem extended to substitutions
+-- (not needed for tracing reduction of terms)
+fundₛ : (s : Sub Γ Δ) → Rs s (evalₛ s)
+fundₛ []         = []
+fundₛ (s `, x)   = (fundₛ s) `, Rt-cast (sym (substTmPresId _)) (fund x idRs)
+fundₛ (lock s x) = lock (fundₛ s) x
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ⟶* embNf (norm t)

@@ -1,7 +1,7 @@
 module IK.HellOfSyntacticLemmas where
 
 -- Welcome to the hell of mind-numbing syntactic lemmas.
--- No good ever come from proving these lemmas, but no
+-- No good ever comes from proving these lemmas, but no
 -- good can happen without proving them.
 
 open import Data.Product  using (Σ ; _×_ ; _,_ ; ∃ ; proj₁ ; proj₂)
@@ -260,7 +260,6 @@ wkSubId (keep w)  = cong (_`, var ze) (trans
   (trans
     (cong₂ wkSub (cong drop (trans (leftIdWk _) (sym (rightIdWk _)))) refl)
     (auxLemma w)))
-wkSubId (drop🔒 w) = refl
 wkSubId (keep🔒 w) = cong₂ lock (wkSubId w) refl
 
 ------------------------
@@ -299,7 +298,6 @@ sliceCompLemma : (w : Δ ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR) (t : Tm (ΓL 🔒
 sliceCompLemma w e t = (trans (wkTmPres∙ _ _ _) (sym (trans
   (wkTmPres∙ _ _ _)
   (cong₂ wkTm (goodSlice w e) refl))))
-
 
 beta-wk-lemma : (w  : Δ ≤ Γ) (u : Tm Γ a) (t : Tm (Γ `, a) b)
   → substTm (idₛ `, wkTm w u) (wkTm (keep w) t) ≡ wkTm w (substTm (idₛ `, u) t)

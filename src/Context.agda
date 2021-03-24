@@ -66,7 +66,6 @@ data _≤_  : Ctx → Ctx → Set where
   base   : [] ≤ []
   drop   : Γ ≤ Δ → (Γ `, a) ≤ Δ
   keep   : Γ ≤ Δ → (Γ `, a) ≤ (Δ `, a)
-  drop🔒  : Γ ≤ [] → Γ 🔒 ≤ []
   keep🔒  : Γ ≤ Δ → Γ 🔒 ≤ Δ 🔒
 
 {-
@@ -95,17 +94,9 @@ idWk {[]}     = base
 idWk {Γ `, x} = keep idWk
 idWk {Γ 🔒}    = keep🔒 idWk
 
--- any context is weaker than the empty context
-termWk : Γ ≤ []
-termWk {[]}     = base
-termWk {Γ `, x} = drop termWk
-termWk {Γ 🔒}    = drop🔒 termWk
-
 -- weakening is transitive (or can be composed)
 _∙_ : {Σ : Ctx} → Δ ≤ Σ → Γ ≤ Δ → Γ ≤ Σ
 w       ∙ base     = w
-base    ∙ drop🔒 w' = drop🔒 (base ∙ w')
-drop🔒 w ∙ keep🔒 w' = drop🔒 (w ∙ w')
 w       ∙ drop w'  = drop (w ∙ w')
 drop w  ∙ keep w'  = drop (w ∙ w')
 keep w  ∙ keep w'  = keep (w ∙ w')
@@ -114,23 +105,6 @@ keep🔒 w ∙ keep🔒 w' = keep🔒 (w ∙ w')
 -- weakening that "generates a fresh variable"
 fresh : (Γ `, a) ≤ Γ
 fresh = drop idWk
-
--- left weakening lemma (standard)
-leftWk : ∀ (Γ : Ctx) (Γ' : Ctx) → (Γ' ,, Γ) ≤ Γ
-leftWk []       []        = base
-leftWk []       (Γ' `, x) = drop (leftWk [] Γ')
-leftWk []       (Γ' 🔒)    = drop🔒 (leftWk [] Γ')
-leftWk (Γ `, x) Γ'        = keep (leftWk Γ Γ')
-leftWk (Γ 🔒)    Γ'        = keep🔒 (leftWk Γ Γ')
-
--- right weakening lemma (non-standard restriction here)
-rightWk : ∀ (Γ : Ctx) (Γ' : Ctx) → 🔒-free Γ' → (Γ ,, Γ') ≤ Γ
-rightWk []       []        lf = base
-rightWk []       (Γ' `, x) lf = drop (rightWk [] Γ' lf)
-rightWk (Γ `, x) []        lf = keep (rightWk Γ [] tt)
-rightWk (Γ `, x) (Γ' `, y) lf = drop (rightWk (Γ `, x) Γ' lf)
-rightWk (Γ 🔒)    []        lf = keep🔒 (rightWk Γ [] tt)
-rightWk (Γ 🔒)    (Γ' `, x) lf = drop (rightWk (Γ 🔒) Γ' lf)
 
 variable
   ΓL' ΓR' Γ'' ΓL'' ΓR'' : Ctx
@@ -186,7 +160,6 @@ leftIdWk : (w : Γ ≤ Γ') → idWk ∙ w ≡ w
 leftIdWk base      = refl
 leftIdWk (drop w)  = cong drop (leftIdWk w)
 leftIdWk (keep w)  = cong keep (leftIdWk w)
-leftIdWk (drop🔒 w) = cong drop🔒 (leftIdWk w)
 leftIdWk (keep🔒 w) = cong keep🔒 (leftIdWk w)
 
 -- weakening composition obeys the right identity law
@@ -195,19 +168,15 @@ rightIdWk base      = refl
 rightIdWk (drop w)  = cong drop (rightIdWk w)
 rightIdWk (keep w)  = cong keep (rightIdWk w)
 rightIdWk (keep🔒 w) = cong keep🔒 (rightIdWk w)
-rightIdWk (drop🔒 w) = cong drop🔒 (rightIdWk w)
 
 -- weakening composition is associative
 assocWk : {Γ1 Γ2 Γ3 Γ4 : Ctx} → (w3 : Γ3 ≤ Γ4) (w2 : Γ2 ≤ Γ3) → (w1 : Γ1 ≤ Γ2)
   → (w3 ∙ w2) ∙ w1 ≡ w3 ∙ (w2 ∙ w1)
 assocWk w3         w2         base       = refl
-assocWk base       base       (drop🔒 w1) = cong drop🔒 (assocWk base base w1)
 assocWk w3         w2         (drop w1)  = cong drop (assocWk w3 w2 w1)
 assocWk w3         (drop w2)  (keep w1)  = cong drop (assocWk w3 w2 w1)
 assocWk (drop w3)  (keep w2)  (keep w1)  = cong drop (assocWk w3 w2 w1)
 assocWk (keep w3)  (keep w2)  (keep w1)  = cong keep (assocWk w3 w2 w1)
-assocWk base       (drop🔒 w2) (keep🔒 w1) = cong drop🔒 (assocWk base w2 w1)
-assocWk (drop🔒 w3) (keep🔒 w2) (keep🔒 w1) = cong drop🔒 (assocWk w3 w2 w1)
 assocWk (keep🔒 w3) (keep🔒 w2) (keep🔒 w1) = cong keep🔒 (assocWk w3 w2 w1)
 
 --------------------
@@ -273,12 +242,6 @@ extRId = nil
 wᵣ : LFExt Γ ΓL ΓR → Γ ≤ ΓL
 wᵣ nil     = idWk
 wᵣ (ext e) = drop (wᵣ e)
-
--- extensions yield a "left" weakening
-wₗ : Ext θ Γ ΓL ΓR → Γ ≤ ΓR
-wₗ nil        = termWk
-wₗ (ext e)    = keep (wₗ e)
-wₗ (ext🔒 x e) = keep🔒 (wₗ e)
 
 private
  variable ΓLL ΓLR ΓRL ΓRR : Ctx

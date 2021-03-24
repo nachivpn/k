@@ -71,8 +71,8 @@ module _ where
   -- Show that `a` is a theorem iff `◻ a` is a theorem,
   -- i.e., [] ⊢ a iff [] ⊢ ◻ a.
 
-  forth : Tm [] a → Tm Γ (◻ a)
-  forth t = wkTm termWk (box (wkTm (drop🔒 base) t))
+  -- forth : Tm [] a → Tm Γ (◻ a)
+  -- forth t = {!!}
 
   back : Tm [] (◻ a) → Tm [] a
   back t = embNf (strenNf add🔒 (norm (unbox t nil)))

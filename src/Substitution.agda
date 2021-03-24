@@ -29,7 +29,6 @@ trimSub : Γ ≤ Δ → Sub Γ' Γ → Sub Γ' Δ
 trimSub base      []         = []
 trimSub (drop w)  (s `, x)   = trimSub w s
 trimSub (keep w)  (s `, x)   = (trimSub w s) `, x
-trimSub (drop🔒 w) (lock s x) = []
 trimSub (keep🔒 w) (lock s x) = lock (trimSub w s) x
 
 -- apply substitution to a variable
@@ -64,7 +63,6 @@ embWk : Γ ≤ Δ → Sub Γ Δ
 embWk base      = []
 embWk (drop w)  = dropₛ (embWk w)
 embWk (keep w)  = keepₛ (embWk w)
-embWk (drop🔒 w) = []
 embWk (keep🔒 w) = lock (embWk w) nil
 
 --------------------
@@ -101,7 +99,6 @@ nat-trimSub : (s : Sub Γ Δ) (w : Δ ≤ Δ') (w' : Γ' ≤ Γ)
 nat-trimSub []         base      w' = refl
 nat-trimSub (s `, t)   (drop w)  w' = nat-trimSub s w w'
 nat-trimSub (s `, t)   (keep w)  w' = cong (_`, wkTm w' t) (nat-trimSub s w w')
-nat-trimSub (lock s x) (drop🔒 w) w' = refl
 nat-trimSub (lock s x) (keep🔒 w) w' = cong₂ lock (nat-trimSub s w _) refl
 
 -- `trimSub` on the identity substituion embeds the weakening
@@ -113,5 +110,4 @@ trimSubId (drop w) = trans
 trimSubId (keep w) = cong (_`, var ze) (trans
   (sym (nat-trimSub idₛ w fresh))
   (cong (wkSub fresh) (trimSubId w)))
-trimSubId (drop🔒 w) = refl
 trimSubId (keep🔒 w) = cong₂ lock (trimSubId w) refl

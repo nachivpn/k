@@ -74,17 +74,11 @@ data _≤_  : Ctx → Ctx → Set where
   In addition to the regular definition of weakening (`base`, `drop` and `keep`),
   we also allow weakening in the presence of locks:
 
-  - `drop🔒` allows the empty context to be weakened with locks
   - `keep🔒` allows weakening under locks
 
   Disallowing weakening with locks in general ensures that values
   that depend on "local" assumptions cannot be boxed by simply
-  weakening with locks. In the case where a given context is empty,
-  adding locks is harmless since there no dependancies. We need this,
-  for example, to implementat the necessitation rule (see `nec`).
-
-  The structure of this relation enables the desired left and
-  right weakening lemmas (see `leftWk` and `rightWk`).
+  weakening with locks.
 
 -}
 

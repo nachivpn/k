@@ -67,6 +67,21 @@ wkSubPres∙ w w' (lock s e) = cong₂ lock
   (trans  (wkSubPres∙ _ _ s) (cong₂ wkSub (stashSquash w' w e) refl))
   (resAccLem w' w e)
 
+wkNePres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (n : Ne Γ a)
+  → wkNe w' (wkNe w n) ≡ wkNe (w ∙ w') n
+wkNfPres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (n : Nf Γ a)
+  → wkNf w' (wkNf w n) ≡ wkNf (w ∙ w') n
+
+wkNePres∙ w w' (var x)     = cong var (wkVarPres∙ w w' x)
+wkNePres∙ w w' (app n m)   = cong₂ app (wkNePres∙ w w' n) (wkNfPres∙ w w' m)
+wkNePres∙ w w' (unbox n e) = cong₂ unbox
+  (trans (wkNePres∙ _ _ _) (cong₂ wkNe (stashSquash w' w e) refl)) (resAccLem w' w e)
+
+wkNfPres∙ w w' (up𝕓 n) = cong up𝕓 (wkNePres∙ w w' n)
+wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)
+wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep🔒 w) (keep🔒 w') n)
+
+
 private
   wkSubFreshLemma : {s : Sub Δ Γ} {w : Δ' ≤ Δ}
     → wkSub (fresh {a = a}) (wkSub w s) ≡ wkSub (keep w) (dropₛ s)

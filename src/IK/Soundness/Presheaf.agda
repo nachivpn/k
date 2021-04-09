@@ -16,12 +16,12 @@ postulate
   funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g
 
-variable
-  A B G : Ctx → Set
+-----------------------------
+-- Presheaf refinement of Tm'
+-----------------------------
 
--- Presheaf refinement of the Tm' interpretation.
 -- Used ensure that the domain of interpretation is indeed presheafs
--- (i.e., context-indexed sets with a monotonicitiy condition that *obey naturality*)
+-- (i.e., context-indexed sets with a monotonicitiy condition *that obeys naturality*)
 Psh : Tm' Γ a → Set
 -- naturality of normal forms, wkTm w (embNf n) ≡ embNf (wkNf w n),
 -- is known to be true from impl., and thus left implicit
@@ -32,9 +32,19 @@ Psh {Γ} {a ⇒ b} f      = {Γ' : Ctx} (w : Γ' ≤ Γ)
   → ({Γ⁰ : Ctx} → (w' : Γ⁰ ≤ Γ') → f (w ∙ w') (wkTm' w' x) ≡ wkTm' w' (f w x))
   -- result is in Psh
     × Psh (f w x)
--- to prove Box A is a presheaf (that obeys naturality)
+-- to prove `Box A` is a presheaf (that obeys naturality)
 -- we only need to know that A is a presheaf (i.e., x obeys naturality)
 Psh {Γ} {◻ a} (box x) = Psh x
+
+-- Psh extended to interpretation of contexts
+Pshₛ : Sub' Γ Δ → Set
+Pshₛ {Γ} {[]}     s          = ⊤
+Pshₛ {Γ} {Δ `, a} (s , x)    = Pshₛ s × Psh x
+Pshₛ {Γ} {Δ 🔒}    (lock s e) = Pshₛ s
+
+-----------------------------------
+-- Psh(ₛ) is preserved by weakening
+-----------------------------------
 
 -- wkTm' preserves Psh
 wkTm'PresPsh : (w : Γ' ≤ Γ) (x : Tm' Γ a) → Psh x → Psh (wkTm' w x)
@@ -48,14 +58,6 @@ wkTm'PresPsh {a = a ⇒ b} w f       p = λ w' y q →
     , pfx
 wkTm'PresPsh {a = ◻ a}  w (box x) p = wkTm'PresPsh (keep🔒 w) x p
 
-Pshₛ : Sub' Γ Δ → Set
--- naturality terminal presheaf left implicit
-Pshₛ {Γ} {[]}     s          = ⊤
--- naturality of product preheaf left implicit
-Pshₛ {Γ} {Δ `, a} (s , x)    = Pshₛ s × Psh x
-
-Pshₛ {Γ} {Δ 🔒}    (lock s e) = Pshₛ s
-
 -- wkSub' preserves Pshₛ
 wkSub'PresPsh : (w : Γ' ≤ Γ) (s : Sub' Γ Δ) → Pshₛ s → Pshₛ (wkSub' w s)
 wkSub'PresPsh {Δ = []}     w s          p         =
@@ -65,9 +67,9 @@ wkSub'PresPsh {Δ = Δ `, a} w (s , x)    (ps , px) =
 wkSub'PresPsh {Δ = Δ 🔒}    w (lock s e) p         =
   wkSub'PresPsh (stashWk e w) s p
 
------------------------------
--- Tm' and Sub' are presheafs
------------------------------
+--------------------
+-- Tm' is a presheaf
+--------------------
 
 -- identity functor law of Tm'
 wkTm'PresId : (x : Tm' Γ a) → wkTm' idWk x ≡ x
@@ -89,6 +91,10 @@ wkTm'Pres∙ {a = a ⇒ b} w w' f       =
 wkTm'Pres∙ {a = ◻ a}  w w' (box x) =
   cong box (wkTm'Pres∙ (keep🔒 w) (keep🔒 w') x)
 
+---------------------
+-- Sub' is a presheaf
+---------------------
+
 -- identity functor law of Sub'
 wkSub'PresId : (s : Sub' Γ Δ) → wkSub' idWk s ≡ s
 wkSub'PresId {Δ = []}     tt         = refl
@@ -107,6 +113,10 @@ wkSub'Pres∙ {Δ = Δ 🔒}    w w' (lock s e) = cong₂ lock
   (trans  (wkSub'Pres∙ _ _ s) (cong₂ wkSub' (stashSquash w' w e) refl))
   (resAccLem w' w e)
 
+---------------------------------------
+-- subsVar' is a natural transformation
+---------------------------------------
+
 -- naturality of substVar'
 nat-substVar' : (w : Δ' ≤ Δ) (x : Var Γ a) (s : Sub' Δ Γ)
   → substVar' x (wkSub' w s) ≡ wkTm' w (substVar' x s)
@@ -118,13 +128,16 @@ psh-substVar' : (x : Var Γ a) (s : Sub' Δ Γ) → Pshₛ s → Psh (substVar' 
 psh-substVar' ze     (_ , x) (_ , px) = px
 psh-substVar' (su x) (s , _) (ps , _) = psh-substVar' x s ps
 
+---------------------------------------
+-- `eval t` is a natural transformation
+---------------------------------------
 
 -- (mutually defined functions below)
 
--- eval obeys Psh
+-- result of evaluation is in Psh
 psh-eval  : (t : Tm Γ a) (s : Sub' Δ Γ)
   → Pshₛ s → Psh (eval t s)
--- naturality of eval
+-- naturality of `eval t`
 nat-eval : (t : Tm Γ a) (w : Δ' ≤ Δ) (s : Sub' Δ Γ)
   → Pshₛ s → eval t (wkSub' w s) ≡ wkTm' w (eval t s)
 
@@ -179,16 +192,48 @@ nat-eval (unbox t nil)     w (lock s e) ps = trans
 nat-eval (unbox t (ext e)) w (s , _) (ps , _)
   = nat-eval (unbox t e) w s ps
 
+------------------------------------------------
+-- reflect and reify are natural transformations
+------------------------------------------------
+
+-- naturality of reflect
 nat-reflect : (w : Γ' ≤ Γ) (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)
 nat-reflect {a = 𝕓}     w n = refl
 nat-reflect {a = a ⇒ b} w n = funexti (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
 nat-reflect {a = ◻ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
 
--- WIP!
+-- image of reflect is in Psh
 psh-reflect : (n : Ne Γ a) → Psh (reflect n)
+-- naturality of reify
+nat-reify : (w : Γ' ≤ Γ) (x : Tm' Γ a) → Psh x → reify (wkTm' w x) ≡ wkNf w (reify x)
+
+-- psh-reflect
 psh-reflect {a = 𝕓}     n = tt
 psh-reflect {a = a ⇒ b} n = λ w x px
-  → (λ w' → {!!})
+  → (λ w' → trans
+       (cong reflect
+         (cong₂ app (sym (wkNePres∙ _ _ _)) (nat-reify _ _ px)))
+       (nat-reflect w' (app (wkNe w n) (reify x))))
   , psh-reflect (app (wkNe w n) _)
 psh-reflect {a = ◻ a}  n = psh-reflect (unbox n nil)
+
+-- nat-reify
+nat-reify {a = 𝕓}     w x       px = refl
+nat-reify {Γ} {a = a ⇒ b} w f       pf = let (nf , pfx) = pf fresh (reflect (var ze)) (psh-reflect {Γ = _ `, a} (var ze))
+  in cong lam
+    (trans
+      (cong reify
+        (trans
+          (cong₂ f
+            (cong drop (trans (rightIdWk _) (sym (leftIdWk _))))
+            (nat-reflect (keep w) (var ze)))
+          (nf (keep w))))
+      (nat-reify (keep w) (f fresh (reflect (var ze))) pfx))
+nat-reify {a = ◻ a} w  (box x) px = cong box (nat-reify (keep🔒 w) x px)
+
+-- idₛ' is in Pshₛ
+psh-idₛ' : Pshₛ (idₛ' {Γ})
+psh-idₛ' {[]}     = tt
+psh-idₛ' {Γ `, a} = wkSub'PresPsh fresh (idₛ' {Γ}) (psh-idₛ' {Γ}) , psh-reflect {Γ `, a} (var ze)
+psh-idₛ' {Γ 🔒}    = psh-idₛ' {Γ}

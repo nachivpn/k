@@ -1,4 +1,4 @@
-module IK.Trace where
+module IK.Completeness.Trace where
 
 open import Data.Unit
   using (⊤ ; tt)

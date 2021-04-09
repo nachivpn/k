@@ -2,7 +2,7 @@
 module IK.Soundness.Presheaf where
 
 open import Data.Unit  using (⊤ ; tt)
-open import Data.Product  using (Σ ; _×_ ; _,_)
+open import Data.Product  using (Σ ; _×_ ; _,_ ; proj₁ ; proj₂)
 open import Relation.Binary.PropositionalEquality
 
 open import IK.Term
@@ -118,17 +118,27 @@ psh-substVar' : (x : Var Γ a) (s : Sub' Δ Γ) → Pshₛ s → Psh (substVar' 
 psh-substVar' ze     (_ , x) (_ , px) = px
 psh-substVar' (su x) (s , _) (ps , _) = psh-substVar' x s ps
 
--- eval obeys Psh
-psh-eval  : (t : Tm Γ a) (s : Sub' Δ Γ) → Pshₛ s → Psh (eval t s)
--- naturality of eval
-nat-eval : (w : Δ' ≤ Δ) (t : Tm Γ a) (s : Sub' Δ Γ)
-  → eval t (wkSub' w s) ≡ wkTm' w (eval t s)
 
--- WIP!
+-- (mutually defined functions below)
+
+-- eval obeys Psh
+psh-eval  : (t : Tm Γ a) (s : Sub' Δ Γ)
+  → Pshₛ s → Psh (eval t s)
+-- naturality of eval
+nat-eval : (t : Tm Γ a) (w : Δ' ≤ Δ) (s : Sub' Δ Γ)
+  → Pshₛ s → eval t (wkSub' w s) ≡ wkTm' w (eval t s)
+
+-- psh-eval
 psh-eval (var x)           s         ps
   = psh-substVar' x s ps
 psh-eval (lam t)           s         ps
-  = λ w x px →  {!!}
+  = λ w x px
+    → (λ w' → trans
+         -- rewrite using wkSub'Pres∙
+         (cong (λ z → (eval t (z , _))) (sym (wkSub'Pres∙ w w' s)))
+         -- follows directly from nat-eval
+         (nat-eval t w' (wkSub' w s , x) (wkSub'PresPsh w s ps , px)))
+      , (psh-eval t _ (wkSub'PresPsh w s ps , px))
 psh-eval (app t u)         s         ps
   = let (_ , fxp) = psh-eval t s ps idWk _ (psh-eval u s ps) in fxp
 psh-eval (box t)           s         ps
@@ -139,16 +149,46 @@ psh-eval (unbox t nil)     (lock s e') ps with eval t s | psh-eval t s ps
 psh-eval (unbox t (ext e)) (s , _)  (ps , _)
   = psh-eval (unbox t e) s ps
 
--- WIP!
-nat-eval w (var x)           s
+-- nat-eval
+nat-eval (var x)           w s       ps
   = nat-substVar' w x s
-nat-eval w (lam t)           s
-  = {!!}
-nat-eval w (app t u)         s
-  = {!!}
-nat-eval w (box t)           s
-  = cong box (nat-eval (keep🔒 w) t (lock s nil))
-nat-eval w (unbox t nil)     (lock s e')
-  = {!!}
-nat-eval w (unbox t (ext e)) (s , _)
-  = nat-eval w (unbox t e) s
+nat-eval (lam t)           w s       ps
+  = funexti (λ _ → funext λ _ → funext (λ _
+    → cong (λ z →  eval t (z , _)) (wkSub'Pres∙ _ _ _)))
+nat-eval (app t u)         w s       ps with
+  (psh-eval t s ps idWk (eval u s) (psh-eval u s ps))
+... | (g , _)
+  rewrite nat-eval t w s ps | nat-eval u w s ps
+  = trans
+    (cong
+      (λ z → eval t s z (wkTm' w (eval u s)))
+      (trans (rightIdWk w) (sym (leftIdWk w))))
+    (g  w)
+nat-eval (box t)           w s       ps
+  = cong box (nat-eval t (keep🔒 w) (lock s nil) ps)
+nat-eval (unbox t nil)     w (lock s e) ps = trans
+  (cong (λ z → unbox' z (resExt e w)) (nat-eval t (stashWk e w) s ps))
+  (gsLemma w e (eval t s))
+  where
+  gsLemma : (w : Δ' ≤ Δ ) (e : LFExt Δ (ΓL 🔒) ΓR) (x : Tm' ΓL (◻ a))
+    → unbox' (wkTm' (stashWk e w) x) (resExt e w) ≡ wkTm' w (unbox' x e)
+  gsLemma w e (box x) = trans (wkTm'Pres∙ _ _ _)
+    (sym (trans
+      (wkTm'Pres∙ _ _ _)
+      (cong (λ z → wkTm' z x) (goodSlice w e))))
+nat-eval (unbox t (ext e)) w (s , _) (ps , _)
+  = nat-eval (unbox t e) w s ps
+
+nat-reflect : (w : Γ' ≤ Γ) (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)
+nat-reflect {a = 𝕓}     w n = refl
+nat-reflect {a = a ⇒ b} w n = funexti (λ _ → funext (λ _ → funext (λ _
+  → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
+nat-reflect {a = ◻ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
+
+-- WIP!
+psh-reflect : (n : Ne Γ a) → Psh (reflect n)
+psh-reflect {a = 𝕓}     n = tt
+psh-reflect {a = a ⇒ b} n = λ w x px
+  → (λ w' → {!!})
+  , psh-reflect (app (wkNe w n) _)
+psh-reflect {a = ◻ a}  n = psh-reflect (unbox n nil)

@@ -4,7 +4,7 @@ module IK.Applications.WeakNorm where
 open import IK.Term
 open import IK.Norm
 open import IK.Reduction
-open import IK.Trace
+open import IK.Completeness.Trace
 
 open import Data.Unit
 open import Data.Product  using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂)

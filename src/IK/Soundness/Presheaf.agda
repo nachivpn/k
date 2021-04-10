@@ -73,7 +73,7 @@ wkSub'PresPsh {Δ = Δ 🔒}    w (lock s e) p         =
 
 -- Given `a : Ty`,
 -- (object map)   Tm'- a : Ctx → Set
--- (morphism map) wkTm'  : Γ' ≤ Γ → Tm' Γ a → Tm' Γ' a
+-- (morphism map) wkTm'  : Γ' ≤ Γ → Tm'- a Γ → Tm'- a Γ'
 
 -- identity functor law of `Tm'- a`
 wkTm'PresId : (x : Tm' Γ a) → wkTm' idWk x ≡ x
@@ -96,12 +96,12 @@ wkTm'Pres∙ {a = ◻ a}  w w' (box x) =
   cong box (wkTm'Pres∙ (keep🔒 w) (keep🔒 w') x)
 
 --------------------------
--- `Sub'- Γ` is a presheaf
+-- `Sub'- Δ` is a presheaf
 --------------------------
 
--- Given `Γ : Ctx`,
--- (object map)   Sub'- Γ : Ctx → Set
--- (morphism map) wkSub'  : Γ' ≤ Γ → Sub Γ a → Sub Γ' a
+-- Given `Δ : Ctx`,
+-- (object map)   Sub'- Δ : Ctx → Set
+-- (morphism map) wkSub'  : Γ' ≤ Γ → Sub'- Δ Γ → Sub'- Δ Γ'
 
 -- identity functor law of `Sub'- Γ`
 wkSub'PresId : (s : Sub' Γ Δ) → wkSub' idWk s ≡ s

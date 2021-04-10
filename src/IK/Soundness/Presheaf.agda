@@ -67,11 +67,15 @@ wkSub'PresPsh {Δ = Δ `, a} w (s , x)    (ps , px) =
 wkSub'PresPsh {Δ = Δ 🔒}    w (lock s e) p         =
   wkSub'PresPsh (stashWk e w) s p
 
---------------------
--- Tm' is a presheaf
---------------------
+-------------------------
+-- `Tm'- a` is a presheaf
+-------------------------
 
--- identity functor law of Tm'
+-- Given `a : Ty`,
+-- (object map)   Tm'- a : Ctx → Set
+-- (morphism map) wkTm'  : Γ' ≤ Γ → Tm' Γ a → Tm' Γ' a
+
+-- identity functor law of `Tm'- a`
 wkTm'PresId : (x : Tm' Γ a) → wkTm' idWk x ≡ x
 wkTm'PresId {a = 𝕓}     n
   = wkNfPresId n
@@ -80,7 +84,7 @@ wkTm'PresId {a = a ⇒ b} f
 wkTm'PresId {a = ◻ a}  (box x)
   = cong box (wkTm'PresId x)
 
--- composition functor law of Tm'
+-- composition functor law of `Tm'- a`
 wkTm'Pres∙ : (w : Γ' ≤ Γ) (w' : Γ'' ≤ Γ') (x : Tm' Γ a)
   → wkTm' w' (wkTm' w x) ≡ wkTm' (w ∙ w') x
 wkTm'Pres∙ {a = 𝕓}     w w' n       =
@@ -91,11 +95,15 @@ wkTm'Pres∙ {a = a ⇒ b} w w' f       =
 wkTm'Pres∙ {a = ◻ a}  w w' (box x) =
   cong box (wkTm'Pres∙ (keep🔒 w) (keep🔒 w') x)
 
----------------------
--- Sub' is a presheaf
----------------------
+--------------------------
+-- `Sub'- Γ` is a presheaf
+--------------------------
 
--- identity functor law of Sub'
+-- Given `Γ : Ctx`,
+-- (object map)   Sub'- Γ : Ctx → Set
+-- (morphism map) wkSub'  : Γ' ≤ Γ → Sub Γ a → Sub Γ' a
+
+-- identity functor law of `Sub'- Γ`
 wkSub'PresId : (s : Sub' Γ Δ) → wkSub' idWk s ≡ s
 wkSub'PresId {Δ = []}     tt         = refl
 wkSub'PresId {Δ = Δ `, a} (s , x)    = cong₂ _,_ (wkSub'PresId s) (wkTm'PresId x)
@@ -104,7 +112,7 @@ wkSub'PresId {Δ = Δ 🔒}    (lock s e) with ←🔒IsPre🔒 e | 🔒→isPos
   (trans (cong₂ wkSub' (stashWkId e) refl) (wkSub'PresId s))
   (resExtId e)
 
--- composition functor law of Sub'
+-- composition functor law of `Sub'- Γ`
 wkSub'Pres∙ : (w : Γ' ≤ Γ) (w' : Γ'' ≤ Γ') (s : Sub' Γ Δ)
   → wkSub' w' (wkSub' w s) ≡ wkSub' (w ∙ w') s
 wkSub'Pres∙ {Δ = []}     w w' tt         = refl
@@ -113,9 +121,12 @@ wkSub'Pres∙ {Δ = Δ 🔒}    w w' (lock s e) = cong₂ lock
   (trans  (wkSub'Pres∙ _ _ s) (cong₂ wkSub' (stashSquash w' w e) refl))
   (resAccLem w' w e)
 
----------------------------------------
--- subsVar' is a natural transformation
----------------------------------------
+-------------------------------------------
+-- `subsVar' x` is a natural transformation
+-------------------------------------------
+
+-- for `x : Var Γ a`,
+-- substVar x : Sub'- Γ →̇ Tm'- a
 
 -- naturality of substVar'
 nat-substVar' : (w : Δ' ≤ Δ) (x : Var Γ a) (s : Sub' Δ Γ)
@@ -131,6 +142,9 @@ psh-substVar' (su x) (s , _) (ps , _) = psh-substVar' x s ps
 ---------------------------------------
 -- `eval t` is a natural transformation
 ---------------------------------------
+
+-- for `t : Tm Γ a`,
+-- eval t : Sub'- Γ →̇ Tm'- a
 
 -- (mutually defined functions below)
 
@@ -195,6 +209,9 @@ nat-eval (unbox t (ext e)) w (s , _) (ps , _)
 ------------------------------------------------
 -- reflect and reify are natural transformations
 ------------------------------------------------
+
+-- reflect : Ne- a →̇ Tm'- a
+-- reify   : Tm'- a →̇ Nf'- a
 
 -- naturality of reflect
 nat-reflect : (w : Γ' ≤ Γ) (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)

@@ -3,6 +3,7 @@ module Everything where
 import Context
 import Substitution
 
+import IK.Conversion
 import IK.HellOfSyntacticLemmas
 import IK.Norm
 import IK.Reduction
@@ -15,3 +16,4 @@ import IK.Applications.WeakNorm
 import IK.Soundness.Presheaf
 
 import IK.Completeness.Trace
+import IK.Completeness.Completeness

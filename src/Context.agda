@@ -1,7 +1,7 @@
 module Context (Ty : Set) where
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; cong ; sym ; trans)
+  using (_≡_ ; cong ; cong₂ ; sym ; trans)
 
 open _≡_
 
@@ -186,6 +186,16 @@ data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
 LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 
+-- Proof of WL is irrelevant
+WLIsProp : ∀ {θ} (x x' : WL θ) → x ≡ x'
+WLIsProp {tt} tt tt = refl
+
+-- Proof of Ext is irrelevant
+ExtIsProp : ∀ (e e' : Ext θ Γ ΓL ΓR) → e ≡ e'
+ExtIsProp nil         nil         = refl
+ExtIsProp (ext e)     (ext e')    = cong ext (ExtIsProp e e')
+ExtIsProp (ext🔒 x e) (ext🔒 x' e') = cong₂ ext🔒 (WLIsProp x x') (ExtIsProp e e')
+
 -- LFExt is indeed a lock-free extension
 LFExtIs🔒-free : LFExt Γ ΓL ΓR → 🔒-free ΓR
 LFExtIs🔒-free nil = tt
@@ -280,14 +290,7 @@ stashWk (ext e) (keep w)  = stashWk e w
 
 resAccLem : (w' : Δ ≤ Γ') (w  : Γ' ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR)
   → resExt (resExt e w) w' ≡ resExt e (w ∙ w')
-resAccLem (drop w') (drop w)   nil     = cong ext (resAccLem w' (drop w) nil)
-resAccLem (drop w') (drop w)   (ext e) = cong ext (resAccLem w' (drop w) (ext e))
-resAccLem (drop w') (keep w)   (ext e) = cong ext (resAccLem w' (keep w) (ext e))
-resAccLem (drop w') (keep🔒 w)  nil     = cong ext (resAccLem w' (keep🔒 w) nil)
-resAccLem (keep w') (drop w)   nil     = cong ext (resAccLem w' w nil)
-resAccLem (keep w') (drop w)   (ext e) = cong ext (resAccLem w' w (ext e))
-resAccLem (keep w') (keep w)   (ext e) = cong ext (resAccLem w' w e)
-resAccLem (keep🔒 w') (keep🔒 w) nil     = refl
+resAccLem _ _ _ = ExtIsProp _ _
 
 stashSquash : (w' : Δ ≤ Γ') (w  : Γ' ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR)
   → (stashWk e w ∙ stashWk (resExt e w) w') ≡ stashWk e (w ∙ w')
@@ -313,5 +316,4 @@ stashWkId {Γ `, x} (ext e) = stashWkId e
 stashWkId {Γ 🔒}    nil     = refl
 
 resExtId :  (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → resExt e idWk ≡ e
-resExtId {Γ `, x} (ext e) = cong ext (resExtId e)
-resExtId {Γ 🔒}    nil     = refl
+resExtId _ = ExtIsProp _ _

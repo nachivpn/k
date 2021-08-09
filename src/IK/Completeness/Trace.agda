@@ -105,7 +105,7 @@ invRs {Γ = []}     {s = []}      {tt}     w sRs'          =
 invRs {Γ = Γ `, _} {s = s `, t} {s' , x} w (sRs' `, tRx)  =
   invRs {Γ = Γ} w sRs' `, invRt w tRx
 invRs {Γ = Γ 🔒} {s = lock s e} {lock s' .e} w (lock x .e) =
-  lock (invRs (stashWk e w) x) (resExt e w)
+  lock (invRs (sliceLeft e w) x) (wkLFExt e w)
 
 -- syntactic identity is related to semantic identity
 idRs : Rs {Γ} idₛ idₛ'
@@ -149,7 +149,7 @@ private
     → Rt t x
     → Rt (unbox t e) (unbox' x e)
   unboxPresRt {t = t} {box x} e (u , uRx , r) =
-    Rt-prepend (multi (cong-unbox* r) (one red-box)) (invRt (wᵣ e) uRx)
+    Rt-prepend (multi (cong-unbox* r) (one red-box)) (invRt (LFExtTo≤ e) uRx)
 
 -- proof of the Fundamental theorem
 fund : (t : Tm Γ a) → R t (eval t)

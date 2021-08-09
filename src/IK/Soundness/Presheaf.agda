@@ -65,7 +65,7 @@ wkSub'PresPsh {Δ = []}     w s          p         =
 wkSub'PresPsh {Δ = Δ `, a} w (s , x)    (ps , px) =
   wkSub'PresPsh w s ps , wkTm'PresPsh w x px
 wkSub'PresPsh {Δ = Δ 🔒}    w (lock s e) p         =
-  wkSub'PresPsh (stashWk e w) s p
+  wkSub'PresPsh (sliceLeft e w) s p
 
 -------------------------
 -- `Tm'- a` is a presheaf
@@ -109,8 +109,8 @@ wkSub'PresId {Δ = []}     tt         = refl
 wkSub'PresId {Δ = Δ `, a} (s , x)    = cong₂ _,_ (wkSub'PresId s) (wkTm'PresId x)
 wkSub'PresId {Δ = Δ 🔒}    (lock s e) with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
 ... | refl | refl = cong₂ lock
-  (trans (cong₂ wkSub' (stashWkId e) refl) (wkSub'PresId s))
-  (resExtId e)
+  (trans (cong₂ wkSub' (sliceLeftId e) refl) (wkSub'PresId s))
+  (wkLFExtPresId e)
 
 -- composition functor law of `Sub'- Γ`
 wkSub'Pres∙ : (w : Γ' ≤ Γ) (w' : Γ'' ≤ Γ') (s : Sub' Γ Δ)
@@ -118,8 +118,8 @@ wkSub'Pres∙ : (w : Γ' ≤ Γ) (w' : Γ'' ≤ Γ') (s : Sub' Γ Δ)
 wkSub'Pres∙ {Δ = []}     w w' tt         = refl
 wkSub'Pres∙ {Δ = Δ `, a} w w' (s , x)    = cong₂ _,_ (wkSub'Pres∙ w w' s) (wkTm'Pres∙ w w' x)
 wkSub'Pres∙ {Δ = Δ 🔒}    w w' (lock s e) = cong₂ lock
-  (trans  (wkSub'Pres∙ _ _ s) (cong₂ wkSub' (stashSquash w' w e) refl))
-  (resAccLem w' w e)
+  (trans  (wkSub'Pres∙ _ _ s) (cong₂ wkSub' (sliceLeftPres∙ w' w e) refl))
+  (wkLFExtPres∙ w' w e)
 
 -------------------------------------------
 -- `subsVar' x` is a natural transformation
@@ -172,7 +172,7 @@ psh-eval (box t)           s         ps
   = psh-eval t (lock s nil) ps
 psh-eval (unbox t nil)     (lock s e') ps with eval t s | psh-eval t s ps
 ... | box x | px
-  = wkTm'PresPsh (wᵣ e') x px
+  = wkTm'PresPsh (LFExtTo≤ e') x px
 psh-eval (unbox t (ext e)) (s , _)  (ps , _)
   = psh-eval (unbox t e) s ps
 
@@ -194,15 +194,15 @@ nat-eval (app t u)         w s       ps with
 nat-eval (box t)           w s       ps
   = cong box (nat-eval t (keep🔒 w) (lock s nil) ps)
 nat-eval (unbox t nil)     w (lock s e) ps = trans
-  (cong (λ z → unbox' z (resExt e w)) (nat-eval t (stashWk e w) s ps))
+  (cong (λ z → unbox' z (wkLFExt e w)) (nat-eval t (sliceLeft e w) s ps))
   (gsLemma w e (eval t s))
   where
   gsLemma : (w : Δ' ≤ Δ ) (e : LFExt Δ (ΓL 🔒) ΓR) (x : Tm' ΓL (◻ a))
-    → unbox' (wkTm' (stashWk e w) x) (resExt e w) ≡ wkTm' w (unbox' x e)
+    → unbox' (wkTm' (sliceLeft e w) x) (wkLFExt e w) ≡ wkTm' w (unbox' x e)
   gsLemma w e (box x) = trans (wkTm'Pres∙ _ _ _)
     (sym (trans
       (wkTm'Pres∙ _ _ _)
-      (cong (λ z → wkTm' z x) (goodSlice w e))))
+      (cong (λ z → wkTm' z x) (slicingLemma w e))))
 nat-eval (unbox t (ext e)) w (s , _) (ps , _)
   = nat-eval (unbox t e) w s ps
 

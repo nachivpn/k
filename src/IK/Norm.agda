@@ -42,7 +42,7 @@ wkNf : Γ' ≤ Γ → Nf Γ a → Nf Γ' a
 
 wkNe w (var x)      = var (wkVar w x)
 wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
-wkNe w (unbox n e)  = unbox (wkNe (stashWk e w) n) (resExt e w)
+wkNe w (unbox n e)  = unbox (wkNe (sliceLeft e w) n) (wkLFExt e w)
 
 wkNf e (up𝕓 x) = up𝕓 (wkNe e x)
 wkNf e (lam n) = lam (wkNf (keep e) n)
@@ -88,11 +88,11 @@ wkTm' {a = ◻ a}   e (box x) = box (wkTm' (keep🔒 e) x)
 wkSub' : Γ' ≤ Γ → Sub' Γ Δ → Sub' Γ' Δ
 wkSub' {Δ = []}     w tt          = tt
 wkSub' {Δ = Δ `, a} w (s , x)     = wkSub' w s , wkTm' w x
-wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (stashWk e w) s) (resExt e w)
+wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (sliceLeft e w) s) (wkLFExt e w)
 
 -- semantic counterpart of `unbox` from `Tm`
 unbox' : Box (λ Δ → Tm' Δ a) ΓL → LFExt Γ (ΓL 🔒) ΓR → Tm' Γ a
-unbox' (box x) e = wkTm' (wᵣ e) x
+unbox' (box x) e = wkTm' (LFExtTo≤ e) x
 
 -------------------------
 -- Normalization function

@@ -28,7 +28,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → t ⟶ lam (app (wkTm fresh t) (var ze))
 
   red-box : {t : Tm (ΓL 🔒) a} {e : LFExt Γ (ΓL 🔒) ΓR}
-    → unbox (box t) e ⟶ wkTm (wᵣ e) t
+    → unbox (box t) e ⟶ wkTm (LFExtTo≤ e) t
 
   exp-box : {t : Tm Γ (◻ a)}
     → t ⟶ box (unbox t nil)
@@ -107,7 +107,7 @@ invRed w (cong-lam r)
 invRed w (cong-box r)
   = cong-box* (invRed (keep🔒 w) r)
 invRed w (cong-unbox r)
-  = cong-unbox* (invRed (stashWk _ w) r)
+  = cong-unbox* (invRed (sliceLeft _ w) r)
 invRed w (cong-app1 r)
   = cong-app* (invRed w r) ε
 invRed w (cong-app2 r)

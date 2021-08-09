@@ -23,16 +23,16 @@ wkTmPresId (app t u) = cong₂ app (wkTmPresId t) (wkTmPresId u)
 wkTmPresId (box t) = cong box (wkTmPresId t)
 wkTmPresId (unbox t e) with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
 wkTmPresId (unbox t e) | refl | refl = cong₂ unbox
-  (trans (cong₂ wkTm (stashWkId e) refl) (wkTmPresId t))
-  (resExtId e)
+  (trans (cong₂ wkTm (sliceLeftId e) refl) (wkTmPresId t))
+  (wkLFExtPresId e)
 
 wkSubPresId : (s : Sub Γ Δ) → wkSub idWk s ≡ s
 wkSubPresId [] = refl
 wkSubPresId (s `, t) = cong₂ _`,_ (wkSubPresId s) (wkTmPresId t)
 wkSubPresId (lock s e) with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
 ... | refl | refl = cong₂ lock
-  (trans (cong₂ wkSub (stashWkId e) refl) (wkSubPresId s))
-  (resExtId e)
+  (trans (cong₂ wkSub (sliceLeftId e) refl) (wkSubPresId s))
+  (wkLFExtPresId e)
 
 wkNePresId : (n : Ne Γ a) → wkNe idWk n ≡ n
 wkNfPresId : (n : Nf Γ a) → wkNf idWk n ≡ n
@@ -41,8 +41,8 @@ wkNePresId (var x)     = cong var (wkVarPresId x)
 wkNePresId (app n m)   = cong₂ app (wkNePresId n) (wkNfPresId m)
 wkNePresId (unbox n e) with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
 ... | refl | refl = cong₂ unbox
-  (trans (cong₂ wkNe (stashWkId e) refl) (wkNePresId n))
-  (resExtId e)
+  (trans (cong₂ wkNe (sliceLeftId e) refl) (wkNePresId n))
+  (wkLFExtPresId e)
 
 wkNfPresId (up𝕓 n) = cong up𝕓 (wkNePresId n)
 wkNfPresId (lam n) = cong lam (wkNfPresId n)
@@ -56,7 +56,7 @@ wkTmPres∙ w w' (lam t)   = cong lam (wkTmPres∙ (keep w) (keep w') t)
 wkTmPres∙ w w' (app t u) = cong₂ app (wkTmPres∙ w w' t) (wkTmPres∙ w w' u)
 wkTmPres∙ w w' (box t)   = cong box (wkTmPres∙ (keep🔒 w) (keep🔒 w') t)
 wkTmPres∙ w w' (unbox t e) = cong₂ unbox
-  (trans (wkTmPres∙ _ _ _) (cong₂ wkTm (stashSquash w' w e) refl)) (resAccLem w' w e)
+  (trans (wkTmPres∙ _ _ _) (cong₂ wkTm (sliceLeftPres∙ w' w e) refl)) (wkLFExtPres∙  w' w e)
 
 -- weakening of substitutions preserves weakening compisition
 wkSubPres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (s : Sub Γ ΓR)
@@ -64,8 +64,8 @@ wkSubPres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (s : Sub Γ ΓR)
 wkSubPres∙ w w' []       = refl
 wkSubPres∙ w w' (s `, t) = cong₂ _`,_ (wkSubPres∙ w w' s) (wkTmPres∙ w w' t)
 wkSubPres∙ w w' (lock s e) = cong₂ lock
-  (trans  (wkSubPres∙ _ _ s) (cong₂ wkSub (stashSquash w' w e) refl))
-  (resAccLem w' w e)
+  (trans  (wkSubPres∙ _ _ s) (cong₂ wkSub (sliceLeftPres∙ w' w e) refl))
+  (wkLFExtPres∙  w' w e)
 
 wkNePres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (n : Ne Γ a)
   → wkNe w' (wkNe w n) ≡ wkNe (w ∙ w') n
@@ -75,7 +75,7 @@ wkNfPres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (n : Nf Γ a)
 wkNePres∙ w w' (var x)     = cong var (wkVarPres∙ w w' x)
 wkNePres∙ w w' (app n m)   = cong₂ app (wkNePres∙ w w' n) (wkNfPres∙ w w' m)
 wkNePres∙ w w' (unbox n e) = cong₂ unbox
-  (trans (wkNePres∙ _ _ _) (cong₂ wkNe (stashSquash w' w e) refl)) (resAccLem w' w e)
+  (trans (wkNePres∙ _ _ _) (cong₂ wkNe (sliceLeftPres∙ w' w e) refl)) (wkLFExtPres∙ w' w e)
 
 wkNfPres∙ w w' (up𝕓 n) = cong up𝕓 (wkNePres∙ w w' n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)
@@ -185,8 +185,8 @@ private
     → wkTm (fresh {a = b}) (unbox t e) ≡ unbox t (ext e)
   dropUnboxLemma e with (←🔒IsPre🔒 e) | 🔒→isPost🔒 e
   dropUnboxLemma e | refl | refl = cong₂ unbox (trans
-    (cong₂ wkTm (stashWkId e) refl) (wkTmPresId _))
-    (cong ext (resExtId e))
+    (cong₂ wkTm (sliceLeftId e) refl) (wkTmPresId _))
+    (cong ext (wkLFExtPresId e))
 
 substTmPresId : (t : Tm Γ a) → substTm idₛ t ≡ t
 substTmPresId (var x) = substVarPresId x
@@ -237,7 +237,7 @@ rightIdSub (lock s (ext x)) with ←🔒IsPre🔒 x | 🔒→isPost🔒 x
   (trans
     (cong (wkSub fresh) (rightIdSub (lock s x)))
     (trans
-      (cong₂ lock (cong₂ wkSub (stashWkId x) refl) (cong ext (resExtId x)))
+      (cong₂ lock (cong₂ wkSub (sliceLeftId x) refl) (cong ext (wkLFExtPresId x)))
       (cong₂ lock (wkSubPresId s) refl)))
 
 
@@ -297,7 +297,7 @@ nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
 
 nat-embNe w (var x)     = refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
-nat-embNe w (unbox n x) = cong₂ unbox (nat-embNe (stashWk x w) n) refl
+nat-embNe w (unbox n x) = cong₂ unbox (nat-embNe (sliceLeft x w) n) refl
 
 -- Outcast lemmas
 
@@ -308,11 +308,11 @@ keepFreshLemma = trans (wkTmPres∙ _ _ _) (sym (trans
     (cong₂ wkTm (cong drop (trans (leftIdWk _) (sym (rightIdWk _)))) refl)))
 
 sliceCompLemma : (w : Δ ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR) (t : Tm (ΓL 🔒) a)
-  → wkTm (wᵣ (resExt e w)) (wkTm (keep🔒 (stashWk e w)) t) ≡
-      wkTm w (wkTm (wᵣ e) t)
+  → wkTm (LFExtTo≤ (wkLFExt e w)) (wkTm (keep🔒 (sliceLeft e w)) t) ≡
+      wkTm w (wkTm (LFExtTo≤ e) t)
 sliceCompLemma w e t = (trans (wkTmPres∙ _ _ _) (sym (trans
   (wkTmPres∙ _ _ _)
-  (cong₂ wkTm (goodSlice w e) refl))))
+  (cong₂ wkTm (slicingLemma w e) refl))))
 
 beta-wk-lemma : (w  : Δ ≤ Γ) (u : Tm Γ a) (t : Tm (Γ `, a) b)
   → substTm (idₛ `, wkTm w u) (wkTm (keep w) t) ≡ wkTm w (substTm (idₛ `, u) t)

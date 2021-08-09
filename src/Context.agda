@@ -107,7 +107,7 @@ variable
 data Flag : Set where tt ff : Flag
 
 variable
-  θ : Flag
+  θ θ' : Flag
 
 -- with locks?
 WL : Flag → Set
@@ -187,11 +187,11 @@ LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 
 -- Proof of WL is irrelevant
-WLIsProp : ∀ {θ} (x x' : WL θ) → x ≡ x'
+WLIsProp : (x x' : WL θ) → x ≡ x'
 WLIsProp {tt} tt tt = refl
 
 -- Proof of Ext is irrelevant
-ExtIsProp : ∀ (e e' : Ext θ Γ ΓL ΓR) → e ≡ e'
+ExtIsProp : (e e' : Ext θ Γ ΓL ΓR) → e ≡ e'
 ExtIsProp nil         nil         = refl
 ExtIsProp (ext e)     (ext e')    = cong ext (ExtIsProp e e')
 ExtIsProp (ext🔒 x e) (ext🔒 x' e') = cong₂ ext🔒 (WLIsProp x x') (ExtIsProp e e')
@@ -243,9 +243,9 @@ extRId : Ext θ Γ Γ []
 extRId = nil
 
 -- lock-free extensions yield a "right" weakening (i.e., adding variables on the right)
-wᵣ : LFExt Γ ΓL ΓR → Γ ≤ ΓL
-wᵣ nil     = idWk
-wᵣ (ext e) = drop (wᵣ e)
+LFExtTo≤ : LFExt Γ ΓL ΓR → Γ ≤ ΓL
+LFExtTo≤ nil     = idWk
+LFExtTo≤ (ext e) = drop (LFExtTo≤ e)
 
 private
  variable ΓLL ΓLR ΓRL ΓRR : Ctx
@@ -262,17 +262,21 @@ extRAssoc el nil         = el
 extRAssoc el (ext er)    = ext (extRAssoc el er)
 extRAssoc el (ext🔒 x er) = ext🔒 x (extRAssoc el er)
 
--- "residual" extension
-resExt : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ' ≤ Γ → LFExt Γ' ((←🔒 Γ') 🔒) (🔒→ Γ')
-resExt e       (drop w)  = ext (resExt e w)
-resExt nil     (keep🔒 w) = nil
-resExt (ext e) (keep w)  = ext (resExt e w)
+-- weaken the extension of a context
+wkLFExt : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ' ≤ Γ → LFExt Γ' ((←🔒 Γ') 🔒) (🔒→ Γ')
+wkLFExt e       (drop w)  = ext (wkLFExt e w)
+wkLFExt nil     (keep🔒 w) = nil
+wkLFExt (ext e) (keep w)  = ext (wkLFExt e w)
 
--- "stashed" weakening
-stashWk : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ' ≤ Γ → (←🔒 Γ') ≤ ΓL
-stashWk e       (drop w)  = stashWk e w
-stashWk nil     (keep🔒 w) = w
-stashWk (ext e) (keep w)  = stashWk e w
+-- slice a weakening to the left of a lock
+sliceLeft : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ' ≤ Γ → (←🔒 Γ') ≤ ΓL
+sliceLeft e       (drop w)  = sliceLeft e w
+sliceLeft nil     (keep🔒 w) = w
+sliceLeft (ext e) (keep w)  = sliceLeft e w
+
+-- slice a weakening to the right of a lock
+sliceRight : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ' ≤ Γ → Γ' ≤ (←🔒 Γ') 🔒
+sliceRight e w = LFExtTo≤ (wkLFExt e w)
 
 -- the operation ←🔒 returns the context to the left of 🔒
 ←🔒IsPre🔒 : LFExt Γ (ΓL 🔒) ΓR → ΓL ≡ (←🔒 Γ)
@@ -288,32 +292,36 @@ stashWk (ext e) (keep w)  = stashWk e w
 -- Slicing laws
 ---------------
 
-resAccLem : (w' : Δ ≤ Γ') (w  : Γ' ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR)
-  → resExt (resExt e w) w' ≡ resExt e (w ∙ w')
-resAccLem _ _ _ = ExtIsProp _ _
+wkLFExtPres∙ : (w' : Δ ≤ Γ') (w  : Γ' ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR)
+  → wkLFExt (wkLFExt e w) w' ≡ wkLFExt e (w ∙ w')
+wkLFExtPres∙ _ _ _ = ExtIsProp _ _
 
-stashSquash : (w' : Δ ≤ Γ') (w  : Γ' ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR)
-  → (stashWk e w ∙ stashWk (resExt e w) w') ≡ stashWk e (w ∙ w')
-stashSquash (drop w')  (drop w)  nil     = stashSquash w' (drop w) nil
-stashSquash (drop w')  (drop w)  (ext e) = stashSquash w' (drop w) (ext e)
-stashSquash (keep w')  (drop w)  nil     = stashSquash w' w nil
-stashSquash (keep w')  (drop w)  (ext e) = stashSquash w' w (ext e)
-stashSquash (drop w')  (keep w)  (ext e) = stashSquash w' (keep w) (ext e)
-stashSquash (keep w')  (keep w)  (ext e) = stashSquash w' w e
-stashSquash (drop w')  (keep🔒 w) nil     = stashSquash w' (keep🔒 w) nil
-stashSquash (keep🔒 w') (keep🔒 w) nil     = refl
+sliceLeftPres∙ : (w' : Δ ≤ Γ') (w  : Γ' ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR)
+  → (sliceLeft e w ∙ sliceLeft (wkLFExt e w) w') ≡ sliceLeft e (w ∙ w')
+sliceLeftPres∙ (drop w')  (drop w)  nil     = sliceLeftPres∙ w' (drop w) nil
+sliceLeftPres∙ (drop w')  (drop w)  (ext e) = sliceLeftPres∙ w' (drop w) (ext e)
+sliceLeftPres∙ (keep w')  (drop w)  nil     = sliceLeftPres∙ w' w nil
+sliceLeftPres∙ (keep w')  (drop w)  (ext e) = sliceLeftPres∙ w' w (ext e)
+sliceLeftPres∙ (drop w')  (keep w)  (ext e) = sliceLeftPres∙ w' (keep w) (ext e)
+sliceLeftPres∙ (keep w')  (keep w)  (ext e) = sliceLeftPres∙ w' w e
+sliceLeftPres∙ (drop w')  (keep🔒 w) nil     = sliceLeftPres∙ w' (keep🔒 w) nil
+sliceLeftPres∙ (keep🔒 w') (keep🔒 w) nil     = refl
 
--- a good slice is a slice whose composition doesn't change
-goodSlice : (w : Γ' ≤ Γ) → (e : LFExt Γ (ΓL 🔒) ΓR)
-  → wᵣ e ∙ w ≡ (keep🔒 (stashWk e w) ∙ wᵣ (resExt e w))
-goodSlice (drop w)  nil     = cong drop (goodSlice w nil)
-goodSlice (drop w)  (ext e) = cong drop (goodSlice w (ext e))
-goodSlice (keep w)  (ext e) = cong drop (goodSlice w e)
-goodSlice (keep🔒 w) nil     = cong keep🔒 (trans (leftIdWk w) (sym (rightIdWk w)))
+-- roughly, slicing a weakening into two weakenings, one to left of the lock,
+-- and the other to right, must not change its composition.
+slicingLemma : (w : Γ' ≤ Γ) → (e : LFExt Γ (ΓL 🔒) ΓR)
+  → LFExtTo≤ e ∙ w ≡ (keep🔒 (sliceLeft e w) ∙ sliceRight e w)
+slicingLemma (drop w)  nil     = cong drop (slicingLemma w nil)
+slicingLemma (drop w)  (ext e) = cong drop (slicingLemma w (ext e))
+slicingLemma (keep w)  (ext e) = cong drop (slicingLemma w e)
+slicingLemma (keep🔒 w) nil     = cong keep🔒 (trans (leftIdWk w) (sym (rightIdWk w)))
 
-stashWkId : (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → stashWk e idWk ≡ idWk
-stashWkId {Γ `, x} (ext e) = stashWkId e
-stashWkId {Γ 🔒}    nil     = refl
+sliceLeftId : (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → sliceLeft e idWk ≡ idWk
+sliceLeftId {Γ `, x} (ext e) = sliceLeftId e
+sliceLeftId {Γ 🔒}    nil     = refl
 
-resExtId :  (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → resExt e idWk ≡ e
-resExtId _ = ExtIsProp _ _
+wkLFExtPresId :  (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → wkLFExt e idWk ≡ e
+wkLFExtPresId _ = ExtIsProp _ _
+
+sliceRightId : (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → sliceRight e idWk ≡ LFExtTo≤ e
+sliceRightId e rewrite wkLFExtPresId e = refl

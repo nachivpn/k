@@ -20,20 +20,14 @@ postulate
 -- Presheaf refinement of Tm'
 -----------------------------
 
--- Used ensure that the domain of interpretation is indeed presheafs
--- (i.e., context-indexed sets with a monotonicitiy condition *that obeys naturality*)
+-- Used to ensure that the domain of interpretation is indeed presheafs
 Psh : Tm' Γ a → Set
--- naturality of normal forms, wkTm w (embNf n) ≡ embNf (wkNf w n),
--- is known to be true from impl., and thus left implicit
 Psh {Γ} {𝕓}     n      = ⊤
 Psh {Γ} {a ⇒ b} f      = {Γ' : Ctx} (w : Γ' ≤ Γ)
   → (x : Tm' Γ' a) → Psh x
-  -- naturality of exponential presheaf
+  -- naturality of presheaf exponentials
   → ({Γ⁰ : Ctx} → (w' : Γ⁰ ≤ Γ') → f (w ∙ w') (wkTm' w' x) ≡ wkTm' w' (f w x))
-  -- result is in Psh
     × Psh (f w x)
--- to prove `Box A` is a presheaf (that obeys naturality)
--- we only need to know that A is a presheaf (i.e., x obeys naturality)
 Psh {Γ} {◻ a} (box x) = Psh x
 
 -- Psh extended to interpretation of contexts
@@ -236,8 +230,10 @@ psh-reflect {a = a ⇒ b} n = λ w x px
 psh-reflect {a = ◻ a}  n = psh-reflect (unbox n nil)
 
 -- nat-reify
-nat-reify {a = 𝕓}     w x       px = refl
-nat-reify {Γ} {a = a ⇒ b} w f       pf = let (nf , pfx) = pf fresh (reflect (var ze)) (psh-reflect {Γ = _ `, a} (var ze))
+nat-reify {a = 𝕓}         w x   px
+  = refl
+nat-reify {Γ} {a = a ⇒ b} w f   pf
+  = let (nf , pfx) = pf fresh (reflect (var ze)) (psh-reflect {Γ = _ `, a} (var ze))
   in cong lam
     (trans
       (cong reify
@@ -247,7 +243,8 @@ nat-reify {Γ} {a = a ⇒ b} w f       pf = let (nf , pfx) = pf fresh (reflect (
             (nat-reflect (keep w) (var ze)))
           (nf (keep w))))
       (nat-reify (keep w) (f fresh (reflect (var ze))) pfx))
-nat-reify {a = ◻ a} w  (box x) px = cong box (nat-reify (keep🔒 w) x px)
+nat-reify {a = ◻ a} w  (box x) px
+  = cong box (nat-reify (keep🔒 w) x px)
 
 -- idₛ' is in Pshₛ
 psh-idₛ' : Pshₛ (idₛ' {Γ})

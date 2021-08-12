@@ -14,6 +14,7 @@ import IK.Applications.Neutrality
 import IK.Applications.WeakNorm
 
 import IK.Soundness.Presheaf
+import IK.Soundness.Soundness
 
 import IK.Completeness.Trace
 import IK.Completeness.Completeness

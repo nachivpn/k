@@ -33,12 +33,7 @@ data Rs : Sub Γ Δ → Sub' Γ Δ → Set where
        → Rs s s' → Rt t x → Rs (s `, t)  (s' , x)
   lock : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
     → Rs s s' → (e : LFExt Δ' (Δ 🔒) (ΔR)) → Rs (lock s e) (lock s' e)
-
-R : Tm Γ a → (Sub'- Γ →̇ Tm'- a) → Set
-R {Γ} t f = ∀ {Δ} {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-    → Rs s s'
-    → Rt (substTm s t) (eval t s')
-
+    
 ----------------------------
 -- Standard LR properties --
 ----------------------------
@@ -151,8 +146,14 @@ private
   unboxPresRt {t = t} {box x} e (u , uRx , r) =
     Rt-prepend (multi (cong-unbox* r) (one red-box)) (invRt (LFExtTo≤ e) uRx)
 
--- proof of the Fundamental theorem
-fund : (t : Tm Γ a) → R t (eval t)
+-- The Fundamental theorem, for terms
+
+Fund : Tm Γ a → (Sub'- Γ →̇ Tm'- a) → Set
+Fund {Γ} t f = ∀ {Δ} {s : Sub Δ Γ} {s' : Sub' Δ Γ}
+    → Rs s s'
+    → Rt (substTm s t) (f s')
+
+fund : (t : Tm Γ a) → Fund t (eval t)
 fund (var x)     {s = s} {s'} sRs'
   = substVarPresRt x sRs'
 fund (lam t)     {s = s} {s'} sRs' {u = u}
@@ -168,12 +169,23 @@ fund (unbox t nil) {s = lock s e} {lock s' .e} (lock sRs' .e)
 fund (unbox t (ext e)) {s = s `, _} {s' , _} (sRs' `, _)
   = fund (unbox t e) sRs'
 
--- fundamental theorem extended to substitutions
+-- The Fundamental theorem, extended to substitutions
 -- (not needed for tracing reduction of terms)
-fundₛ : (s : Sub Γ Δ) → Rs s (evalₛ s)
-fundₛ []         = []
-fundₛ (s `, x)   = (fundₛ s) `, Rt-cast (sym (substTmPresId _)) (fund x idRs)
-fundₛ (lock s x) = lock (fundₛ s) x
+
+Fundₛ : Sub Γ Δ → (Sub'- Γ →̇ Sub'- Δ) → Set
+Fundₛ {Γ} s₀ f = ∀ {Δ'} {s : Sub Δ' Γ} {s' : Sub' Δ' Γ}
+    → Rs s s'
+    → Rs (s₀ ∙ₛ s) (f s')
+
+fundₛ : (s : Sub Γ Δ) → Fundₛ s (evalₛ s)
+fundₛ []               sRs'
+  = []
+fundₛ (s₀ `, t)         sRs'
+  = (fundₛ s₀ sRs') `, fund t sRs'
+fundₛ (lock s₀ (ext e)) (sRs' `, _)
+  = fundₛ (lock s₀ e) sRs'
+fundₛ (lock s₀ nil)     (lock sRs' e)
+  = lock (fundₛ s₀ sRs') e
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ⟶* embNf (norm t)

@@ -172,10 +172,11 @@ Nfₛ- : Ctx → Ctx → Set
 Nfₛ- Δ Γ = Nfₛ Γ Δ
 
 -- interpretation of substitutions
-evalₛ : Sub- Γ  →̇ Sub'- Γ
-evalₛ []         = tt
-evalₛ (s `, t)   = (evalₛ s) , eval t idₛ'
-evalₛ (lock s x) = lock (evalₛ s) x
+evalₛ : Sub Γ Δ → Sub'- Γ  →̇ Sub'- Δ
+evalₛ []               s'          = tt
+evalₛ (s `, t)         s'          = (evalₛ s s') , eval t s'
+evalₛ (lock s nil)     (lock s' e) = lock (evalₛ s s') e
+evalₛ (lock s (ext e)) (s' , _)    = evalₛ (lock s e) s'
 
 -- retraction of evalₛ
 quotₛ : Sub'- Γ →̇ Nfₛ- Γ
@@ -185,4 +186,4 @@ quotₛ {Γ 🔒}    (lock s e) = lock (quotₛ s) e
 
 -- normalization function, for substitutions
 normₛ : Sub Δ Γ → Nfₛ Δ Γ
-normₛ s = quotₛ (evalₛ s)
+normₛ s = quotₛ (evalₛ s idₛ')

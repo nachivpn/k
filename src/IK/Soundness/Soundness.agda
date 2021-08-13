@@ -40,6 +40,51 @@ data _≋ₛ_ : Sub' Γ Δ → Sub' Γ Δ → Set where
        → s ≋ₛ s' → (e : LFExt Γ' (Γ 🔒) (ΓR))
        → _≋ₛ_ {Γ = Γ'} {Δ = Δ 🔒} (lock s e)  (lock s' e)
 
+-- ≋ is symmetric
+sym-≋ : {x y : Tm' Γ a}
+      → x ≋ y → y ≋ x
+sym-≋ {a = 𝕓}     x≡y
+  = sym x≡y
+sym-≋ {a = a ⇒ b} x≋y
+  = λ w px' py' x'≋y' → sym-≋ {a = b} (x≋y w py' px' (sym-≋ {a = a} x'≋y'))
+sym-≋ {a = ◻ a} {box x} {box y} x≋y
+  = sym-≋ {a = a} x≋y
+
+-- ≋ is transitive
+trans-≋ : {x y z : Tm' Γ a}
+  → x ≋ y → y ≋ z → x ≋ z
+trans-≋ {a = 𝕓}     x≡y y≡z
+  = trans x≡y y≡z
+trans-≋ {a = a ⇒ b} {x} {y} {z} x≋y y≋z w {x = x'} {y = y'} px' py' x'≋y'
+  = trans-≋ {a = b} (x≋y w px' py' x'≋y' ) (y≋z w py' py' ((trans-≋ {a = a} (sym-≋ {a = a} x'≋y') x'≋y')))
+trans-≋ {a = ◻ a} {box x} {box y} {box z} x≋y y≋z
+  = trans-≋ {x = x} x≋y y≋z
+
+-- WTH is this thing actually called?
+pseudo-refl-≋ : {x y : Tm' Γ a}
+  → x ≋ y → x ≋ x
+pseudo-refl-≋ {a = a} x≋y = trans-≋ {a = a} x≋y (sym-≋ {a = a} x≋y)
+
+-- ≋ₛ is symmetric
+sym-≋ₛ : {s s' : Sub' Γ Δ}
+      → s ≋ₛ s' → s' ≋ₛ s
+sym-≋ₛ {Δ = []}     s≋s'
+  = s≋s'
+sym-≋ₛ {Δ = Δ `, a} {s = s , x} {s' = s' , y} (s≋s' `, x≋y)
+  = sym-≋ₛ s≋s' `, sym-≋ {a = a} x≋y
+sym-≋ₛ {Δ = Δ 🔒} {s = lock s e} {s' = lock s' .e}  (lock s≋s' .e)
+  = lock (sym-≋ₛ s≋s') e
+
+postulate
+  -- ≋ₛ is transitive
+  trans-≋ₛ : {s s' s'' : Sub' Γ Δ}
+    → s ≋ₛ s' → s' ≋ₛ s'' → s ≋ₛ s''
+
+pseudo-refl-≋ₛ : {s s' : Sub' Γ Δ}
+  → s ≋ₛ s' → s ≋ₛ s
+pseudo-refl-≋ₛ x≋y = trans-≋ₛ x≋y (sym-≋ₛ x≋y)
+
+
 -- wkTm' preserves the relation _≋_
 wkTm'Pres≋ : {x : Tm' Γ a} {y : Tm' Γ a}
   → (w : Δ ≤ Γ)
@@ -120,7 +165,7 @@ trimSub'PresId {Δ = []}     tt         = refl
 trimSub'PresId {Δ = Δ `, _} (s , _)    = cong₂ _,_ (trimSub'PresId s) refl
 trimSub'PresId {Δ = Δ 🔒}    (lock s e) = cong₂ lock (trimSub'PresId s) refl
 
--- semantic version of `coh-trimSub-wkVar` in `Substitution.agda`
+-- semantic counterpart of `coh-trimSub-wkVar` in `Substitution.agda`
 coh-trimSub'-wkVar' : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (x : Var Γ a)
   → substVar' (wkVar w x) s ≡ substVar' x (trimSub' w s)
 coh-trimSub'-wkVar' (drop w) (s , _) ze     = coh-trimSub'-wkVar' w s ze
@@ -128,7 +173,7 @@ coh-trimSub'-wkVar' (drop w) (s , _) (su x) = coh-trimSub'-wkVar' w s (su x)
 coh-trimSub'-wkVar' (keep w) (s , _) ze     = refl
 coh-trimSub'-wkVar' (keep w) (s , _) (su x) = coh-trimSub'-wkVar' w s x
 
--- semantic version of `coh-trimSub-wkTm` in `HellOfSyntacticLemmas.agda`
+-- semantic counterpart of `coh-trimSub-wkTm` in `HellOfSyntacticLemmas.agda`
 coh-trimSub'-wkTm : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (t : Tm Γ a)
   → eval (wkTm w t) s ≡ eval t (trimSub' w s)
 coh-trimSub'-wkTm w s (var x)
@@ -150,13 +195,91 @@ coh-trimSub'-wkTm (keep🔒 w) (lock s e) (unbox t nil)
   = cong₂ unbox' (coh-trimSub'-wkTm w s t) refl
 coh-trimSub'-wkTm (keep w) (s , _) (unbox t (ext e))
   = coh-trimSub'-wkTm w s (unbox t e)
-  
+
+psh-evalₛ : (s : Sub Γ Γ') (s' : Sub' Δ Γ)
+    → Pshₛ s' → Pshₛ (evalₛ s s')
+psh-evalₛ []       s' ps'
+  = tt
+psh-evalₛ (s `, t) s' ps'
+  = (psh-evalₛ s s' ps') , (psh-eval t s' ps')
+psh-evalₛ (lock s nil) (lock s' e) ps'
+  = psh-evalₛ s s' ps'
+psh-evalₛ (lock s (ext e)) (s' , _) (ps' , _)
+  = psh-evalₛ (lock s e) s' ps'
+
+nat-evalₛ : (w : Δ' ≤ Δ)  (s : Sub Γ' Γ) (s' : Sub' Δ Γ') (ps' : Pshₛ s')
+  → evalₛ s (wkSub' w s') ≡ wkSub' w (evalₛ s s')
+nat-evalₛ w []               s'        ps'
+  = refl
+nat-evalₛ w (s `, t)         s'        ps'
+  = cong₂ _,_ (nat-evalₛ w s s' ps') (nat-eval t w s' ps')
+nat-evalₛ w (lock s (ext e)) (s' , _) (ps' , _)
+  = nat-evalₛ w (lock s e) s' ps'
+nat-evalₛ w (lock s nil)     (lock s' e) ps'
+  = cong₂ lock (nat-evalₛ (sliceLeft e w) s s' ps') refl
+
+-- semantic counterpart of coh-trimSub-wkSub in `HellOfSyntacticLemmas.agda`
+coh-trimSub'-wkSub : (w : Γ' ≤ Γ) (s : Sub Γ Δ) (s' : Sub' Δ' Γ')
+  → evalₛ (wkSub w s) s' ≡ evalₛ s (trimSub' w s')
+coh-trimSub'-wkSub w [] s'
+  = refl
+coh-trimSub'-wkSub w (s `, t) s'
+  = cong₂ _,_ (coh-trimSub'-wkSub w s s') (coh-trimSub'-wkTm w s' t)
+coh-trimSub'-wkSub (drop w) (lock s e) (s' , _)
+  = coh-trimSub'-wkSub w (lock s e) s'
+coh-trimSub'-wkSub (keep w) (lock s (ext e)) (s' , _)
+  = coh-trimSub'-wkSub w (lock s e) s'
+coh-trimSub'-wkSub (keep🔒 w) (lock s nil) (lock s' e')
+  = cong₂ lock (coh-trimSub'-wkSub w s s') refl
+
+evalₛPresId : (s' : Sub' Γ Δ) → evalₛ idₛ s' ≡ s'
+evalₛPresId {Δ = []}     tt
+  = refl
+evalₛPresId {Δ = Δ `, _} (s' , x)
+  = cong₂ (_,_)
+          (trans
+            (coh-trimSub'-wkSub fresh idₛ (s' , x))
+            (trans
+              (cong (evalₛ idₛ) (trimSub'PresId s'))
+              (evalₛPresId s')))
+          refl
+evalₛPresId {Δ = Δ 🔒} (lock s' e)
+  = cong₂ lock (evalₛPresId s') refl
+
+
+coh-substTm-evalₛ : (t : Tm Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
+  → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t (evalₛ s₀ s') ≋ eval (substTm s₀ t) s'  
+coh-substTm-evalₛ (var x)     s₀ ps ps' s≋s'
+  = {!!}
+coh-substTm-evalₛ (lam t)     s₀ ps ps' s≋s' w {x = x} {y} px py x≋y
+  = {!!}
+coh-substTm-evalₛ (app t u)  s₀ ps ps' s≋s'
+  = coh-substTm-evalₛ t s₀ ps ps' s≋s' idWk
+      (psh-eval u _ (psh-evalₛ s₀ _ ps'))
+      (psh-eval (substTm s₀ u) _ ps')
+      (coh-substTm-evalₛ u s₀ ps ps' s≋s')
+coh-substTm-evalₛ (box t)     s₀ ps ps' s≋s'
+  = coh-substTm-evalₛ t (lock s₀ nil) ps ps' (lock s≋s' nil)
+coh-substTm-evalₛ (unbox t (ext e)) (s₀ `, _) ps ps' s≋s'
+  = coh-substTm-evalₛ (unbox t e) s₀ ps ps' s≋s'
+coh-substTm-evalₛ (unbox t nil) (lock s₀ (ext e)) (ps , _) (ps' , _) (s≋s' `, _)
+  = coh-substTm-evalₛ (unbox t nil) (lock s₀ e) ps ps' s≋s'
+coh-substTm-evalₛ (unbox t nil) (lock s₀ nil) {s = lock s e} {s' = lock s' e'} ps ps' (lock s≋s' e')
+  = unbox'Pres≋ {x = eval t (evalₛ s₀ s')} e' (coh-substTm-evalₛ t s₀ ps ps' s≋s')
+
 -- soundness of single-step reduction
 sound-red : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ⟶ t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-red red-fun ps ps' s≋s'
-  = {!!} -- requires nat-evalₛ
+sound-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-fun ps ps' s≋s' rewrite
+  wkSub'PresId s
+  | evalₛPresId s'
+    = trans-≋ {Γ = Δ} {a = b}
+      (fund t
+            (ps , (psh-eval u s ps))
+            (subst Pshₛ (sym (evalₛPresId s')) ps' , psh-eval u s' ps')
+            (subst (s ≋ₛ_) (sym (evalₛPresId s')) s≋s' `, fund u ps ps' s≋s'))
+      (coh-substTm-evalₛ t (idₛ `, u) {s} {s'} ps ps' s≋s') 
 sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y rewrite
   sym (rightIdWk w)
   | sym (cong (λ f → f idWk x) (nat-eval t w s ps))
@@ -198,6 +321,6 @@ sound-red* : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
 sound-red* {t = t} {t' = .t} ε        ps ps' s≋s'
   = fund t ps ps' s≋s'
-sound-red* {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
-  = {!!} -- requires transitivity of ≋
+sound-red* {a = a} {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
+  = trans-≋ {a = a} (sound-red r ps ps' s≋s') (sound-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s'))) 
 

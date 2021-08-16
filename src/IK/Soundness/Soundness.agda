@@ -247,11 +247,18 @@ evalₛPresId {Δ = Δ 🔒} (lock s' e)
   = cong₂ lock (evalₛPresId s') refl
 
 
+coh-substVar-evalₛ : (x : Var Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
+  → Pshₛ s → Pshₛ s' → s ≋ₛ s' → substVar' x (evalₛ s₀ s') ≋ eval (substVar s₀ x) s'
+coh-substVar-evalₛ ze     (_ `, t) {s} {s'} ps ps' s≋s'
+  = pseudo-refl-≋ {x = eval t s'} (sym-≋ {x = eval t s} (fund t ps ps' s≋s'))
+coh-substVar-evalₛ (su x) (s₀ `, _) ps ps' s≋s'
+  = coh-substVar-evalₛ x s₀ ps ps' s≋s'
+
 coh-substTm-evalₛ : (t : Tm Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t (evalₛ s₀ s') ≋ eval (substTm s₀ t) s'  
-coh-substTm-evalₛ (var x)     s₀ ps ps' s≋s'
-  = {!!}
-coh-substTm-evalₛ (lam t)     s₀ ps ps' s≋s' w {x = x} {y} px py x≋y
+coh-substTm-evalₛ (var x)     s₀ ps ps' s≋s' 
+  = coh-substVar-evalₛ x s₀ ps ps' s≋s'
+coh-substTm-evalₛ (lam t)     s₀ {s} {s'} ps ps' s≋s' w {x = x} {y} px py x≋y
   = {!!}
 coh-substTm-evalₛ (app t u)  s₀ ps ps' s≋s'
   = coh-substTm-evalₛ t s₀ ps ps' s≋s' idWk
@@ -267,12 +274,43 @@ coh-substTm-evalₛ (unbox t nil) (lock s₀ (ext e)) (ps , _) (ps' , _) (s≋s'
 coh-substTm-evalₛ (unbox t nil) (lock s₀ nil) {s = lock s e} {s' = lock s' e'} ps ps' (lock s≋s' e')
   = unbox'Pres≋ {x = eval t (evalₛ s₀ s')} e' (coh-substTm-evalₛ t s₀ ps ps' s≋s')
 
+private
+  lemma1 : {t : Tm (ΓL 🔒) a} (e : LFExt Γ (ΓL 🔒) ΓR) {s s' : Sub' Δ Γ}
+    → Pshₛ s → Pshₛ s'
+    → s ≋ₛ s'
+    → eval (unbox (box t) e) s ≋ eval t (trimSub' (LFExtTo≤ e) s')
+  lemma1 {t = t} nil {s = lock s e} {s' = lock s' e} ps ps' (lock s≋s' e)
+    with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
+  ... | refl | refl
+    rewrite sym (nat-eval t (LFExtTo≤ e) (lock s nil) ps)
+      | ExtIsProp (wkLFExt nil (LFExtTo≤ e)) e
+        = fund t
+               (wkSub'PresPsh (sliceLeft nil (LFExtTo≤ e)) s ps)
+               (subst Pshₛ (sym (trimSub'PresId s')) ps')
+               (lock lemma1-2 e)
+    where
+      lemma1-1 : ∀ (e : LFExt Γ (←🔒 Γ 🔒) ΓR) → sliceLeft nil (LFExtTo≤ e) ≡ idWk
+      lemma1-1 {Γ Context.`, x} (Context.ext e) = lemma1-1 e
+      lemma1-1 {Γ Context.🔒} Context.nil = refl
+      lemma1-2 : wkSub' (sliceLeft nil (LFExtTo≤ e)) s ≋ₛ trimSub' idWk s'
+      lemma1-2 rewrite lemma1-1 e
+        | trimSub'PresId s'
+        | wkSub'PresId s = s≋s'
+  lemma1 {t = t} (ext e) (s  , _) (s' , _) (s≋s' `, _)
+    = lemma1 {t = t} e s s' s≋s'
+    
+  lemma2 : {x y : Tm' Γ (◻ a)}
+    → x ≋ y
+    → x ≋ box (unbox' y nil)
+  lemma2 {x = box x} {box y} x≋y rewrite wkTm'PresId y
+      = x≋y
+
 -- soundness of single-step reduction
 sound-red : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ⟶ t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-fun ps ps' s≋s' rewrite
-  wkSub'PresId s
+sound-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-fun ps ps' s≋s'
+  rewrite wkSub'PresId s
   | evalₛPresId s'
     = trans-≋ {Γ = Δ} {a = b}
       (fund t
@@ -280,8 +318,8 @@ sound-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-
             (subst Pshₛ (sym (evalₛPresId s')) ps' , psh-eval u s' ps')
             (subst (s ≋ₛ_) (sym (evalₛPresId s')) s≋s' `, fund u ps ps' s≋s'))
       (coh-substTm-evalₛ t (idₛ `, u) {s} {s'} ps ps' s≋s') 
-sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y rewrite
-  sym (rightIdWk w)
+sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
+  rewrite sym (rightIdWk w)
   | sym (cong (λ f → f idWk x) (nat-eval t w s ps))
   | sym (trimSub'PresId (wkSub' w s))
   | rightIdWk w
@@ -294,10 +332,11 @@ sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y rewr
            px
            py
            x≋y
-sound-red red-box ps ps' s≋s'
-  = {!!}
-sound-red exp-box ps ps' s≋s'
-  = {!!}
+sound-red {t = unbox (box t) e} {s = s} {s' = s'} red-box ps ps' s≋s'
+  rewrite coh-trimSub'-wkTm (LFExtTo≤ e) s' t
+  = lemma1 {t = t} e ps ps' s≋s'
+sound-red {t = t} {s = s} {s'} exp-box ps ps' s≋s'
+  = lemma2 {x = eval t s} (fund t ps ps' s≋s')
 sound-red {t = t} {s = s} {s'} (cong-lam r) ps ps' s≋s' w {x = x} px py x≋y
   = sound-red r (wkSub'PresPsh w s ps , px) (wkSub'PresPsh w s' ps' , py) ((wkSub'Pres≋ w s≋s') `, x≋y)
 sound-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app1 r) ps ps' s≋s'

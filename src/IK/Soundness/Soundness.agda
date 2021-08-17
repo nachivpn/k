@@ -1,5 +1,3 @@
---{-# OPTIONS --allow-unsolved-metas #-}
-
 module IK.Soundness.Soundness where
 
 open import Data.Unit
@@ -22,6 +20,7 @@ open import IK.Reduction
 open import IK.Conversion
 open import IK.Soundness.Presheaf
 open import IK.HellOfSyntacticLemmas
+open import IK.Soundness.HellOfSemanticLemmas
 
 -- soundness relation on semantic values
 _≋_ : Tm' Γ a → Tm' Γ a → Set
@@ -43,6 +42,10 @@ data _≋ₛ_ : Sub' Γ Δ → Sub' Γ Δ → Set where
        → s ≋ₛ s' → (e : LFExt Γ' (Γ 🔒) (ΓR))
        → _≋ₛ_ {Γ = Γ'} {Δ = Δ 🔒} (lock s e)  (lock s' e)
 
+------------------------
+-- Properties of ≋ and ≋ₛ
+------------------------
+
 -- ≋ is symmetric
 sym-≋ : {x y : Tm' Γ a}
       → x ≋ y → y ≋ x
@@ -59,11 +62,13 @@ trans-≋ : {x y z : Tm' Γ a}
 trans-≋ {a = 𝕓}     x≡y y≡z
   = trans x≡y y≡z
 trans-≋ {a = a ⇒ b} {x} {y} {z} x≋y y≋z w {x = x'} {y = y'} px' py' x'≋y'
-  = trans-≋ {a = b} (x≋y w px' py' x'≋y' ) (y≋z w py' py' ((trans-≋ {a = a} (sym-≋ {a = a} x'≋y') x'≋y')))
+  = trans-≋ {a = b}
+      (x≋y w px' py' x'≋y')
+      (y≋z w py' py' ((trans-≋ {a = a} (sym-≋ {a = a} x'≋y') x'≋y')))
 trans-≋ {a = ◻ a} {box x} {box y} {box z} x≋y y≋z
   = trans-≋ {x = x} x≋y y≋z
 
--- WTH is this thing actually called?
+-- WTH should this thing be called?
 pseudo-refl-≋ : {x y : Tm' Γ a}
   → x ≋ y → x ≋ x
 pseudo-refl-≋ {a = a} x≋y = trans-≋ {a = a} x≋y (sym-≋ {a = a} x≋y)
@@ -88,6 +93,7 @@ trans-≋ₛ {Δ = Δ `, a} (s≋s' `, x≋x') (s'≋s'' `, x'≋x'')
 trans-≋ₛ {Δ = Δ 🔒}    (lock s≋s' e) (lock s'≋s'' e)
   = lock (trans-≋ₛ s≋s' s'≋s'') e
 
+-- WTH should this thing be called?
 pseudo-refl-≋ₛ : {s s' : Sub' Γ Δ}
   → s ≋ₛ s' → s ≋ₛ s
 pseudo-refl-≋ₛ x≋y = trans-≋ₛ x≋y (sym-≋ₛ x≋y)
@@ -116,6 +122,10 @@ wkSub'Pres≋ {Δ = Δ `, a} w (s≋s' `, x)
 wkSub'Pres≋ w (lock s≋s e)
   = lock (wkSub'Pres≋ (sliceLeft e w) s≋s) (wkLFExt e w)
 
+--------------------------------------
+-- The Fundamental theorem of ≋ and ≋ₛ
+--------------------------------------
+
 private
 
   substVar'Pres≋ : (x : Var Γ a) {s s' : Sub' Δ Γ}
@@ -139,12 +149,11 @@ fund :  (t : Tm Γ a) {s s' : Sub' Δ Γ}
   → s ≋ₛ s' → eval t s ≋ eval t s'
 fund (var x) ps ps' s≋s'
   = substVar'Pres≋ x s≋s'
-fund (lam t) {s = s} {s' = s'} ps ps' s≋s'
-  = λ w px py x≋y
-    → fund t
-           (wkSub'PresPsh w s ps , px)
-           (wkSub'PresPsh w s' ps' , py)
-           (wkSub'Pres≋ w s≋s' `, x≋y)
+fund (lam t) {s = s} {s' = s'} ps ps' s≋s' w px py x≋y
+  = fund t
+      (wkSub'PresPsh w s ps , px)
+      (wkSub'PresPsh w s' ps' , py)
+      (wkSub'Pres≋ w s≋s' `, x≋y)
 fund (app t u) {s = s} {s' = s'} ps ps' s≋s'
   = fund t ps ps' s≋s' idWk (psh-eval u s ps) (psh-eval u s' ps') (fund u ps ps' s≋s')
 fund (box t) ps ps' s≋s'
@@ -167,110 +176,9 @@ fundₛ (lock s₀ (ext e)) {s = s , _} {s' = s' , _} (ps , _) (ps' , _) (s≋s'
 fundₛ (lock s₀ nil) {s = lock s e} {s' = lock s' e} ps ps' (lock s≋s' e)
   = lock (fundₛ s₀ ps ps' s≋s') e
 
--- semantic counterpart of trimSub
-trimSub' : Γ' ≤ Γ → Sub'- Γ' →̇ Sub'- Γ
-trimSub' base      tt         = tt
-trimSub' (drop w)  (s , _)    = trimSub' w s
-trimSub' (keep w)  (s , x)    = trimSub' w s , x
-trimSub' (keep🔒 w) (lock s e) = lock (trimSub' w s) e
-
--- naturality of trimSub'
-nat-trimSub' : (w' : Δ ≤ Δ') (w : Γ' ≤ Γ) (s : Sub' Γ Δ)
-  → trimSub' w' (wkSub' w s) ≡ wkSub' w (trimSub' w' s)
-nat-trimSub' base       w s          = refl
-nat-trimSub' (drop w')  w (s , _)    = nat-trimSub' w' w s
-nat-trimSub' (keep w')  w (s , x)    = cong₂ _,_ (nat-trimSub' w' w s) refl
-nat-trimSub' (keep🔒 w') w (lock s e) = cong₂ lock (nat-trimSub' w' (sliceLeft e w) s) refl
-
--- trimSub' preserves idWk
-trimSub'PresId : (s : Sub' Γ Δ) → trimSub' idWk s ≡ s
-trimSub'PresId {Δ = []}     tt         = refl
-trimSub'PresId {Δ = Δ `, _} (s , _)    = cong₂ _,_ (trimSub'PresId s) refl
-trimSub'PresId {Δ = Δ 🔒}    (lock s e) = cong₂ lock (trimSub'PresId s) refl
-
--- semantic counterpart of coh-trimSub-wkVar in Substitution.agda
-coh-trimSub'-wkVar' : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (x : Var Γ a)
-  → substVar' (wkVar w x) s ≡ substVar' x (trimSub' w s)
-coh-trimSub'-wkVar' (drop w) (s , _) ze     = coh-trimSub'-wkVar' w s ze
-coh-trimSub'-wkVar' (drop w) (s , _) (su x) = coh-trimSub'-wkVar' w s (su x)
-coh-trimSub'-wkVar' (keep w) (s , _) ze     = refl
-coh-trimSub'-wkVar' (keep w) (s , _) (su x) = coh-trimSub'-wkVar' w s x
-
--- semantic counterpart of coh-trimSub-wkTm in HellOfSyntacticLemmas.agda
-coh-trimSub'-wkTm : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (t : Tm Γ a)
-  → eval (wkTm w t) s ≡ eval t (trimSub' w s)
-coh-trimSub'-wkTm w s (var x)
-  = coh-trimSub'-wkVar' w s x
-coh-trimSub'-wkTm w s (lam t)
-  = funexti (λ _ → funext (λ w' → funext (λ x →
-      trans
-        (coh-trimSub'-wkTm (keep w) (wkSub' w' s , x) t)
-        (cong (λ z → eval t (z , x)) (nat-trimSub' w w' s)))))
-coh-trimSub'-wkTm w s (app t u)
-  = trans
-      (cong (λ f → f idWk (eval (wkTm w u) s)) (coh-trimSub'-wkTm w s t))
-      (cong (eval t (trimSub' w s) idWk) (coh-trimSub'-wkTm w s u))
-coh-trimSub'-wkTm w s (box t)
-  = cong box (coh-trimSub'-wkTm (keep🔒 w) (lock s nil) t)
-coh-trimSub'-wkTm (drop w) (s , _) (unbox t e)
-  = coh-trimSub'-wkTm w s (unbox t e)
-coh-trimSub'-wkTm (keep🔒 w) (lock s e) (unbox t nil)
-  = cong₂ unbox' (coh-trimSub'-wkTm w s t) refl
-coh-trimSub'-wkTm (keep w) (s , _) (unbox t (ext e))
-  = coh-trimSub'-wkTm w s (unbox t e)
-
--- 
-psh-evalₛ : (s : Sub Γ Γ') (s' : Sub' Δ Γ)
-    → Pshₛ s' → Pshₛ (evalₛ s s')
-psh-evalₛ []       s' ps'
-  = tt
-psh-evalₛ (s `, t) s' ps'
-  = (psh-evalₛ s s' ps') , (psh-eval t s' ps')
-psh-evalₛ (lock s nil) (lock s' e) ps'
-  = psh-evalₛ s s' ps'
-psh-evalₛ (lock s (ext e)) (s' , _) (ps' , _)
-  = psh-evalₛ (lock s e) s' ps'
-
--- naturality of evalₛ
-nat-evalₛ : (w : Δ' ≤ Δ)  (s : Sub Γ' Γ) (s' : Sub' Δ Γ') (ps' : Pshₛ s')
-  → evalₛ s (wkSub' w s') ≡ wkSub' w (evalₛ s s')
-nat-evalₛ w []               s'        ps'
-  = refl
-nat-evalₛ w (s `, t)         s'        ps'
-  = cong₂ _,_ (nat-evalₛ w s s' ps') (nat-eval t w s' ps')
-nat-evalₛ w (lock s (ext e)) (s' , _) (ps' , _)
-  = nat-evalₛ w (lock s e) s' ps'
-nat-evalₛ w (lock s nil)     (lock s' e) ps'
-  = cong₂ lock (nat-evalₛ (sliceLeft e w) s s' ps') refl
-
--- semantic counterpart of coh-trimSub-wkSub in `HellOfSyntacticLemmas.agda`
-coh-trimSub'-wkSub : (w : Γ' ≤ Γ) (s : Sub Γ Δ) (s' : Sub' Δ' Γ')
-  → evalₛ (wkSub w s) s' ≡ evalₛ s (trimSub' w s')
-coh-trimSub'-wkSub w [] s'
-  = refl
-coh-trimSub'-wkSub w (s `, t) s'
-  = cong₂ _,_ (coh-trimSub'-wkSub w s s') (coh-trimSub'-wkTm w s' t)
-coh-trimSub'-wkSub (drop w) (lock s e) (s' , _)
-  = coh-trimSub'-wkSub w (lock s e) s'
-coh-trimSub'-wkSub (keep w) (lock s (ext e)) (s' , _)
-  = coh-trimSub'-wkSub w (lock s e) s'
-coh-trimSub'-wkSub (keep🔒 w) (lock s nil) (lock s' e')
-  = cong₂ lock (coh-trimSub'-wkSub w s s') refl
-
-evalₛPresId : (s' : Sub' Γ Δ) → evalₛ idₛ s' ≡ s'
-evalₛPresId {Δ = []}     tt
-  = refl
-evalₛPresId {Δ = Δ `, _} (s' , x)
-  = cong₂ (_,_)
-          (trans
-            (coh-trimSub'-wkSub fresh idₛ (s' , x))
-            (trans
-              (cong (evalₛ idₛ) (trimSub'PresId s'))
-              (evalₛPresId s')))
-          refl
-evalₛPresId {Δ = Δ 🔒} (lock s' e)
-  = cong₂ lock (evalₛPresId s') refl
-
+--------------------------
+-- Soundness of evaluation
+--------------------------
 
 coh-substVar-evalₛ : (x : Var Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → substVar' x (evalₛ s₀ s') ≋ eval (substVar s₀ x) s'
@@ -347,11 +255,11 @@ private
   lemma2 {x = box x} {box y} x≋y rewrite wkTm'PresId y
       = x≋y
 
--- soundness of single-step reduction
-sound-red : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
+-- soundness of evaluation wrt single-step reduction
+sound-eval-red : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ⟶ t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-fun ps ps' s≋s'
+sound-eval-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-fun ps ps' s≋s'
   rewrite wkSub'PresId s
   | evalₛPresId s'
     = trans-≋ {Γ = Δ} {a = b}
@@ -360,7 +268,7 @@ sound-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-
             (subst Pshₛ (sym (evalₛPresId s')) ps' , psh-eval u s' ps')
             (subst (s ≋ₛ_) (sym (evalₛPresId s')) s≋s' `, fund u ps ps' s≋s'))
       (coh-substTm-evalₛ t (idₛ `, u) {s} {s'} ps ps' s≋s') 
-sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
+sound-eval-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
   rewrite sym (rightIdWk w)
   | sym (cong (λ f → f idWk x) (nat-eval t w s ps))
   | sym (trimSub'PresId (wkSub' w s))
@@ -374,73 +282,88 @@ sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
            px
            py
            x≋y
-sound-red {t = unbox (box t) e} {s = s} {s' = s'} red-box ps ps' s≋s'
+sound-eval-red {t = unbox (box t) e} {s = s} {s' = s'} red-box ps ps' s≋s'
   rewrite coh-trimSub'-wkTm (LFExtTo≤ e) s' t
   = lemma1 {t = t} e ps ps' s≋s'
-sound-red {t = t} {s = s} {s'} exp-box ps ps' s≋s'
+sound-eval-red {t = t} {s = s} {s'} exp-box ps ps' s≋s'
   = lemma2 {x = eval t s} (fund t ps ps' s≋s')
-sound-red {t = t} {s = s} {s'} (cong-lam r) ps ps' s≋s' w {x = x} px py x≋y
-  = sound-red r (wkSub'PresPsh w s ps , px) (wkSub'PresPsh w s' ps' , py) ((wkSub'Pres≋ w s≋s') `, x≋y)
-sound-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app1 r) ps ps' s≋s'
-  = sound-red r ps ps' s≋s'
-              idWk
-              (psh-eval u s ps)
-              (psh-eval u s' ps')
-              (fund u ps ps' s≋s')
-sound-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app2 r) ps ps' s≋s'
-  = fund t ps ps' s≋s' idWk (psh-eval u s ps) (psh-eval u' s' ps') (sound-red r ps ps' s≋s')
-sound-red (cong-box r) ps ps' s≋s'
-  = sound-red r ps ps' (lock s≋s' nil)
-sound-red {s = lock s e} {s' = lock s' .e} (cong-unbox {t = t} {e = nil} r) ps ps' (lock s≋s' e)
-  = unbox'Pres≋ {x = eval t s} e (sound-red r ps ps' s≋s')
-sound-red {s = s , _} {s' = s' , _} (cong-unbox {t = t} {e = ext e} r) (ps , _) (ps' , _) (s≋s' `, _)
-  = sound-red (cong-unbox {e = e} r) ps ps' s≋s'
+sound-eval-red {t = t} {s = s} {s'} (cong-lam r) ps ps' s≋s' w {x = x} px py x≋y
+  = sound-eval-red r
+      (wkSub'PresPsh w s ps , px)
+      (wkSub'PresPsh w s' ps' , py)
+      ((wkSub'Pres≋ w s≋s') `, x≋y)
+sound-eval-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app1 r) ps ps' s≋s'
+  = sound-eval-red r ps ps' s≋s'
+      idWk
+      (psh-eval u s ps)
+      (psh-eval u s' ps')
+      (fund u ps ps' s≋s')
+sound-eval-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app2 r) ps ps' s≋s'
+  = fund t ps ps' s≋s' idWk (psh-eval u s ps) (psh-eval u' s' ps') (sound-eval-red r ps ps' s≋s')
+sound-eval-red (cong-box r) ps ps' s≋s'
+  = sound-eval-red r ps ps' (lock s≋s' nil)
+sound-eval-red {s = lock s e} {s' = lock s' .e} (cong-unbox {t = t} {e = nil} r) ps ps' (lock s≋s' e)
+  = unbox'Pres≋ {x = eval t s} e (sound-eval-red r ps ps' s≋s')
+sound-eval-red {s = s , _} {s' = s' , _} (cong-unbox {t = t} {e = ext e} r) (ps , _) (ps' , _) (s≋s' `, _)
+  = sound-eval-red (cong-unbox {e = e} r) ps ps' s≋s'
 
--- soundness of multi-step reduction
-sound-red* : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
+-- soundness of evaluation wrt multi-step reduction
+sound-eval-red* : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ⟶* t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-red* {t = t} {t' = .t} ε        ps ps' s≋s'
+sound-eval-red* {t = t} {t' = .t} ε        ps ps' s≋s'
   = fund t ps ps' s≋s'
-sound-red* {a = a} {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
-  = trans-≋ {a = a} (sound-red r ps ps' s≋s') (sound-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s'))) 
+sound-eval-red* {a = a} {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
+  = trans-≋ {a = a} (sound-eval-red r ps ps' s≋s') (sound-eval-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s'))) 
 
--- soundness of conversion
-sound-conv : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
+-- soundness of evaluation wrt conversion
+sound-eval-≈ : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ≈ t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-conv {t = t} ε ps ps' s≋s'
-  = sound-red* {t = t} (zero refl) ps ps' s≋s'
-sound-conv {a = a} (inj₁ r ◅ t≈t') ps ps' s≋s'
-  = trans-≋ {a = a} (sound-red r ps ps' s≋s') (sound-conv t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
-sound-conv {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s≋s'
+sound-eval-≈ {t = t} ε ps ps' s≋s'
+  = sound-eval-red* {t = t} (zero refl) ps ps' s≋s'
+sound-eval-≈ {a = a} (inj₁ r ◅ t≈t') ps ps' s≋s'
+  = trans-≋ {a = a} (sound-eval-red r ps ps' s≋s') (sound-eval-≈ t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
+sound-eval-≈ {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s≋s'
   = trans-≋ {a = a}
-      (sym-≋ {y = eval t s} (sound-red r ps' ps (sym-≋ₛ s≋s')))
-      (sound-conv t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
+      (sym-≋ {y = eval t s} (sound-eval-red r ps' ps (sym-≋ₛ s≋s')))
+      (sound-eval-≈ t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
 
-sound-reify : {x y : Tm' Γ a}
+--------------------------------------------------------
+-- Uniqueness of reification and soundness of reflection 
+--------------------------------------------------------
+
+unique-reify : {x y : Tm' Γ a}
   → x ≋ y → reify x ≡ reify y
 sound-reflect : {n n' : Ne Γ a}
   → n ≡ n' → reflect n ≋ reflect n'
   
-sound-reify {a = 𝕓}      x≡y = x≡y
-sound-reify {a = a ⇒ b}  x≋y = cong lam
-  (sound-reify
+unique-reify {a = 𝕓}      x≡y = x≡y
+unique-reify {a = a ⇒ b}  x≋y = cong lam
+  (unique-reify
     (x≋y fresh (psh-reflect {a = a} (var ze)) (psh-reflect {a = a} (var ze))
     (sound-reflect {a = a} refl)))
-sound-reify {a = ◻ a} {box x} {box y} x≋y = cong box (sound-reify x≋y)
+unique-reify {a = ◻ a} {box x} {box y} x≋y
+  = cong box (unique-reify x≋y)
 
-sound-reflect {a = 𝕓}      n≡n' = cong up𝕓 n≡n'
-sound-reflect {a = a ⇒ b}  n≡n' = λ w px py x≋y
-  → sound-reflect {a = b} (cong₂ app (cong (wkNe w) n≡n') (sound-reify x≋y))
-sound-reflect {a = ◻ a}    n≡n' = sound-reflect {a = a} (cong₂ unbox n≡n' refl)
+sound-reflect {a = 𝕓}      n≡n'
+  = cong up𝕓 n≡n'
+sound-reflect {a = a ⇒ b}  n≡n' w px py x≋y
+  = sound-reflect {a = b} (cong₂ app (cong (wkNe w) n≡n') (unique-reify x≋y))
+sound-reflect {a = ◻ a}    n≡n'
+  = sound-reflect {a = a} (cong₂ unbox n≡n' refl)
+
+-----------------------------
+-- Soundness of normalization
+-----------------------------
 
 idₛ'≋idₛ' : {Γ : Ctx} → idₛ' {Γ} ≋ₛ idₛ'
 idₛ'≋idₛ' {[]}     = []
 idₛ'≋idₛ' {Γ `, a} = (wkSub'Pres≋ fresh (idₛ'≋idₛ' {Γ})) `, (sound-reflect {a = a} refl)
 idₛ'≋idₛ' {Γ 🔒}    = lock idₛ'≋idₛ' nil
 
-sound : {t t' : Tm Γ a} → t ⟶* t' → norm t ≡ norm t'
-sound {Γ = Γ} r = sound-reify (sound-red* r (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')
+sound-norm-red* : {t t' : Tm Γ a} → t ⟶* t' → norm t ≡ norm t'
+sound-norm-red* {Γ = Γ} r = unique-reify (sound-eval-red* r (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')
 
--- TODO: fix names
+sound-norm-≈ : {t t' : Tm Γ a} → t ≈ t' → norm t ≡ norm t'
+sound-norm-≈ {Γ = Γ} p = unique-reify (sound-eval-≈ p (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')

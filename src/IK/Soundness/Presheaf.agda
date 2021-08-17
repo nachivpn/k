@@ -200,6 +200,37 @@ nat-eval (unbox t nil)     w (lock s e) ps = trans
 nat-eval (unbox t (ext e)) w (s , _) (ps , _)
   = nat-eval (unbox t e) w s ps
 
+---------------------------------------
+-- `evalₛ s` is a natural transformation
+---------------------------------------
+
+-- for `s : Sub Γ Δ`,
+-- evalₛ s : Sub'- Γ  →̇ Sub'- Δ
+
+psh-evalₛ : (s : Sub Γ Γ') (s' : Sub' Δ Γ)
+    → Pshₛ s' → Pshₛ (evalₛ s s')
+psh-evalₛ []       s' ps'
+  = tt
+psh-evalₛ (s `, t) s' ps'
+  = (psh-evalₛ s s' ps') , (psh-eval t s' ps')
+psh-evalₛ (lock s nil) (lock s' e) ps'
+  = psh-evalₛ s s' ps'
+psh-evalₛ (lock s (ext e)) (s' , _) (ps' , _)
+  = psh-evalₛ (lock s e) s' ps'
+
+-- naturality of evalₛ
+nat-evalₛ : (w : Δ' ≤ Δ)  (s : Sub Γ' Γ) (s' : Sub' Δ Γ') (ps' : Pshₛ s')
+  → evalₛ s (wkSub' w s') ≡ wkSub' w (evalₛ s s')
+nat-evalₛ w []               s'        ps'
+  = refl
+nat-evalₛ w (s `, t)         s'        ps'
+  = cong₂ _,_ (nat-evalₛ w s s' ps') (nat-eval t w s' ps')
+nat-evalₛ w (lock s (ext e)) (s' , _) (ps' , _)
+  = nat-evalₛ w (lock s e) s' ps'
+nat-evalₛ w (lock s nil)     (lock s' e) ps'
+  = cong₂ lock (nat-evalₛ (sliceLeft e w) s s' ps') refl
+
+
 ------------------------------------------------
 -- reflect and reify are natural transformations
 ------------------------------------------------

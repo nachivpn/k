@@ -73,20 +73,24 @@ sym-≋ₛ : {s s' : Sub' Γ Δ}
       → s ≋ₛ s' → s' ≋ₛ s
 sym-≋ₛ {Δ = []}     s≋s'
   = s≋s'
-sym-≋ₛ {Δ = Δ `, a} {s = s , x} {s' = s' , y} (s≋s' `, x≋y)
+sym-≋ₛ {Δ = Δ `, a} (s≋s' `, x≋y)
   = sym-≋ₛ s≋s' `, sym-≋ {a = a} x≋y
-sym-≋ₛ {Δ = Δ 🔒} {s = lock s e} {s' = lock s' .e}  (lock s≋s' .e)
+sym-≋ₛ {Δ = Δ 🔒} (lock s≋s' e)
   = lock (sym-≋ₛ s≋s') e
 
-postulate
-  -- ≋ₛ is transitive
-  trans-≋ₛ : {s s' s'' : Sub' Γ Δ}
+-- ≋ₛ is transitive
+trans-≋ₛ : {s s' s'' : Sub' Γ Δ}
     → s ≋ₛ s' → s' ≋ₛ s'' → s ≋ₛ s''
+trans-≋ₛ {Δ = []} s≋s' s'≋s''
+  = []
+trans-≋ₛ {Δ = Δ `, a} (s≋s' `, x≋x') (s'≋s'' `, x'≋x'')
+  = trans-≋ₛ s≋s' s'≋s'' `, trans-≋ {a = a} x≋x' x'≋x''
+trans-≋ₛ {Δ = Δ 🔒}    (lock s≋s' e) (lock s'≋s'' e)
+  = lock (trans-≋ₛ s≋s' s'≋s'') e
 
 pseudo-refl-≋ₛ : {s s' : Sub' Γ Δ}
   → s ≋ₛ s' → s ≋ₛ s
 pseudo-refl-≋ₛ x≋y = trans-≋ₛ x≋y (sym-≋ₛ x≋y)
-
 
 -- wkTm' preserves the relation _≋_
 wkTm'Pres≋ : {x : Tm' Γ a} {y : Tm' Γ a}
@@ -413,3 +417,30 @@ sound-conv {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s≋s'
   = trans-≋ {a = a}
       (sym-≋ {y = eval t s} (sound-red r ps' ps (sym-≋ₛ s≋s')))
       (sound-conv t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
+
+sound-reify : {x y : Tm' Γ a}
+  → x ≋ y → reify x ≡ reify y
+sound-reflect : {n n' : Ne Γ a}
+  → n ≡ n' → reflect n ≋ reflect n'
+  
+sound-reify {a = 𝕓}      x≡y = x≡y
+sound-reify {a = a ⇒ b}  x≋y = cong lam
+  (sound-reify
+    (x≋y fresh (psh-reflect {a = a} (var ze)) (psh-reflect {a = a} (var ze))
+    (sound-reflect {a = a} refl)))
+sound-reify {a = ◻ a} {box x} {box y} x≋y = cong box (sound-reify x≋y)
+
+sound-reflect {a = 𝕓}      n≡n' = cong up𝕓 n≡n'
+sound-reflect {a = a ⇒ b}  n≡n' = λ w px py x≋y
+  → sound-reflect {a = b} (cong₂ app (cong (wkNe w) n≡n') (sound-reify x≋y))
+sound-reflect {a = ◻ a}    n≡n' = sound-reflect {a = a} (cong₂ unbox n≡n' refl)
+
+idₛ'≋idₛ' : {Γ : Ctx} → idₛ' {Γ} ≋ₛ idₛ'
+idₛ'≋idₛ' {[]}     = []
+idₛ'≋idₛ' {Γ `, a} = (wkSub'Pres≋ fresh (idₛ'≋idₛ' {Γ})) `, (sound-reflect {a = a} refl)
+idₛ'≋idₛ' {Γ 🔒}    = lock idₛ'≋idₛ' nil
+
+sound : {t t' : Tm Γ a} → t ⟶* t' → norm t ≡ norm t'
+sound {Γ = Γ} r = sound-reify (sound-red* r (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')
+
+-- TODO: fix names

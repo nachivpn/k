@@ -4,6 +4,8 @@ module IK.Soundness.Soundness where
 
 open import Data.Unit
   using (⊤ ; tt)
+open import Data.Sum
+  using (inj₁ ; inj₂)
 open import Data.Product
   using (Σ ; _×_ ; _,_ ; ∃)
 open import Relation.Binary.PropositionalEquality
@@ -17,6 +19,7 @@ import Context
 open import IK.Term
 open import IK.Norm
 open import IK.Reduction
+open import IK.Conversion
 open import IK.Soundness.Presheaf
 open import IK.HellOfSyntacticLemmas
 
@@ -147,12 +150,27 @@ fund (unbox t nil) {s = lock s e} {s' = lock s' .e} ps ps' (lock s≋s' .e)
 fund (unbox t (ext e)) (ps , _) (ps' , _) (s≋s' `, _)
   = fund (unbox t e) ps ps' s≋s'
 
+--
+fundₛ :  (s₀ : Sub Γ Δ) {s s' : Sub' Δ' Γ}
+  → Pshₛ s → Pshₛ s'
+  → s ≋ₛ s' → evalₛ s₀ s ≋ₛ evalₛ s₀ s'
+fundₛ []          ps ps' s≋s'
+  = []
+fundₛ (s₀ `, t)   ps ps' s≋s'
+  = (fundₛ s₀ ps ps' s≋s') `, fund t ps ps' s≋s'
+fundₛ (lock s₀ (ext e)) {s = s , _} {s' = s' , _} (ps , _) (ps' , _) (s≋s' `, _)
+  = fundₛ (lock s₀ e) ps ps' s≋s'
+fundₛ (lock s₀ nil) {s = lock s e} {s' = lock s' e} ps ps' (lock s≋s' e)
+  = lock (fundₛ s₀ ps ps' s≋s') e
+
+-- semantic counterpart of trimSub
 trimSub' : Γ' ≤ Γ → Sub'- Γ' →̇ Sub'- Γ
 trimSub' base      tt         = tt
 trimSub' (drop w)  (s , _)    = trimSub' w s
 trimSub' (keep w)  (s , x)    = trimSub' w s , x
 trimSub' (keep🔒 w) (lock s e) = lock (trimSub' w s) e
 
+-- naturality of trimSub'
 nat-trimSub' : (w' : Δ ≤ Δ') (w : Γ' ≤ Γ) (s : Sub' Γ Δ)
   → trimSub' w' (wkSub' w s) ≡ wkSub' w (trimSub' w' s)
 nat-trimSub' base       w s          = refl
@@ -160,12 +178,13 @@ nat-trimSub' (drop w')  w (s , _)    = nat-trimSub' w' w s
 nat-trimSub' (keep w')  w (s , x)    = cong₂ _,_ (nat-trimSub' w' w s) refl
 nat-trimSub' (keep🔒 w') w (lock s e) = cong₂ lock (nat-trimSub' w' (sliceLeft e w) s) refl
 
+-- trimSub' preserves idWk
 trimSub'PresId : (s : Sub' Γ Δ) → trimSub' idWk s ≡ s
 trimSub'PresId {Δ = []}     tt         = refl
 trimSub'PresId {Δ = Δ `, _} (s , _)    = cong₂ _,_ (trimSub'PresId s) refl
 trimSub'PresId {Δ = Δ 🔒}    (lock s e) = cong₂ lock (trimSub'PresId s) refl
 
--- semantic counterpart of `coh-trimSub-wkVar` in `Substitution.agda`
+-- semantic counterpart of coh-trimSub-wkVar in Substitution.agda
 coh-trimSub'-wkVar' : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (x : Var Γ a)
   → substVar' (wkVar w x) s ≡ substVar' x (trimSub' w s)
 coh-trimSub'-wkVar' (drop w) (s , _) ze     = coh-trimSub'-wkVar' w s ze
@@ -173,7 +192,7 @@ coh-trimSub'-wkVar' (drop w) (s , _) (su x) = coh-trimSub'-wkVar' w s (su x)
 coh-trimSub'-wkVar' (keep w) (s , _) ze     = refl
 coh-trimSub'-wkVar' (keep w) (s , _) (su x) = coh-trimSub'-wkVar' w s x
 
--- semantic counterpart of `coh-trimSub-wkTm` in `HellOfSyntacticLemmas.agda`
+-- semantic counterpart of coh-trimSub-wkTm in HellOfSyntacticLemmas.agda
 coh-trimSub'-wkTm : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (t : Tm Γ a)
   → eval (wkTm w t) s ≡ eval t (trimSub' w s)
 coh-trimSub'-wkTm w s (var x)
@@ -196,6 +215,7 @@ coh-trimSub'-wkTm (keep🔒 w) (lock s e) (unbox t nil)
 coh-trimSub'-wkTm (keep w) (s , _) (unbox t (ext e))
   = coh-trimSub'-wkTm w s (unbox t e)
 
+-- 
 psh-evalₛ : (s : Sub Γ Γ') (s' : Sub' Δ Γ)
     → Pshₛ s' → Pshₛ (evalₛ s s')
 psh-evalₛ []       s' ps'
@@ -207,6 +227,7 @@ psh-evalₛ (lock s nil) (lock s' e) ps'
 psh-evalₛ (lock s (ext e)) (s' , _) (ps' , _)
   = psh-evalₛ (lock s e) s' ps'
 
+-- naturality of evalₛ
 nat-evalₛ : (w : Δ' ≤ Δ)  (s : Sub Γ' Γ) (s' : Sub' Δ Γ') (ps' : Pshₛ s')
   → evalₛ s (wkSub' w s') ≡ wkSub' w (evalₛ s s')
 nat-evalₛ w []               s'        ps'
@@ -259,7 +280,24 @@ coh-substTm-evalₛ : (t : Tm Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
 coh-substTm-evalₛ (var x)     s₀ ps ps' s≋s' 
   = coh-substVar-evalₛ x s₀ ps ps' s≋s'
 coh-substTm-evalₛ (lam t)     s₀ {s} {s'} ps ps' s≋s' w {x = x} {y} px py x≋y
-  = {!!}
+  rewrite sym (nat-evalₛ w s₀ s' ps')
+  = trans-≋ {z =  eval (substTm (wkSub fresh s₀ `, var ze) t) (wkSub' w s' , y)}
+      ((subst (λ z → _ ≋ eval t (z , y))
+        (trans
+          (cong (evalₛ s₀) (sym (trimSub'PresId _)))
+          (sym (coh-trimSub'-wkSub fresh s₀ (wkSub' w s' , y))))
+        (fund t
+          (psh-evalₛ s₀ _ (wkSub'PresPsh w s' ps') , px)
+          (psh-evalₛ s₀ _ (wkSub'PresPsh w s' ps') , py)
+          (fundₛ s₀
+            (wkSub'PresPsh w s' ps')
+            (wkSub'PresPsh w s' ps')
+            (wkSub'Pres≋ w ((pseudo-refl-≋ₛ {s = s'} (sym-≋ₛ s≋s')))) `, x≋y))))
+      ((coh-substTm-evalₛ t
+        (keepₛ s₀)
+        (wkSub'PresPsh w s ps , px)
+        (wkSub'PresPsh w s' ps' , py)
+        (wkSub'Pres≋ w s≋s' `, x≋y)))
 coh-substTm-evalₛ (app t u)  s₀ ps ps' s≋s'
   = coh-substTm-evalₛ t s₀ ps ps' s≋s' idWk
       (psh-eval u _ (psh-evalₛ s₀ _ ps'))
@@ -363,3 +401,15 @@ sound-red* {t = t} {t' = .t} ε        ps ps' s≋s'
 sound-red* {a = a} {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
   = trans-≋ {a = a} (sound-red r ps ps' s≋s') (sound-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s'))) 
 
+-- soundness of conversion
+sound-conv : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
+  → t ≈ t'
+  → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
+sound-conv {t = t} ε ps ps' s≋s'
+  = sound-red* {t = t} (zero refl) ps ps' s≋s'
+sound-conv {a = a} (inj₁ r ◅ t≈t') ps ps' s≋s'
+  = trans-≋ {a = a} (sound-red r ps ps' s≋s') (sound-conv t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
+sound-conv {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s≋s'
+  = trans-≋ {a = a}
+      (sym-≋ {y = eval t s} (sound-red r ps' ps (sym-≋ₛ s≋s')))
+      (sound-conv t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))

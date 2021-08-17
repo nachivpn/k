@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 module IK.Soundness.Presheaf where
 
 open import Data.Unit  using (⊤ ; tt)
@@ -15,7 +14,7 @@ postulate
 
   funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g
-
+  
 -----------------------------
 -- Presheaf refinement of Tm'
 -----------------------------

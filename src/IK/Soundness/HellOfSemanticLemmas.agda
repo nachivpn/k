@@ -7,11 +7,15 @@ open import Relation.Binary.PropositionalEquality
 import Context
 open import IK.Term
 open import IK.Norm
-open import IK.Reduction
-open import IK.Conversion
-open import IK.Soundness.Presheaf
 open import IK.HellOfSyntacticLemmas
 
+postulate
+  funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
+          → ((x : A) → f x ≡ g x) → f ≡ g
+
+  funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
+          → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g
+          
 -- semantic counterpart of trimSub
 trimSub' : Γ' ≤ Γ → Sub'- Γ' →̇ Sub'- Γ
 trimSub' base      tt         = tt

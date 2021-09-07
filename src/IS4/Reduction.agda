@@ -31,7 +31,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → unbox (box t) e ⟶ substTm (lock idₛ e) t
 
   exp-box : {t : Tm Γ (◻ a)}
-    → t ⟶ box (unbox t (ext🔒 _ nil))
+    → t ⟶ box (unbox t (ext🔒- nil))
 
   cong-lam : {t t' : Tm (Γ `, a) b}
     → t ⟶ t'

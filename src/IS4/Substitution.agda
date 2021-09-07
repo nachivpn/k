@@ -7,11 +7,10 @@ module IS4.Substitution (Ty : Set)
   (wkTm  : ∀ {Γ' Γ a} → I≤ Ty Γ' Γ → Tm Γ a → Tm Γ' a)
   where
 
-open import Data.Unit using (tt)
 open import Data.Product
 open import Relation.Binary.PropositionalEquality
 
-open import Context Ty
+open import Context Ty hiding (ext🔒)
 
 private
   variable
@@ -24,7 +23,7 @@ private
 data Sub : Ctx → Ctx → Set where
   []   : Sub Δ []
   _`,_ : Sub Δ Γ → Tm Δ a → Sub Δ (Γ `, a)
-  lock : Sub ΔL Γ → Ext tt Δ ΔL ΔR → Sub Δ (Γ 🔒)
+  lock : Sub ΔL Γ → CExt Δ ΔL ΔR → Sub Δ (Γ 🔒)
 
 -- composition operation for weakening after substituion
 trimSub : Γ ≤ Δ → Sub Γ' Γ → Sub Γ' Δ
@@ -48,7 +47,7 @@ wkSub w (lock s e)  = lock (wkSub (factor2≤ e w) s) (factor2Ext e w)
 idₛ : Sub Γ Γ
 idₛ {[]}     = []
 idₛ {Γ `, x} = wkSub fresh idₛ `, (var ze)
-idₛ {Γ 🔒}    = lock (idₛ {Γ}) (ext🔒 tt nil)
+idₛ {Γ 🔒}    = lock (idₛ {Γ}) (ext🔒- nil)
 
 -- NOTE: composition requires parallel substituion for terms
 
@@ -65,9 +64,9 @@ embWk : Γ ≤ Δ → Sub Γ Δ
 embWk base      = []
 embWk (drop w)  = dropₛ (embWk w)
 embWk (keep w)  = keepₛ (embWk w)
-embWk (keep🔒 w) = lock (embWk w) (ext🔒 tt nil)
+embWk (keep🔒 w) = lock (embWk w) (ext🔒- nil)
 
-ExtToSub : Ext tt Γ ΓL ΓR → Sub Γ (ΓL 🔒)
+ExtToSub : CExt Γ ΓL ΓR → Sub Γ (ΓL 🔒)
 ExtToSub e = lock idₛ e
 
 --------------------

@@ -61,7 +61,6 @@ data Lock (A : Ctx → Set) : Ctx → Set where
   lock : A ΓL → CExt Γ ΓL ΓR  → Lock A Γ
 
 -- interpretation of types
-
 Tm' : Ctx → Ty → Set
 Tm' Γ  𝕓       = Nf Γ 𝕓
 Tm' Γ  (a ⇒ b) = {Γ' : Ctx} → Γ' ≤ Γ → (Tm' Γ' a → Tm' Γ' b)
@@ -111,9 +110,9 @@ reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
 reflect {a = ◻ a} n  = λ e → reflect (unbox n e)
 
 -- reify values to normal forms
-reify {a = 𝕓}     x   = x
-reify {a = a ⇒ b} x   = lam (reify (x (drop idWk) (reflect (var ze))))
-reify {a = ◻ a}  bx  = box (reify (bx (ext🔒- nil)))
+reify {a = 𝕓}     x  = x
+reify {a = a ⇒ b} x  = lam (reify (x (drop idWk) (reflect (var ze))))
+reify {a = ◻ a}  bx = box (reify (bx (ext🔒- nil)))
 
 -- identity substitution
 idₛ' : Sub' Γ Γ

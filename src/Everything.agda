@@ -21,7 +21,7 @@ import IK.Completeness.Trace
 import IK.Completeness.Completeness
 
 import IS4.Substitution
---import IS4.Conversion
+import IS4.Conversion
 --import IS4.HellOfSyntacticLemmas
 import IS4.Norm
 --import IS4.Reduction

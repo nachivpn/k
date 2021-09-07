@@ -42,7 +42,7 @@ wkNf : Γ' ≤ Γ → Nf Γ a → Nf Γ' a
 
 wkNe w (var x)      = var (wkVar w x)
 wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
-wkNe w (unbox n e)  = unbox (wkNe (sliceLeftG e w) n) (wkExt e w)
+wkNe w (unbox n e)  = unbox (wkNe (factor2≤ e w) n) (factor2Ext e w)
 
 wkNf e (up𝕓 x) = up𝕓 (wkNe e x)
 wkNf e (lam n) = lam (wkNf (keep e) n)
@@ -77,13 +77,13 @@ Sub' Δ (Γ 🔒)    = Lock (λ Γ' → Sub' Γ' Γ) Δ
 wkTm' : Γ' ≤ Γ → Tm' Γ a → Tm' Γ' a
 wkTm' {a = 𝕓}     w n  = wkNf w n
 wkTm' {a = a ⇒ b} w f  = λ w' y → f (w ∙ w') y
-wkTm' {a = ◻ a}  w bx = λ e → {!!}
+wkTm' {a = ◻ a}  w bx = λ e → wkTm' (factor1≤ e w) (bx (factor1Ext e w))
 
 -- substitutions in the model can be weakened
 wkSub' : Γ' ≤ Γ → Sub' Γ Δ → Sub' Γ' Δ
 wkSub' {Δ = []}     w tt          = tt
 wkSub' {Δ = Δ `, a} w (s , x)     = wkSub' w s , wkTm' w x
-wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (sliceLeftG e w) s) (wkExt e w)
+wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (factor2≤ e w) s) (factor2Ext e w)
 
 -- semantic counterpart of `unbox` from `Tm`
 unbox' : Tm' ΓL (◻ a) → Ext tt Γ ΓL ΓR → Tm' Γ a

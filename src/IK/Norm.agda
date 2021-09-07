@@ -1,4 +1,4 @@
-\module IK.Norm where
+module IK.Norm where
 
 open import Data.Unit  using (⊤ ; tt)
 open import Data.Product  using (Σ ; _×_ ; _,_)

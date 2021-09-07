@@ -42,7 +42,7 @@ substVar (s `, t) (su x) = substVar s x
 wkSub : Γ' ≤ Γ → Sub Γ Δ → Sub Γ' Δ
 wkSub w []          = []
 wkSub w (s `, t)    = (wkSub w s) `, wkTm w t
-wkSub w (lock s e)  = lock (wkSub (sliceLeftG e w) s) (wkExt e w)
+wkSub w (lock s e)  = lock (wkSub (factor2≤ e w) s) (factor2Ext e w)
 
 -- identity substitution
 idₛ : Sub Γ Γ

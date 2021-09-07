@@ -40,7 +40,7 @@ wkTm w (var x)     = var (wkVar w x)
 wkTm w (lam t)     = lam (wkTm (keep w) t)
 wkTm w (app t u)   = app (wkTm w t) (wkTm w u)
 wkTm w (box t)     = box (wkTm (keep🔒 w) t)
-wkTm w (unbox t e) = unbox (wkTm (sliceLeftG e w) t) (wkExt e w)
+wkTm w (unbox t e) = unbox (wkTm (factor2≤ e w) t) (factor2Ext e w)
 
 open import IS4.Substitution Ty Tm var wkTm public
 

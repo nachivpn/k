@@ -1,7 +1,8 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 module Context (Ty : Set) where
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; cong ; cong₂ ; sym ; trans ; subst)
+  using (_≡_ ; cong ; cong₂ ; sym ; trans ; subst )
 
 open _≡_
 
@@ -296,45 +297,108 @@ sliceRight e w = LFExtTo≤ (wkLFExt e w)
 -- Operations on general extensions
 -----------------------------------
 
-←,, : Ext θ Γ ΓL ΓR → Γ' ≤ Γ → Ctx
-←,, {Γ = Γ}      {Γ' = Γ'}       nil        w
+module carlostome/k/src/IS4/Term-agda where
+
+  private
+
+    _⊑_ = λ Γ Δ → ∃ λ Γ' → Ext tt Δ Γ Γ'
+
+    pattern nil'       = _ , nil
+    pattern ext' e     = _ , ext e
+    pattern ext🔒' f e = _ , ext🔒 f e
+
+    open import Relation.Binary hiding (_⇒_)
+
+    ⊑-refl : Reflexive _⊑_
+    ⊑-refl = nil'
+
+    ⊑-trans : Transitive _⊑_
+    ⊑-trans (_ , Γ⊑Δ) (_ , Δ⊑Ε) = _ , extRAssoc Γ⊑Δ Δ⊑Ε
+
+    factor1 : Γ ⊑ Δ → Γ ≤ Γ' → ∃ λ Δ' → Δ ≤ Δ' × Γ' ⊑ Δ'
+    factor1 nil'           Γ'≤Γ
+      = _ , Γ'≤Γ , nil'
+    factor1 (ext' Γ⊑Δ)     Γ'≤Γ with factor1 (_ , Γ⊑Δ) Γ'≤Γ
+    ... | Δ' , Δ'≤Δ , Γ'⊑Δ'
+      = Δ' , drop Δ'≤Δ , Γ'⊑Δ'
+    factor1 (ext🔒' _ Γ⊑Δ) Γ'≤Γ with factor1 (_ , Γ⊑Δ) Γ'≤Γ
+    ... | Δ' , Δ'≤Δ , Γ'⊑Δ'
+      = (Δ' 🔒) , keep🔒 Δ'≤Δ , ⊑-trans Γ'⊑Δ' (ext🔒' tt extRId)
+
+    factor2 : Γ ⊑ Δ → Δ' ≤ Δ → ∃ λ Γ' → Γ' ≤ Γ × Γ' ⊑ Δ'
+    factor2 nil'           Δ≤Δ'
+      = _ , Δ≤Δ' , nil'
+    factor2 (ext' Γ⊑Δ)     Δ≤Δ'
+      = factor2 (_ , Γ⊑Δ) (fresh ∙ Δ≤Δ')
+    factor2 (ext🔒' _ Γ⊑Δ) Δ≤Δ' with factor2 (_ , Γ⊑Δ) (sliceLeft extRId Δ≤Δ')
+    ... | Γ' , Γ≤Γ' , Γ'⊑Δ'
+      = Γ' , Γ≤Γ' , ⊑-trans Γ'⊑Δ' (⊑-trans (ext🔒' tt extRId) (_ , upExt (wkLFExt extRId Δ≤Δ')))
+
+-- f1LRCtx e w == proj₁ (factor1 (_ , e) w)
+f1LRCtx : Ext tt Δ Γ ΓR → Γ ≤ Γ' → Ctx
+f1LRCtx {Γ' = Γ'} nil        w = Γ'
+f1LRCtx           (ext e)    w = f1LRCtx e w
+f1LRCtx           (ext🔒 x e) w = (f1LRCtx e w) 🔒
+
+-- f1RCtx e w == proj₁ (proj₂ (proj₂ (factor1 (_ , e) w)))
+f1RCtx : Ext tt Δ Γ ΓR → Γ ≤ Γ' → Ctx
+f1RCtx {Γ' = Γ'} nil        w = []
+f1RCtx           (ext e)    w = f1RCtx e w
+f1RCtx           (ext🔒 x e) w = (f1RCtx e w) 🔒
+
+--
+factor1Ext : (e : Ext tt Δ Γ ΓR) → (w : Γ ≤ Γ') → Ext tt (f1LRCtx e w) Γ' (f1RCtx e w)
+factor1Ext nil        w = nil
+factor1Ext (ext e)    w = factor1Ext e w
+factor1Ext (ext🔒 x e) w = ext🔒 _ (factor1Ext e w)
+
+--
+factor1≤ : (e : Ext tt Δ Γ ΓR) → (w : Γ ≤ Γ') → Δ ≤ (f1LRCtx e w)
+factor1≤ nil        w = w
+factor1≤ (ext e)    w = drop (factor1≤ e w)
+factor1≤ (ext🔒 x e) w = keep🔒 (factor1≤ e w)
+
+-- f2LCtx e w == proj₁ (factor2 (_ , e) w)
+f2LCtx : Ext θ Γ ΓL ΓR → Γ' ≤ Γ → Ctx
+f2LCtx {Γ = Γ}      {Γ' = Γ'}       nil        w
   = Γ'
-←,, {Γ = Γ `, a} {Γ' = Γ' `, b}  (ext e)    (drop w)
-  = ←,, e (fresh {Γ}  ∙ w)
-←,, {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)    (keep w)
-  = ←,, e w
-←,, {Γ = Γ 🔒} {Γ' = Γ' `, a}     (ext🔒 f e) (drop w)
-  = ←,,  (ext🔒 f e) w
-←,, {Γ = Γ 🔒} {Γ' = Γ' 🔒}        (ext🔒 f e) (keep🔒 w)
-  = ←,, e w
+f2LCtx {Γ = Γ `, a} {Γ' = Γ' `, b}  (ext e)    (drop w)
+  = f2LCtx e (fresh {Γ}  ∙ w)
+f2LCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)    (keep w)
+  = f2LCtx e w
+f2LCtx {Γ = Γ 🔒} {Γ' = Γ' `, a}     (ext🔒 f e) (drop w)
+  = f2LCtx  (ext🔒 f e) w
+f2LCtx {Γ = Γ 🔒} {Γ' = Γ' 🔒}        (ext🔒 f e) (keep🔒 w)
+  = f2LCtx e w
 
-,,→ : Ext θ Γ ΓL ΓR → Γ' ≤ Γ → Ctx
-,,→  {Γ = Γ}     {Γ' = Γ'}      nil        w
+-- f2LCtx e w == proj₁ (proj₂ (proj₂ (factor2 (_ , e) w)))
+f2RCtx : Ext θ Γ ΓL ΓR → Γ' ≤ Γ → Ctx
+f2RCtx  {Γ = Γ}     {Γ' = Γ'}      nil        w
   = []
-,,→ {Γ = Γ `, a} {Γ' = Γ' `, b} (ext e)    (drop w)
-  = ,,→ e (fresh ∙ w) `, b
-,,→ {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)   (keep w)
-  = ,,→ e w `, a
-,,→ {Γ = Γ 🔒}    {Γ' = Γ' `, a} (ext🔒 f e) (drop  {a = a} w)
-  = ,,→ (ext🔒 f e) w `, a
-,,→ {Γ = Γ 🔒}    {Γ' = Γ' 🔒}    (ext🔒 f e) (keep🔒 w)
-  = (,,→ e w) 🔒
+f2RCtx {Γ = Γ `, a} {Γ' = Γ' `, b} (ext e)    (drop w)
+  = f2RCtx e (fresh ∙ w) `, b
+f2RCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)   (keep w)
+  = f2RCtx e w `, a
+f2RCtx {Γ = Γ 🔒}    {Γ' = Γ' `, a} (ext🔒 f e) (drop  {a = a} w)
+  = f2RCtx (ext🔒 f e) w `, a
+f2RCtx {Γ = Γ 🔒}    {Γ' = Γ' 🔒}    (ext🔒 f e) (keep🔒 w)
+  = (f2RCtx e w) 🔒
 
--- weaken the extension of a context
-wkExt : (e : Ext θ Γ ΓL ΓR) → (w : Γ' ≤ Γ) → Ext θ Γ' (←,, e w) (,,→ e w)
-wkExt nil        w         = nil
-wkExt (ext e)    (drop w)  = ext (wkExt e (fresh ∙ w))
-wkExt (ext  e)   (keep w)  = ext (wkExt e w)
-wkExt (ext🔒 f e) (drop w)  = ext (wkExt (ext🔒 f e) w)
-wkExt (ext🔒 f e) (keep🔒 w) = ext🔒 f (wkExt e w)
+--
+factor2Ext : (e : Ext θ Γ ΓL ΓR) → (w : Γ' ≤ Γ) → Ext θ Γ' (f2LCtx e w) (f2RCtx e w)
+factor2Ext nil        w         = nil
+factor2Ext (ext e)    (drop w)  = ext (factor2Ext e (fresh ∙ w))
+factor2Ext (ext  e)   (keep w)  = ext (factor2Ext e w)
+factor2Ext (ext🔒 f e) (drop w)  = ext (factor2Ext (ext🔒 f e) w)
+factor2Ext (ext🔒 f e) (keep🔒 w) = ext🔒 f (factor2Ext e w)
 
--- sliceLeft for general extensions
-sliceLeftG : (e : Ext θ Γ ΓL ΓR) → (w : Γ' ≤ Γ) → (←,, e w) ≤ ΓL
-sliceLeftG nil        w         = w
-sliceLeftG (ext e)    (drop w)  = sliceLeftG e (fresh ∙ w)
-sliceLeftG (ext e)    (keep w)  = sliceLeftG e w
-sliceLeftG (ext🔒 f e) (drop w)  = sliceLeftG (ext🔒 f e) w
-sliceLeftG (ext🔒 f e) (keep🔒 w) = sliceLeftG e w
+--
+factor2≤ : (e : Ext θ Γ ΓL ΓR) → (w : Γ' ≤ Γ) → (f2LCtx e w) ≤ ΓL
+factor2≤ nil        w         = w
+factor2≤ (ext e)    (drop w)  = factor2≤ e (fresh ∙ w)
+factor2≤ (ext e)    (keep w)  = factor2≤ e w
+factor2≤ (ext🔒 f e) (drop w)  = factor2≤ (ext🔒 f e) w
+factor2≤ (ext🔒 f e) (keep🔒 w) = factor2≤ e w
 
 
 ----------------------------------------

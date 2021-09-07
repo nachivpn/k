@@ -1,9 +1,9 @@
-\module IK.Norm where
+module IS4.Norm where
 
 open import Data.Unit  using (⊤ ; tt)
 open import Data.Product  using (Σ ; _×_ ; _,_)
 
-open import IK.Term
+open import IS4.Term
 
 ---------------
 -- Normal forms
@@ -15,7 +15,7 @@ data Nf : Ctx → Ty → Set
 data Ne where
   var   : Var Γ a → Ne Γ a
   app   : Ne Γ (a ⇒ b) → Nf Γ a → Ne Γ b
-  unbox : Ne ΓL (◻ a) → LFExt Γ (ΓL 🔒) ΓR → Ne Γ a
+  unbox : Ne ΓL (◻ a) → Ext tt Γ ΓL ΓR → Ne Γ a
 
 data Nf where
   up𝕓 : Ne Γ 𝕓 → Nf Γ 𝕓
@@ -42,7 +42,7 @@ wkNf : Γ' ≤ Γ → Nf Γ a → Nf Γ' a
 
 wkNe w (var x)      = var (wkVar w x)
 wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
-wkNe w (unbox n e)  = unbox (wkNe (sliceLeft e w) n) (wkLFExt e w)
+wkNe w (unbox n e)  = unbox (wkNe (sliceLeftG e w) n) (wkExt e w)
 
 wkNf e (up𝕓 x) = up𝕓 (wkNe e x)
 wkNf e (lam n) = lam (wkNf (keep e) n)
@@ -56,21 +56,16 @@ wkNf e (box n) = box (wkNf (keep🔒 e) n)
 _→̇_ : (Ctx → Set) → (Ctx → Set) → Set
 _→̇_ A B = {Δ : Ctx} → A Δ → B Δ
 
--- semantic counterpart of `box` from `Tm`
-data Box (A : Ctx → Set) : Ctx → Set where
-  box : A (Γ 🔒) → Box A Γ
-
 -- semantic counterpart of `lock` from `Sub`
 data Lock (A : Ctx → Set) : Ctx → Set where
-  lock : A ΓL → LFExt Γ (ΓL 🔒) ΓR  → Lock A Γ
-  -- equivalently, `lock : 🔒-free Γ' → A Γ → Lock A (Γ 🔒 ,, Γ')`
+  lock : A ΓL → Ext tt Γ ΓL ΓR  → Lock A Γ
 
 -- interpretation of types
 
 Tm' : Ctx → Ty → Set
-Tm' Γ 𝕓       = Nf Γ 𝕓
-Tm' Γ (a ⇒ b) = {Γ' : Ctx} → Γ' ≤ Γ → (Tm' Γ' a → Tm' Γ' b)
-Tm' Γ (◻ a)   = Box (λ Γ' → Tm' Γ' a) Γ
+Tm' Γ  𝕓       = Nf Γ 𝕓
+Tm' Γ  (a ⇒ b) = {Γ' : Ctx} → Γ' ≤ Γ → (Tm' Γ' a → Tm' Γ' b)
+Tm' ΓL (◻ a)  = {Γ ΓR : Ctx} → Ext tt Γ ΓL ΓR → Tm' Γ a
 
 -- interpretation of contexts
 Sub' : Ctx → Ctx → Set
@@ -80,19 +75,19 @@ Sub' Δ (Γ 🔒)    = Lock (λ Γ' → Sub' Γ' Γ) Δ
 
 -- values in the model can be weakened
 wkTm' : Γ' ≤ Γ → Tm' Γ a → Tm' Γ' a
-wkTm' {a = 𝕓}     e n       = wkNf e n
-wkTm' {a = a ⇒ b} e f       = λ e' y → f (e ∙ e') y
-wkTm' {a = ◻ a}   e (box x) = box (wkTm' (keep🔒 e) x)
+wkTm' {a = 𝕓}     w n  = wkNf w n
+wkTm' {a = a ⇒ b} w f  = λ w' y → f (w ∙ w') y
+wkTm' {a = ◻ a}  w bx = λ e → {!!}
 
 -- substitutions in the model can be weakened
 wkSub' : Γ' ≤ Γ → Sub' Γ Δ → Sub' Γ' Δ
 wkSub' {Δ = []}     w tt          = tt
 wkSub' {Δ = Δ `, a} w (s , x)     = wkSub' w s , wkTm' w x
-wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (sliceLeft e w) s) (wkLFExt e w)
+wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (sliceLeftG e w) s) (wkExt e w)
 
 -- semantic counterpart of `unbox` from `Tm`
-unbox' : Box (λ Δ → Tm' Δ a) ΓL → LFExt Γ (ΓL 🔒) ΓR → Tm' Γ a
-unbox' (box x) e = wkTm' (LFExtTo≤ e) x
+unbox' : Tm' ΓL (◻ a) → Ext tt Γ ΓL ΓR → Tm' Γ a
+unbox' bx e = bx e
 
 -------------------------
 -- Normalization function
@@ -113,33 +108,51 @@ reflect : Ne Γ a  → Tm' Γ a
 -- interpretation of neutrals
 reflect {a = 𝕓} n     = up𝕓 n
 reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
-reflect {a = ◻ a} n   = box (reflect (unbox n nil))
+reflect {a = ◻ a} n  = λ e → reflect (unbox n e)
 
 -- reify values to normal forms
-reify {a = 𝕓}     x       = x
-reify {a = a ⇒ b} x       = lam (reify (x (drop idWk) (reflect (var ze))))
-reify {a = ◻ a}   (box x) = box (reify x)
-
+reify {a = 𝕓}     x   = x
+reify {a = a ⇒ b} x   = lam (reify (x (drop idWk) (reflect (var ze))))
+reify {a = ◻ a}  bx  = box (reify (bx (ext🔒 _ nil)))
 
 -- identity substitution
 idₛ' : Sub' Γ Γ
 idₛ' {[]}     = tt
 idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , reflect (var ze)
-idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) nil
+idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) (ext🔒 _ nil)
 
 -- interpretation of variables
 substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
 substVar' ze     (_ , x) = x
 substVar' (su x) (γ , _) = substVar' x γ
 
+import Context as C
+import IS4.Substitution as S
+
 -- interpretation of terms
 eval : Tm Γ a → (Sub'- Γ →̇ Tm'- a)
-eval (var x)           s           = substVar' x s
-eval (lam t)           s           = λ e x → eval t (wkSub' e s , x)
-eval (app t u)         s           = (eval t s) idWk (eval u s)
-eval (box t)           s           = box (eval t (lock s nil))
-eval (unbox t nil)     (lock s e') = unbox' (eval t s) e'
-eval (unbox t (ext e)) (s , _)     = eval (unbox t e) s
+eval (var x)              s
+  = substVar' x s
+eval (lam t)              s
+  = λ e x → eval t (wkSub' e s , x)
+eval (app t u)            s
+  = (eval t s) idWk (eval u s)
+eval (box t)              s
+  = λ e → eval t (lock s e)
+eval (unbox t nil)        s
+  = unbox' (eval t s) nil
+eval (unbox t (ext e))    (s , _)
+  = eval (unbox t e) s
+eval (unbox t (C.ext🔒 f e)) (lock s C.nil)
+  = eval (unbox t e) s
+eval (unbox t (C.ext🔒 f e)) (lock s (C.ext e'))
+  = wkTm' fresh (eval (unbox t (ext🔒 _ e)) (lock s e'))
+eval (unbox t (C.ext🔒 f C.nil)) (lock s (C.ext🔒 x e'))
+  = unbox' (eval t s) (ext🔒 tt e')
+eval (unbox t (C.ext🔒 f (C.ext e))) (lock (s , _) (C.ext🔒 x e'))
+  = eval (unbox t (ext🔒 tt e)) (lock s (ext🔒 f e'))
+eval (unbox t (ext🔒 f (C.ext🔒 _ e))) (lock (lock s e'') (C.ext🔒 _ e'))
+  = eval (unbox t (ext🔒 _ e)) (lock s (ext🔒 _ (extRAssoc e'' e')))
 
 -- retraction of interpretation
 quot : (Sub'- Γ →̇ Tm'- a) → Nf Γ a
@@ -148,7 +161,6 @@ quot f = reify (f idₛ')
 -- normalization function
 norm : Tm Γ a → Nf Γ a
 norm t = quot (eval t)
-
 
 ----------------------------------
 -- Normalization for substitutions
@@ -160,7 +172,7 @@ norm t = quot (eval t)
 data Nfₛ : Ctx → Ctx → Set where
   []   : Nfₛ Γ []
   _`,_ : Nfₛ Γ Δ → Nf Γ a → Nfₛ Γ (Δ `, a)
-  lock : Nfₛ ΔL Γ → LFExt Δ (ΔL 🔒) ΔR → Nfₛ Δ (Γ 🔒)
+  lock : Nfₛ ΔL Γ → Ext tt Δ ΔL ΔR → Nfₛ Δ (Γ 🔒)
 
 -- embeddding of substitution normal forms back into substitutions
 embNfₛ : Nfₛ Γ Δ → Sub Γ Δ
@@ -173,10 +185,20 @@ Nfₛ- Δ Γ = Nfₛ Γ Δ
 
 -- interpretation of substitutions
 evalₛ : Sub Γ Δ → Sub'- Γ  →̇ Sub'- Δ
-evalₛ []               s'          = tt
-evalₛ (s `, t)         s'          = (evalₛ s s') , eval t s'
-evalₛ (lock s nil)     (lock s' e) = lock (evalₛ s s') e
-evalₛ (lock s (ext e)) (s' , _)    = evalₛ (lock s e) s'
+evalₛ []                                 s'
+  = tt
+evalₛ (s `, t)                           s'
+  = (evalₛ s s') , eval t s'
+evalₛ (lock s nil)                       s'
+  = lock (evalₛ s s') nil
+evalₛ (lock s (ext e))                   (s' , _)
+  = evalₛ (lock s e) s'
+evalₛ (S.lock s (C.ext🔒 f C.nil))        (lock s' e')
+  = lock (evalₛ s s') e'
+evalₛ (S.lock s (C.ext🔒 f (C.ext e)))    (lock (s' , _) e')
+  = evalₛ (lock s (ext🔒 tt e)) (lock s' e')
+evalₛ (S.lock s (C.ext🔒 f (C.ext🔒 x e))) (lock (lock s' e'') e')
+  = evalₛ (lock s (ext🔒 tt e)) (lock s' (extRAssoc e'' e'))
 
 -- retraction of evalₛ
 quotₛ : Sub'- Γ →̇ Nfₛ- Γ

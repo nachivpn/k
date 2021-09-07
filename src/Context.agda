@@ -1,7 +1,7 @@
 module Context (Ty : Set) where
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; cong ; cong₂ ; sym ; trans)
+  using (_≡_ ; cong ; cong₂ ; sym ; trans ; subst)
 
 open _≡_
 
@@ -262,6 +262,10 @@ extRAssoc el nil         = el
 extRAssoc el (ext er)    = ext (extRAssoc el er)
 extRAssoc el (ext🔒 x er) = ext🔒 x (extRAssoc el er)
 
+-------------------------------------
+-- Operations on lock-free extensions
+-------------------------------------
+
 -- weaken the extension of a context
 wkLFExt : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ' ≤ Γ → LFExt Γ' ((←🔒 Γ') 🔒) (🔒→ Γ')
 wkLFExt e       (drop w)  = ext (wkLFExt e w)
@@ -288,9 +292,54 @@ sliceRight e w = LFExtTo≤ (wkLFExt e w)
 🔒→isPost🔒 nil     = refl
 🔒→isPost🔒 (ext e) = cong (_`, _) (🔒→isPost🔒 e)
 
----------------
--- Slicing laws
----------------
+-----------------------------------
+-- Operations on general extensions
+-----------------------------------
+
+←,, : Ext θ Γ ΓL ΓR → Γ' ≤ Γ → Ctx
+←,, {Γ = Γ}      {Γ' = Γ'}       nil        w
+  = Γ'
+←,, {Γ = Γ `, a} {Γ' = Γ' `, b}  (ext e)    (drop w)
+  = ←,, e (fresh {Γ}  ∙ w)
+←,, {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)    (keep w)
+  = ←,, e w
+←,, {Γ = Γ 🔒} {Γ' = Γ' `, a}     (ext🔒 f e) (drop w)
+  = ←,,  (ext🔒 f e) w
+←,, {Γ = Γ 🔒} {Γ' = Γ' 🔒}        (ext🔒 f e) (keep🔒 w)
+  = ←,, e w
+
+,,→ : Ext θ Γ ΓL ΓR → Γ' ≤ Γ → Ctx
+,,→  {Γ = Γ}     {Γ' = Γ'}      nil        w
+  = []
+,,→ {Γ = Γ `, a} {Γ' = Γ' `, b} (ext e)    (drop w)
+  = ,,→ e (fresh ∙ w) `, b
+,,→ {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)   (keep w)
+  = ,,→ e w `, a
+,,→ {Γ = Γ 🔒}    {Γ' = Γ' `, a} (ext🔒 f e) (drop  {a = a} w)
+  = ,,→ (ext🔒 f e) w `, a
+,,→ {Γ = Γ 🔒}    {Γ' = Γ' 🔒}    (ext🔒 f e) (keep🔒 w)
+  = (,,→ e w) 🔒
+
+-- weaken the extension of a context
+wkExt : (e : Ext θ Γ ΓL ΓR) → (w : Γ' ≤ Γ) → Ext θ Γ' (←,, e w) (,,→ e w)
+wkExt nil        w         = nil
+wkExt (ext e)    (drop w)  = ext (wkExt e (fresh ∙ w))
+wkExt (ext  e)   (keep w)  = ext (wkExt e w)
+wkExt (ext🔒 f e) (drop w)  = ext (wkExt (ext🔒 f e) w)
+wkExt (ext🔒 f e) (keep🔒 w) = ext🔒 f (wkExt e w)
+
+-- sliceLeft for general extensions
+sliceLeftG : (e : Ext θ Γ ΓL ΓR) → (w : Γ' ≤ Γ) → (←,, e w) ≤ ΓL
+sliceLeftG nil        w         = w
+sliceLeftG (ext e)    (drop w)  = sliceLeftG e (fresh ∙ w)
+sliceLeftG (ext e)    (keep w)  = sliceLeftG e w
+sliceLeftG (ext🔒 f e) (drop w)  = sliceLeftG (ext🔒 f e) w
+sliceLeftG (ext🔒 f e) (keep🔒 w) = sliceLeftG e w
+
+
+----------------------------------------
+-- Slicing laws for lock-free extensions
+----------------------------------------
 
 wkLFExtPres∙ : (w' : Δ ≤ Γ') (w  : Γ' ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR)
   → wkLFExt (wkLFExt e w) w' ≡ wkLFExt e (w ∙ w')

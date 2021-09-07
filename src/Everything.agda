@@ -1,8 +1,8 @@
 module Everything where
 
 import Context
-import Substitution
 
+import IK.Substitution
 import IK.Conversion
 import IK.HellOfSyntacticLemmas
 import IK.Norm

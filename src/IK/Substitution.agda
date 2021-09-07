@@ -1,7 +1,7 @@
 open import Context using ()
   renaming (Ctx to ICtx ; _≤_ to I≤ ; Var to IVar)
 
-module Substitution (Ty : Set)
+module IK.Substitution (Ty : Set)
   (Tm    : ICtx Ty → Ty → Set)
   (var   : ∀ {Γ a} → IVar Ty Γ a → Tm Γ a)
   (wkTm  : ∀ {Γ' Γ a} → I≤ Ty Γ' Γ → Tm Γ a → Tm Γ' a)

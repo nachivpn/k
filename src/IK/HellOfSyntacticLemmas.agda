@@ -49,7 +49,7 @@ wkNfPresId (lam n) = cong lam (wkNfPresId n)
 wkNfPresId (box n) = cong box (wkNfPresId n)
 
 -- weakening of terms (a functor map) preserves weakening composition
-wkTmPres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (t : Tm Γ a)
+wkTmPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (t : Tm Γ a)
   → wkTm w' (wkTm w t) ≡ wkTm (w ∙ w') t
 wkTmPres∙ w w' (var x)   = cong var (wkVarPres∙ w w' x)
 wkTmPres∙ w w' (lam t)   = cong lam (wkTmPres∙ (keep w) (keep w') t)
@@ -59,7 +59,7 @@ wkTmPres∙ w w' (unbox t e) = cong₂ unbox
   (trans (wkTmPres∙ _ _ _) (cong₂ wkTm (sliceLeftPres∙ w' w e) refl)) (wkLFExtPres∙  w' w e)
 
 -- weakening of substitutions preserves weakening compisition
-wkSubPres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (s : Sub Γ ΓR)
+wkSubPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (s : Sub Γ ΓR)
   → wkSub w' (wkSub w s) ≡ wkSub (w ∙ w') s
 wkSubPres∙ w w' []       = refl
 wkSubPres∙ w w' (s `, t) = cong₂ _`,_ (wkSubPres∙ w w' s) (wkTmPres∙ w w' t)
@@ -67,9 +67,9 @@ wkSubPres∙ w w' (lock s e) = cong₂ lock
   (trans  (wkSubPres∙ _ _ s) (cong₂ wkSub (sliceLeftPres∙ w' w e) refl))
   (wkLFExtPres∙  w' w e)
 
-wkNePres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (n : Ne Γ a)
+wkNePres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (n : Ne Γ a)
   → wkNe w' (wkNe w n) ≡ wkNe (w ∙ w') n
-wkNfPres∙ : (w : Γ' ≤ Γ) (w' : Δ ≤ Γ') (n : Nf Γ a)
+wkNfPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (n : Nf Γ a)
   → wkNf w' (wkNf w n) ≡ wkNf (w ∙ w') n
 
 wkNePres∙ w w' (var x)     = cong var (wkVarPres∙ w w' x)
@@ -83,7 +83,7 @@ wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep🔒 w) (keep🔒 w') n)
 
 
 private
-  wkSubFreshLemma : {s : Sub Δ Γ} {w : Δ' ≤ Δ}
+  wkSubFreshLemma : {s : Sub Δ Γ} {w : Δ ⊆ Δ'}
     → wkSub (fresh {a = a}) (wkSub w s) ≡ wkSub (keep w) (dropₛ s)
   wkSubFreshLemma {s = s} {w} = trans (wkSubPres∙ w fresh s) (trans
     (cong₂ wkSub (cong drop (rightIdWk _)) refl )
@@ -91,7 +91,7 @@ private
       (wkSubPres∙ _ _ _)
       (cong₂ wkSub (cong drop (leftIdWk _)) refl))))
 
-nat-subsTm : (t : Tm Γ a) (s : Sub Δ Γ) (w : Δ' ≤ Δ)
+nat-subsTm : (t : Tm Γ a) (s : Sub Δ Γ) (w : Δ ⊆ Δ')
   → substTm (wkSub w s) t ≡ wkTm w (substTm s t)
 nat-subsTm (var x)           s          w
   = nat-substVar x s w
@@ -110,7 +110,7 @@ nat-subsTm (unbox t (ext x)) (s `, _)   w
 
 -- weakening a substitution composition is the same as weakening the first sub
 -- (s ∙ₛ s') ₛ∙ₑ w ≡ s ∙ₛ (s' ₛ∙ₑ w)
-coh-wkSub-∙ₛ  : {Δ'' : Ctx} (s : Sub Δ Γ) (s' : Sub Δ' Δ) (w : Δ'' ≤ Δ')
+coh-wkSub-∙ₛ  : {Δ'' : Ctx} (s : Sub Δ Γ) (s' : Sub Δ' Δ) (w : Δ' ⊆ Δ'')
          → wkSub w (s ∙ₛ s') ≡ s ∙ₛ (wkSub w s')
 coh-wkSub-∙ₛ [] s' w
   = refl
@@ -122,7 +122,7 @@ coh-wkSub-∙ₛ (lock s (ext x)) (s' `, x₁) w
   = coh-wkSub-∙ₛ (lock s x) s' w
 
 -- applying a trimmed substitution is the same as weakening and substituting
-coh-trimSub-wkTm : (t : Tm Γ a) (s : Sub Δ' Δ) (w : Δ ≤ Γ)
+coh-trimSub-wkTm : (t : Tm Γ a) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
   → substTm (trimSub w s) t ≡ substTm s (wkTm w t)
 coh-trimSub-wkTm (var x) s w
   = coh-trimSub-wkVar x s w
@@ -145,7 +145,7 @@ coh-trimSub-wkTm (unbox t nil) (lock s x) (keep🔒 w)
 
 -- trimming the first sub in a composition is the same as weakening the second
 -- s ∙ₛ (w ₑ∙ₛ s') ≡ (s ₛ∙ₑ w) ∙ₛ s'
-coh-trimSub-wkSub  : {Δ₁ : Ctx} (s : Sub Δ Γ) (s' : Sub Δ₁ Δ') (w : Δ' ≤ Δ)
+coh-trimSub-wkSub  : {Δ₁ : Ctx} (s : Sub Δ Γ) (s' : Sub Δ₁ Δ') (w : Δ ⊆ Δ')
          → s ∙ₛ (trimSub w s') ≡ (wkSub w s) ∙ₛ s'
 coh-trimSub-wkSub []       s' w
   = refl
@@ -258,9 +258,9 @@ assocSub (lock s3 (ext e)) (s2 `, _) s1
 
 private
   -- just a helper to reduce redundancy, nothing too interesting
-  auxLemma : (w : Δ ≤ Γ) → wkSub (drop {a = a} (w ∙ idWk)) idₛ ≡ dropₛ (embWk w)
+  auxLemma : (w : Γ ⊆ Δ) → wkSub (drop {a = a} (w ∙ idWk)) idₛ ≡ dropₛ (embWk w)
 
-wkSubId : (w : Δ ≤ Γ) → wkSub w idₛ ≡ embWk w
+wkSubId : (w : Γ ⊆ Δ) → wkSub w idₛ ≡ embWk w
 
 auxLemma w = (trans
     (sym (wkSubPres∙ w fresh idₛ))
@@ -286,9 +286,9 @@ wkSubId (keep🔒 w) = cong₂ lock (wkSubId w) refl
 
 -- the mutual brothers normal forms and neutrals who,
 -- as always, must be handled (mutually) together
-nat-embNe : (w : Γ' ≤ Γ) (n : Ne Γ a)
+nat-embNe : (w : Γ ⊆ Γ') (n : Ne Γ a)
   → wkTm w (embNe n) ≡ embNe (wkNe w n)
-nat-embNf : (w : Γ' ≤ Γ) (n : Nf Γ a)
+nat-embNf : (w : Γ ⊆ Γ') (n : Nf Γ a)
   → wkTm w (embNf n) ≡ embNf (wkNf w n)
 
 nat-embNf w (up𝕓 x) = nat-embNe w x
@@ -301,20 +301,20 @@ nat-embNe w (unbox n x) = cong₂ unbox (nat-embNe (sliceLeft x w) n) refl
 
 -- Outcast lemmas
 
-keepFreshLemma : {w : Γ' ≤ Γ} {t : Tm Γ a}
+keepFreshLemma : {w : Γ ⊆ Γ'} {t : Tm Γ a}
   → wkTm (fresh {a = b}) (wkTm w t) ≡ wkTm (keep w) (wkTm fresh t)
 keepFreshLemma = trans (wkTmPres∙ _ _ _) (sym (trans
     (wkTmPres∙ _ _ _)
     (cong₂ wkTm (cong drop (trans (leftIdWk _) (sym (rightIdWk _)))) refl)))
 
-sliceCompLemma : (w : Δ ≤ Γ) (e : LFExt Γ (ΓL 🔒) ΓR) (t : Tm (ΓL 🔒) a)
+sliceCompLemma : (w : Γ ⊆ Δ) (e : LFExt Γ (ΓL 🔒) ΓR) (t : Tm (ΓL 🔒) a)
   → wkTm (LFExtTo≤ (wkLFExt e w)) (wkTm (keep🔒 (sliceLeft e w)) t) ≡
       wkTm w (wkTm (LFExtTo≤ e) t)
 sliceCompLemma w e t = (trans (wkTmPres∙ _ _ _) (sym (trans
   (wkTmPres∙ _ _ _)
   (cong₂ wkTm (slicingLemma w e) refl))))
 
-beta-wk-lemma : (w  : Δ ≤ Γ) (u : Tm Γ a) (t : Tm (Γ `, a) b)
+beta-wk-lemma : (w  : Γ ⊆ Δ) (u : Tm Γ a) (t : Tm (Γ `, a) b)
   → substTm (idₛ `, wkTm w u) (wkTm (keep w) t) ≡ wkTm w (substTm (idₛ `, u) t)
 beta-wk-lemma w u t = trans
   (sym (coh-trimSub-wkTm t _ (keep w)))

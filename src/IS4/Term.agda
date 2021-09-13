@@ -34,7 +34,7 @@ data Tm : Ctx → Ty → Set where
         ----------------------------
         → Tm Γ a
 
-wkTm : Γ' ≤ Γ → Tm Γ a → Tm Γ' a
+wkTm : Γ ⊆ Γ' → Tm Γ a → Tm Γ' a
 wkTm w (var x)     = var (wkVar w x)
 wkTm w (lam t)     = lam (wkTm (keep w) t)
 wkTm w (app t u)   = app (wkTm w t) (wkTm w u)

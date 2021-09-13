@@ -1,10 +1,10 @@
 open import Context using ()
-  renaming (Ctx to ICtx ; _≤_ to I≤ ; Var to IVar)
+  renaming (Ctx to ICtx ; _⊆_ to I⊆ ; Var to IVar)
 
 module IK.Substitution (Ty : Set)
   (Tm    : ICtx Ty → Ty → Set)
   (var   : ∀ {Γ a} → IVar Ty Γ a → Tm Γ a)
-  (wkTm  : ∀ {Γ' Γ a} → I≤ Ty Γ' Γ → Tm Γ a → Tm Γ' a)
+  (wkTm  : ∀ {Γ' Γ a} → I⊆ Ty Γ Γ' → Tm Γ a → Tm Γ' a)
   where
 
 open import Relation.Binary.PropositionalEquality
@@ -25,7 +25,7 @@ data Sub : Ctx → Ctx → Set where
   lock : Sub ΔL Γ → LFExt Δ (ΔL 🔒) ΔR → Sub Δ (Γ 🔒)
 
 -- composition operation for weakening after substituion
-trimSub : Γ ≤ Δ → Sub Γ' Γ → Sub Γ' Δ
+trimSub : Δ ⊆ Γ → Sub Γ' Γ → Sub Γ' Δ
 trimSub base      []         = []
 trimSub (drop w)  (s `, x)   = trimSub w s
 trimSub (keep w)  (s `, x)   = (trimSub w s) `, x
@@ -37,7 +37,7 @@ substVar (s `, t) ze     = t
 substVar (s `, t) (su x) = substVar s x
 
 -- weaken a substitution
-wkSub : Γ' ≤ Γ → Sub Γ Δ → Sub Γ' Δ
+wkSub : Γ ⊆ Γ' → Sub Γ Δ → Sub Γ' Δ
 wkSub w []          = []
 wkSub w (s `, t)    = (wkSub w s) `, wkTm w t
 wkSub w (lock s e)  = lock (wkSub (sliceLeft e w) s) (wkLFExt e w)
@@ -59,7 +59,7 @@ keepₛ : Sub Γ Δ → Sub (Γ `, a) (Δ `, a)
 keepₛ s = dropₛ s `, var ze
 
 -- embed a weakening to substitution
-embWk : Γ ≤ Δ → Sub Γ Δ
+embWk : Δ ⊆ Γ → Sub Γ Δ
 embWk base      = []
 embWk (drop w)  = dropₛ (embWk w)
 embWk (keep w)  = keepₛ (embWk w)
@@ -70,7 +70,7 @@ embWk (keep🔒 w) = lock (embWk w) nil
 --------------------
 
 -- NOTE: these are only the laws that follow directly from the structure of substitutions
-coh-trimSub-wkVar : (x : Var Γ a) (s : Sub Δ' Δ) (w : Δ ≤ Γ)
+coh-trimSub-wkVar : (x : Var Γ a) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
   → substVar (trimSub w s) x ≡ substVar s (wkVar w x)
 coh-trimSub-wkVar ze (s `, x) (drop w)
   = coh-trimSub-wkVar ze s w
@@ -88,13 +88,13 @@ trimSubPresId (s `, x)   = cong (_`, _) (trimSubPresId s)
 trimSubPresId (lock s x) = cong₂ lock (trimSubPresId s) refl
 
 -- naturality of substVar
-nat-substVar : (x : Var Γ a) (s : Sub Δ Γ) (w : Δ' ≤ Δ)
+nat-substVar : (x : Var Γ a) (s : Sub Δ Γ) (w : Δ ⊆ Δ')
   → substVar (wkSub w s) x ≡ wkTm w (substVar s x)
 nat-substVar ze     (s `, t) w = refl
 nat-substVar (su x) (s `, t) w = nat-substVar x s w
 
 -- naturality of trimSub
-nat-trimSub : (s : Sub Γ Δ) (w : Δ ≤ Δ') (w' : Γ' ≤ Γ)
+nat-trimSub : (s : Sub Γ Δ) (w : Δ' ⊆ Δ) (w' : Γ ⊆ Γ')
   → wkSub w' (trimSub w s) ≡ trimSub w (wkSub w' s)
 nat-trimSub []         base      w' = refl
 nat-trimSub (s `, t)   (drop w)  w' = nat-trimSub s w w'
@@ -102,7 +102,7 @@ nat-trimSub (s `, t)   (keep w)  w' = cong (_`, wkTm w' t) (nat-trimSub s w w')
 nat-trimSub (lock s x) (keep🔒 w) w' = cong₂ lock (nat-trimSub s w _) refl
 
 -- `trimSub` on the identity substituion embeds the weakening
-trimSubId : (w : Δ ≤ Γ) → trimSub w idₛ ≡ embWk w
+trimSubId : (w : Γ ⊆ Δ) → trimSub w idₛ ≡ embWk w
 trimSubId base = refl
 trimSubId (drop w) = trans
   (sym (nat-trimSub idₛ w fresh))

@@ -23,7 +23,7 @@ Rt {𝕓}         t x =
   t ⟶* quotTm x
 Rt {a ⇒ b} {Γ} t f =
   {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (e : Γ' ≤ Γ) → Rt u x → Rt (app (wkTm e t) u) (f e x)
+    → (e : Γ ⊆ Γ') → Rt u x → Rt (app (wkTm e t) u) (f e x)
 Rt {◻ a}       t (box x) =
   ∃ λ u → Rt u x × t ⟶* box u
 
@@ -33,7 +33,7 @@ data Rs : Sub Γ Δ → Sub' Γ Δ → Set where
        → Rs s s' → Rt t x → Rs (s `, t)  (s' , x)
   lock : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
     → Rs s s' → (e : LFExt Δ' (Δ 🔒) (ΔR)) → Rs (lock s e) (lock s' e)
-    
+
 ----------------------------
 -- Standard LR properties --
 ----------------------------
@@ -80,7 +80,7 @@ Rt-reflect {a = ◻ a}   n
 
 -- Rt is invariant under weakening
 invRt : {t : Tm Γ a} {x : Tm' Γ a}
-  → (w : Δ ≤ Γ)
+  → (w : Γ ⊆ Δ)
   → Rt t x
   → Rt (wkTm w t) (wkTm' w x)
 invRt {a = 𝕓}  {x = x}       w tRx =
@@ -92,7 +92,7 @@ invRt {a = ◻ a} {x = box x}  e (u , uRx , r) =
 
 -- Rs is invariant under weakening
 invRs : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-  → (w : Δ' ≤ Δ)
+  → (w : Δ ⊆ Δ')
   → Rs s s'
   → Rs (wkSub w s) (wkSub' w s')
 invRs {Γ = []}     {s = []}      {tt}     w sRs'          =
@@ -123,7 +123,7 @@ private
   substVarPresRt (su x) {s `, _} {s' , _} (sRs' `, _)
     = substVarPresRt x sRs'
 
-  beta-lemma : (w : Γ' ≤ Δ)  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
+  beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ⟶* substTm (wkSub w s `, u) t
   beta-lemma w s t u = multi (zero (cong₂ app (cong lam (trans
     (sym (nat-subsTm t (keepₛ s) (keep w)))

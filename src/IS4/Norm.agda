@@ -37,8 +37,8 @@ embNf (box n) = box (embNf n)
 
 -- weakening lemmas
 
-wkNe : Γ' ≤ Γ → Ne Γ a → Ne Γ' a
-wkNf : Γ' ≤ Γ → Nf Γ a → Nf Γ' a
+wkNe : Γ ⊆ Γ' → Ne Γ a → Ne Γ' a
+wkNf : Γ ⊆ Γ' → Nf Γ a → Nf Γ' a
 
 wkNe w (var x)      = var (wkVar w x)
 wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
@@ -63,7 +63,7 @@ data Lock (A : Ctx → Set) : Ctx → Set where
 -- interpretation of types
 Tm' : Ctx → Ty → Set
 Tm' Γ  𝕓       = Nf Γ 𝕓
-Tm' Γ  (a ⇒ b) = {Γ' : Ctx} → Γ' ≤ Γ → (Tm' Γ' a → Tm' Γ' b)
+Tm' Γ  (a ⇒ b) = {Γ' : Ctx} → Γ ⊆ Γ' → (Tm' Γ' a → Tm' Γ' b)
 Tm' ΓL (◻ a)  = {Γ ΓR : Ctx} → CExt Γ ΓL ΓR → Tm' Γ a
 
 -- interpretation of contexts
@@ -73,13 +73,13 @@ Sub' Δ (Γ `, a) = Sub' Δ Γ × Tm' Δ a
 Sub' Δ (Γ 🔒)    = Lock (λ Γ' → Sub' Γ' Γ) Δ
 
 -- values in the model can be weakened
-wkTm' : Γ' ≤ Γ → Tm' Γ a → Tm' Γ' a
+wkTm' : Γ ⊆ Γ' → Tm' Γ a → Tm' Γ' a
 wkTm' {a = 𝕓}     w n  = wkNf w n
 wkTm' {a = a ⇒ b} w f  = λ w' y → f (w ∙ w') y
 wkTm' {a = ◻ a}  w bx = λ e → wkTm' (factor1≤ e w) (bx (factor1Ext e w))
 
 -- substitutions in the model can be weakened
-wkSub' : Γ' ≤ Γ → Sub' Γ Δ → Sub' Γ' Δ
+wkSub' : Γ ⊆ Γ' → Sub' Γ Δ → Sub' Γ' Δ
 wkSub' {Δ = []}     w tt          = tt
 wkSub' {Δ = Δ `, a} w (s , x)     = wkSub' w s , wkTm' w x
 wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (factor2≤ e w) s) (factor2Ext e w)

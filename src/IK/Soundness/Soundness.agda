@@ -27,7 +27,7 @@ _≋_ : Tm' Γ a → Tm' Γ a → Set
 _≋_ {Γ} {a = 𝕓}      n       m
   = n ≡ m
 _≋_ {Γ} {a = a ⇒ b}  f       g
-  = {Γ' : Ctx} (w : Γ' ≤ Γ) → {x y : Tm' Γ' a}
+  = {Γ' : Ctx} (w : Γ ⊆ Γ') → {x y : Tm' Γ' a}
     → Psh x → Psh y
     → x ≋ y → f w x ≋ g w y
 _≋_ {Γ} {a = ◻ a}    (box x) (box y)
@@ -100,7 +100,7 @@ pseudo-refl-≋ₛ x≋y = trans-≋ₛ x≋y (sym-≋ₛ x≋y)
 
 -- wkTm' preserves the relation _≋_
 wkTm'Pres≋ : {x : Tm' Γ a} {y : Tm' Γ a}
-  → (w : Δ ≤ Γ)
+  → (w : Γ ⊆ Δ)
   → x ≋ y
   → wkTm' w x ≋ wkTm' w y
 wkTm'Pres≋ {a = 𝕓}                           w x≡y
@@ -112,7 +112,7 @@ wkTm'Pres≋ {a = ◻ a} {x = box x} {y = box y} w x≋y
 
 -- wkSub' preserves the relation _≋_
 wkSub'Pres≋ : {s s' : Sub' Γ Δ}
-  → (w : Γ' ≤ Γ)
+  → (w : Γ ⊆ Γ')
   → s ≋ₛ s'
   → wkSub' w s ≋ₛ wkSub' w s'
 wkSub'Pres≋ w []
@@ -142,8 +142,8 @@ private
     → unbox' x e ≋ unbox' y e
   unbox'Pres≋ {a = a} {x = box x} {y = box y} e x≋y
     = wkTm'Pres≋ {a = a} (LFExtTo≤ e) x≋y
-  
--- 
+
+--
 fund :  (t : Tm Γ a) {s s' : Sub' Δ Γ}
   → Pshₛ s → Pshₛ s'
   → s ≋ₛ s' → eval t s ≋ eval t s'
@@ -188,8 +188,8 @@ coh-substVar-evalₛ (su x) (s₀ `, _) ps ps' s≋s'
   = coh-substVar-evalₛ x s₀ ps ps' s≋s'
 
 coh-substTm-evalₛ : (t : Tm Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
-  → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t (evalₛ s₀ s') ≋ eval (substTm s₀ t) s'  
-coh-substTm-evalₛ (var x)     s₀ ps ps' s≋s' 
+  → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t (evalₛ s₀ s') ≋ eval (substTm s₀ t) s'
+coh-substTm-evalₛ (var x)     s₀ ps ps' s≋s'
   = coh-substVar-evalₛ x s₀ ps ps' s≋s'
 coh-substTm-evalₛ (lam t)     s₀ {s} {s'} ps ps' s≋s' w {x = x} {y} px py x≋y
   rewrite sym (nat-evalₛ w s₀ s' ps')
@@ -248,7 +248,7 @@ private
         | wkSub'PresId s = s≋s'
   lemma1 {t = t} (ext e) (s  , _) (s' , _) (s≋s' `, _)
     = lemma1 {t = t} e s s' s≋s'
-    
+
   lemma2 : {x y : Tm' Γ (◻ a)}
     → x ≋ y
     → x ≋ box (unbox' y nil)
@@ -267,7 +267,7 @@ sound-eval-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'}
             (ps , (psh-eval u s ps))
             (subst Pshₛ (sym (evalₛPresId s')) ps' , psh-eval u s' ps')
             (subst (s ≋ₛ_) (sym (evalₛPresId s')) s≋s' `, fund u ps ps' s≋s'))
-      (coh-substTm-evalₛ t (idₛ `, u) {s} {s'} ps ps' s≋s') 
+      (coh-substTm-evalₛ t (idₛ `, u) {s} {s'} ps ps' s≋s')
 sound-eval-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
   rewrite sym (rightIdWk w)
   | sym (cong (λ f → f idWk x) (nat-eval t w s ps))
@@ -314,7 +314,7 @@ sound-eval-red* : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
 sound-eval-red* {t = t} {t' = .t} ε        ps ps' s≋s'
   = fund t ps ps' s≋s'
 sound-eval-red* {a = a} {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
-  = trans-≋ {a = a} (sound-eval-red r ps ps' s≋s') (sound-eval-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s'))) 
+  = trans-≋ {a = a} (sound-eval-red r ps ps' s≋s') (sound-eval-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
 
 -- soundness of evaluation wrt conversion
 sound-eval-≈ : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
@@ -330,14 +330,14 @@ sound-eval-≈ {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s�
       (sound-eval-≈ t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
 
 --------------------------------------------------------
--- Uniqueness of reification and soundness of reflection 
+-- Uniqueness of reification and soundness of reflection
 --------------------------------------------------------
 
 unique-reify : {x y : Tm' Γ a}
   → x ≋ y → reify x ≡ reify y
 sound-reflect : {n n' : Ne Γ a}
   → n ≡ n' → reflect n ≋ reflect n'
-  
+
 unique-reify {a = 𝕓}      x≡y = x≡y
 unique-reify {a = a ⇒ b}  x≋y = cong lam
   (unique-reify

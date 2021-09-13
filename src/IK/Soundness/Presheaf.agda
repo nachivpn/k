@@ -14,7 +14,7 @@ postulate
 
   funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g
-  
+
 -----------------------------
 -- Presheaf refinement of Tm'
 -----------------------------
@@ -22,10 +22,10 @@ postulate
 -- Used to ensure that the domain of interpretation is indeed presheafs
 Psh : Tm' Γ a → Set
 Psh {Γ} {𝕓}     n      = ⊤
-Psh {Γ} {a ⇒ b} f      = {Γ' : Ctx} (w : Γ' ≤ Γ)
+Psh {Γ} {a ⇒ b} f      = {Γ' : Ctx} (w : Γ ⊆ Γ')
   → (x : Tm' Γ' a) → Psh x
   -- naturality of presheaf exponentials
-  → ({Γ⁰ : Ctx} → (w' : Γ⁰ ≤ Γ') → f (w ∙ w') (wkTm' w' x) ≡ wkTm' w' (f w x))
+  → ({Γ⁰ : Ctx} → (w' : Γ' ⊆ Γ⁰) → f (w ∙ w') (wkTm' w' x) ≡ wkTm' w' (f w x))
     × Psh (f w x)
 Psh {Γ} {◻ a} (box x) = Psh x
 
@@ -40,7 +40,7 @@ Pshₛ {Γ} {Δ 🔒}    (lock s e) = Pshₛ s
 -----------------------------------
 
 -- wkTm' preserves Psh
-wkTm'PresPsh : (w : Γ' ≤ Γ) (x : Tm' Γ a) → Psh x → Psh (wkTm' w x)
+wkTm'PresPsh : (w : Γ ⊆ Γ') (x : Tm' Γ a) → Psh x → Psh (wkTm' w x)
 wkTm'PresPsh {a = 𝕓}     w x       p = tt
 wkTm'PresPsh {a = a ⇒ b} w f       p = λ w' y q →
   -- nf gives us that f obeys naturality (ind. hyp enabled by PSh)
@@ -52,7 +52,7 @@ wkTm'PresPsh {a = a ⇒ b} w f       p = λ w' y q →
 wkTm'PresPsh {a = ◻ a}  w (box x) p = wkTm'PresPsh (keep🔒 w) x p
 
 -- wkSub' preserves Pshₛ
-wkSub'PresPsh : (w : Γ' ≤ Γ) (s : Sub' Γ Δ) → Pshₛ s → Pshₛ (wkSub' w s)
+wkSub'PresPsh : (w : Γ ⊆ Γ') (s : Sub' Γ Δ) → Pshₛ s → Pshₛ (wkSub' w s)
 wkSub'PresPsh {Δ = []}     w s          p         =
   tt
 wkSub'PresPsh {Δ = Δ `, a} w (s , x)    (ps , px) =
@@ -78,7 +78,7 @@ wkTm'PresId {a = ◻ a}  (box x)
   = cong box (wkTm'PresId x)
 
 -- composition functor law of `Tm'- a`
-wkTm'Pres∙ : (w : Γ' ≤ Γ) (w' : Γ'' ≤ Γ') (x : Tm' Γ a)
+wkTm'Pres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (x : Tm' Γ a)
   → wkTm' w' (wkTm' w x) ≡ wkTm' (w ∙ w') x
 wkTm'Pres∙ {a = 𝕓}     w w' n       =
   wkNfPres∙ w w' n
@@ -106,7 +106,7 @@ wkSub'PresId {Δ = Δ 🔒}    (lock s e) with ←🔒IsPre🔒 e | 🔒→isPos
   (wkLFExtPresId e)
 
 -- composition functor law of `Sub'- Γ`
-wkSub'Pres∙ : (w : Γ' ≤ Γ) (w' : Γ'' ≤ Γ') (s : Sub' Γ Δ)
+wkSub'Pres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (s : Sub' Γ Δ)
   → wkSub' w' (wkSub' w s) ≡ wkSub' (w ∙ w') s
 wkSub'Pres∙ {Δ = []}     w w' tt         = refl
 wkSub'Pres∙ {Δ = Δ `, a} w w' (s , x)    = cong₂ _,_ (wkSub'Pres∙ w w' s) (wkTm'Pres∙ w w' x)
@@ -122,7 +122,7 @@ wkSub'Pres∙ {Δ = Δ 🔒}    w w' (lock s e) = cong₂ lock
 -- substVar x : Sub'- Γ →̇ Tm'- a
 
 -- naturality of substVar'
-nat-substVar' : (w : Δ' ≤ Δ) (x : Var Γ a) (s : Sub' Δ Γ)
+nat-substVar' : (w : Δ ⊆ Δ') (x : Var Γ a) (s : Sub' Δ Γ)
   → substVar' x (wkSub' w s) ≡ wkTm' w (substVar' x s)
 nat-substVar' w ze     s       = refl
 nat-substVar' w (su x) (s , _) = nat-substVar' w x s
@@ -145,7 +145,7 @@ psh-substVar' (su x) (s , _) (ps , _) = psh-substVar' x s ps
 psh-eval  : (t : Tm Γ a) (s : Sub' Δ Γ)
   → Pshₛ s → Psh (eval t s)
 -- naturality of `eval t`
-nat-eval : (t : Tm Γ a) (w : Δ' ≤ Δ) (s : Sub' Δ Γ)
+nat-eval : (t : Tm Γ a) (w : Δ ⊆ Δ') (s : Sub' Δ Γ)
   → Pshₛ s → eval t (wkSub' w s) ≡ wkTm' w (eval t s)
 
 -- psh-eval
@@ -190,7 +190,7 @@ nat-eval (unbox t nil)     w (lock s e) ps = trans
   (cong (λ z → unbox' z (wkLFExt e w)) (nat-eval t (sliceLeft e w) s ps))
   (gsLemma w e (eval t s))
   where
-  gsLemma : (w : Δ' ≤ Δ ) (e : LFExt Δ (ΓL 🔒) ΓR) (x : Tm' ΓL (◻ a))
+  gsLemma : (w : Δ ⊆ Δ') (e : LFExt Δ (ΓL 🔒) ΓR) (x : Tm' ΓL (◻ a))
     → unbox' (wkTm' (sliceLeft e w) x) (wkLFExt e w) ≡ wkTm' w (unbox' x e)
   gsLemma w e (box x) = trans (wkTm'Pres∙ _ _ _)
     (sym (trans
@@ -218,7 +218,7 @@ psh-evalₛ (lock s (ext e)) (s' , _) (ps' , _)
   = psh-evalₛ (lock s e) s' ps'
 
 -- naturality of evalₛ
-nat-evalₛ : (w : Δ' ≤ Δ)  (s : Sub Γ' Γ) (s' : Sub' Δ Γ') (ps' : Pshₛ s')
+nat-evalₛ : (w : Δ ⊆ Δ')  (s : Sub Γ' Γ) (s' : Sub' Δ Γ') (ps' : Pshₛ s')
   → evalₛ s (wkSub' w s') ≡ wkSub' w (evalₛ s s')
 nat-evalₛ w []               s'        ps'
   = refl
@@ -238,7 +238,7 @@ nat-evalₛ w (lock s nil)     (lock s' e) ps'
 -- reify   : Tm'- a →̇ Nf'- a
 
 -- naturality of reflect
-nat-reflect : (w : Γ' ≤ Γ) (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)
+nat-reflect : (w : Γ ⊆ Γ') (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)
 nat-reflect {a = 𝕓}     w n = refl
 nat-reflect {a = a ⇒ b} w n = funexti (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
@@ -247,7 +247,7 @@ nat-reflect {a = ◻ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
 -- image of reflect is in Psh
 psh-reflect : (n : Ne Γ a) → Psh (reflect n)
 -- naturality of reify
-nat-reify : (w : Γ' ≤ Γ) (x : Tm' Γ a) → Psh x → reify (wkTm' w x) ≡ wkNf w (reify x)
+nat-reify : (w : Γ ⊆ Γ') (x : Tm' Γ a) → Psh x → reify (wkTm' w x) ≡ wkNf w (reify x)
 
 -- psh-reflect
 psh-reflect {a = 𝕓}     n = tt

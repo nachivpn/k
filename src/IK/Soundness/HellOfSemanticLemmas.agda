@@ -15,16 +15,16 @@ postulate
 
   funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g
-          
+
 -- semantic counterpart of trimSub
-trimSub' : Γ' ≤ Γ → Sub'- Γ' →̇ Sub'- Γ
+trimSub' : Γ ⊆ Γ' → Sub'- Γ' →̇ Sub'- Γ
 trimSub' base      tt         = tt
 trimSub' (drop w)  (s , _)    = trimSub' w s
 trimSub' (keep w)  (s , x)    = trimSub' w s , x
 trimSub' (keep🔒 w) (lock s e) = lock (trimSub' w s) e
 
 -- naturality of trimSub'
-nat-trimSub' : (w' : Δ ≤ Δ') (w : Γ' ≤ Γ) (s : Sub' Γ Δ)
+nat-trimSub' : (w' : Δ' ⊆ Δ) (w : Γ ⊆ Γ') (s : Sub' Γ Δ)
   → trimSub' w' (wkSub' w s) ≡ wkSub' w (trimSub' w' s)
 nat-trimSub' base       w s          = refl
 nat-trimSub' (drop w')  w (s , _)    = nat-trimSub' w' w s
@@ -38,7 +38,7 @@ trimSub'PresId {Δ = Δ `, _} (s , _)    = cong₂ _,_ (trimSub'PresId s) refl
 trimSub'PresId {Δ = Δ 🔒}    (lock s e) = cong₂ lock (trimSub'PresId s) refl
 
 -- semantic counterpart of coh-trimSub-wkVar in Substitution.agda
-coh-trimSub'-wkVar' : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (x : Var Γ a)
+coh-trimSub'-wkVar' : (w : Γ ⊆ Γ') (s : Sub' Δ Γ') (x : Var Γ a)
   → substVar' (wkVar w x) s ≡ substVar' x (trimSub' w s)
 coh-trimSub'-wkVar' (drop w) (s , _) ze     = coh-trimSub'-wkVar' w s ze
 coh-trimSub'-wkVar' (drop w) (s , _) (su x) = coh-trimSub'-wkVar' w s (su x)
@@ -46,7 +46,7 @@ coh-trimSub'-wkVar' (keep w) (s , _) ze     = refl
 coh-trimSub'-wkVar' (keep w) (s , _) (su x) = coh-trimSub'-wkVar' w s x
 
 -- semantic counterpart of coh-trimSub-wkTm in HellOfSyntacticLemmas.agda
-coh-trimSub'-wkTm : (w : Γ' ≤ Γ) (s : Sub' Δ Γ') (t : Tm Γ a)
+coh-trimSub'-wkTm : (w : Γ ⊆ Γ') (s : Sub' Δ Γ') (t : Tm Γ a)
   → eval (wkTm w t) s ≡ eval t (trimSub' w s)
 coh-trimSub'-wkTm w s (var x)
   = coh-trimSub'-wkVar' w s x
@@ -69,7 +69,7 @@ coh-trimSub'-wkTm (keep w) (s , _) (unbox t (ext e))
   = coh-trimSub'-wkTm w s (unbox t e)
 
 -- semantic counterpart of coh-trimSub-wkSub in `HellOfSyntacticLemmas.agda`
-coh-trimSub'-wkSub : (w : Γ' ≤ Γ) (s : Sub Γ Δ) (s' : Sub' Δ' Γ')
+coh-trimSub'-wkSub : (w : Γ ⊆ Γ') (s : Sub Γ Δ) (s' : Sub' Δ' Γ')
   → evalₛ (wkSub w s) s' ≡ evalₛ s (trimSub' w s')
 coh-trimSub'-wkSub w [] s'
   = refl

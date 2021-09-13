@@ -91,7 +91,7 @@ cong-app* r1       (x ◅ r2) = cong-app2 x ◅ cong-app* r1 r2
 
 
 invRed :  {t t' : Tm Γ a}
-  → (w : Δ ≤ Γ)
+  → (w : Γ ⊆ Δ)
   → t ⟶ t'
   → wkTm w t ⟶* wkTm w t'
 invRed w (red-fun {t = t} {u = u})
@@ -114,7 +114,7 @@ invRed w (cong-app2 r)
   = cong-app* ε (invRed w r)
 
 invRed* :  {t t' : Tm Γ a}
-  → (w : Δ ≤ Γ)
+  → (w : Γ ⊆ Δ)
   → t ⟶* t'
   → wkTm w t ⟶* wkTm w t'
 invRed* w ε       = ε

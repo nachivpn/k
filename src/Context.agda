@@ -1,8 +1,7 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 module Context (Ty : Set) where
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; cong ; cong₂ ; sym ; trans ; subst )
+  using (_≡_ ; cong ; cong₂ ; sym ; trans ; subst ; subst₂)
 
 open _≡_
 
@@ -461,10 +460,26 @@ f2RCtxId (ext🔒- e) = cong _🔒 (f2RCtxId e)
 
 open import Relation.Binary.HeterogeneousEquality as HE using (_≅_)
 
--- TBD
+-- TODO: add to Relation.Binary.HeterogeneousEquality
+private
+  module _ where
+    open import Level           using (Level)
+    open import Relation.Binary using (REL)
+
+    variable
+      ℓ : Level
+      A : Set ℓ
+      B : Set ℓ
+
+    ≡-subst₂-removable : ∀ (R : REL A B ℓ) {x y u v} (eq₁ : x ≡ y) (eq₂ : u ≡ v) z → subst₂ R eq₁ eq₂ z ≅ z
+    ≡-subst₂-removable P refl refl z = HE.refl
+
 factor2ExtPresId :  (e : CExt Γ ΓL ΓR)
   → factor2Ext e idWk ≅ e
-factor2ExtPresId = {!!}
+factor2ExtPresId {Γ} e = let open HE.≅-Reasoning in begin
+  factor2Ext e idWk                            ≡⟨ ExtIsProp _ _ ⟩
+  subst₂ (CExt Γ) (f2LCtxId e) (f2RCtxId e) e  ≅⟨ ≡-subst₂-removable _ _ _ e ⟩
+  e                                            ∎
 
 factor2≤Id : (e : CExt Γ ΓL ΓR)
   → factor2≤ e idWk ≅ idWk {ΓL}

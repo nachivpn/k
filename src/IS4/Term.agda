@@ -8,9 +8,9 @@ module IS4.Term where
 open import IK.Type public
 open import Context (Ty) hiding (ext🔒) public
 
-------------------------------------
--- Variables, terms and substituions
-------------------------------------
+-------------------------------------
+-- Variables, terms and substitutions
+-------------------------------------
 
 data Tm : Ctx → Ty → Set where
 

@@ -8,9 +8,9 @@ module IK.Term where
 open import IK.Type public
 open import Context (Ty) public
 
-------------------------------------
--- Variables, terms and substituions
-------------------------------------
+-------------------------------------
+-- Variables, terms and substitutions
+-------------------------------------
 
 data Tm : Ctx → Ty → Set where
 

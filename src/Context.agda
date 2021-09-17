@@ -443,10 +443,9 @@ factor2≤ (ext e)   (keep w)  = factor2≤ e w
 factor2≤ (ext🔒- e) (drop w)  = factor2≤ (ext🔒- e) w
 factor2≤ (ext🔒- e) (keep🔒 w) = factor2≤ e w
 
-----------------------------------------------
--- Factorisation laws for lock-free extensions
-----------------------------------------------
-
+--------------------------------------------
+-- Factorisation laws for general extensions
+--------------------------------------------
 
 f2LCtxId : (e : CExt Γ ΓL ΓR) → ΓL ≡ f2LCtx e idWk
 f2LCtxId nil       = refl

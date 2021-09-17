@@ -25,7 +25,7 @@ data Sub : Ctx → Ctx → Set where
   _`,_ : Sub Δ Γ → Tm Δ a → Sub Δ (Γ `, a)
   lock : Sub ΔL Γ → CExt Δ ΔL ΔR → Sub Δ (Γ 🔒)
 
--- composition operation for weakening after substituion
+-- composition operation for weakening after substitution
 trimSub : Δ ⊆ Γ → Sub Γ' Γ → Sub Γ' Δ
 trimSub base      []         = []
 trimSub (drop w)  (s `, x)   = trimSub w s
@@ -49,7 +49,7 @@ idₛ {[]}     = []
 idₛ {Γ `, x} = wkSub fresh idₛ `, (var ze)
 idₛ {Γ 🔒}    = lock (idₛ {Γ}) (ext🔒- nil)
 
--- NOTE: composition requires parallel substituion for terms
+-- NOTE: composition requires parallel substitution for terms
 
 -- "drop" the last variable in the context
 dropₛ : Sub Γ Δ → Sub (Γ `, a) Δ
@@ -105,7 +105,7 @@ nat-trimSub (s `, t)   (drop w)  w' = nat-trimSub s w w'
 nat-trimSub (s `, t)   (keep w)  w' = cong (_`, wkTm w' t) (nat-trimSub s w w')
 nat-trimSub (lock s x) (keep🔒 w) w' = cong₂ lock (nat-trimSub s w _) refl
 
--- `trimSub` on the identity substituion embeds the weakening
+-- `trimSub` on the identity substitution embeds the weakening
 trimSubId : (w : Γ ⊆ Δ) → trimSub w idₛ ≡ embWk w
 trimSubId base = refl
 trimSubId (drop w) = trans

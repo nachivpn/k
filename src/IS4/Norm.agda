@@ -3,6 +3,8 @@ module IS4.Norm where
 open import Data.Unit  using (⊤ ; tt)
 open import Data.Product  using (Σ ; _×_ ; _,_)
 
+open import Function
+
 open import IS4.Term
 
 ---------------
@@ -88,6 +90,9 @@ wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (factor2≤ e w) s) (facto
 unbox' : Tm' ΓL (◻ a) → CExt Γ ΓL ΓR → Tm' Γ a
 unbox' bx e = bx e
 
+unlock' : Sub' Δ (Γ 🔒) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × CExt Δ ΔL ΔR }
+unlock' (lock γ e) = _ , γ , e
+
 -------------------------
 -- Normalization function
 -------------------------
@@ -125,30 +130,18 @@ substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
 substVar' ze     (_ , x) = x
 substVar' (su x) (γ , _) = substVar' x γ
 
+CExt' : CExt Γ ΓL ΓR → Sub'- Γ →̇ Sub'- (ΓL 🔒)
+CExt' nil       γ           = lock γ nil                                                              -- = η            ("return")
+CExt' (ext e)   (γ , _)     = CExt' e γ                                                               -- = CExt' e ∘ π₁
+CExt' (ext🔒- e) (lock γ e') = let (_ , γ' , e'') = unlock' (CExt' e γ) in lock γ' (extRAssoc e'' e') -- = ^(CExt' e)   ("bind")
+
 -- interpretation of terms
 eval : Tm Γ a → (Sub'- Γ →̇ Tm'- a)
-eval (var x)                     s
-  = substVar' x s
-eval (lam t)                     s
-  = λ e x → eval t (wkSub' e s , x)
-eval (app t u)                   s
-  = (eval t s) idWk (eval u s)
-eval (box t)                     s
-  = λ e → eval t (lock s e)
-eval (unbox t nil)               s
-  = unbox' (eval t s) nil
-eval (unbox t (ext e))           (s , _)
-  = eval (unbox t e) s
-eval (unbox t (ext🔒- e))         (lock s nil)
-  = eval (unbox t e) s
-eval (unbox t (ext🔒- e))         (lock s (ext e'))
-  = wkTm' fresh (eval (unbox t (ext🔒- e)) (lock s e'))
-eval (unbox t (ext🔒- nil))       (lock s (ext🔒- e'))
-  = unbox' (eval t s) (ext🔒- e')
-eval (unbox t (ext🔒- (ext e)))   (lock (s , _) (ext🔒- e'))
-  = eval (unbox t (ext🔒- e)) (lock s (ext🔒- e'))
-eval (unbox t (ext🔒- (ext🔒- e))) (lock (lock s e'') (ext🔒- e'))
-  = eval (unbox t (ext🔒- e)) (lock s (ext🔒- (extRAssoc e'' e')))
+eval (var x)     s = substVar' x s
+eval (lam t)     s = λ e x → eval t (wkSub' e s , x)
+eval (app t u)   s = (eval t s) idWk (eval u s)
+eval (box t)     s = λ e → eval t (lock s e)
+eval (unbox t e) s = let (_ , s' , e') = unlock' (CExt' e s) in unbox' (eval t s') e' -- = ^(eval t) ∘ CExt' e
 
 -- retraction of interpretation
 quot : (Sub'- Γ →̇ Tm'- a) → Nf Γ a
@@ -181,20 +174,9 @@ Nfₛ- Δ Γ = Nfₛ Γ Δ
 
 -- interpretation of substitutions
 evalₛ : Sub Γ Δ → Sub'- Γ  →̇ Sub'- Δ
-evalₛ []                         s'
-  = tt
-evalₛ (s `, t)                   s'
-  = (evalₛ s s') , eval t s'
-evalₛ (lock s nil)               s'
-  = lock (evalₛ s s') nil
-evalₛ (lock s (ext e))           (s' , _)
-  = evalₛ (lock s e) s'
-evalₛ (lock s (ext🔒- nil))       (lock s' e')
-  = lock (evalₛ s s') e'
-evalₛ (lock s (ext🔒- (ext e)))   (lock (s' , _) e')
-  = evalₛ (lock s (ext🔒- e)) (lock s' e')
-evalₛ (lock s (ext🔒- (ext🔒- e))) (lock (lock s' e'') e')
-  = evalₛ (lock s (ext🔒- e)) (lock s' (extRAssoc e'' e'))
+evalₛ []         γ = tt
+evalₛ (s `, t)   γ = evalₛ s γ , eval t γ
+evalₛ (lock s e) γ = let (_ , γ' , e') = unlock' (CExt' e γ) in lock (evalₛ s γ') e' -- = Lock (evalₛ s ∘ CExt' e)
 
 -- retraction of evalₛ
 quotₛ : Sub'- Γ →̇ Nfₛ- Γ

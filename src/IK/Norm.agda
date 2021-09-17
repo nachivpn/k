@@ -94,6 +94,9 @@ wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (sliceLeft e w) s) (wkLFEx
 unbox' : Box (λ Δ → Tm' Δ a) ΓL → LFExt Γ (ΓL 🔒) ΓR → Tm' Γ a
 unbox' (box x) e = wkTm' (LFExtTo≤ e) x
 
+unlock' : Sub' Δ (Γ 🔒) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × LFExt Δ (ΔL 🔒) ΔR }
+unlock' (lock γ e) = _ , γ , e
+
 -------------------------
 -- Normalization function
 -------------------------
@@ -132,14 +135,17 @@ substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
 substVar' ze     (_ , x) = x
 substVar' (su x) (γ , _) = substVar' x γ
 
+LFExt' : LFExt Γ (ΓL 🔒) ΓR → Sub'- Γ →̇ Sub'- (ΓL 🔒)
+LFExt' nil     γ       = γ          -- = id
+LFExt' (ext e) (γ , _) = LFExt' e γ -- = LFExt' e ∘ π₁
+
 -- interpretation of terms
 eval : Tm Γ a → (Sub'- Γ →̇ Tm'- a)
-eval (var x)           s           = substVar' x s
-eval (lam t)           s           = λ e x → eval t (wkSub' e s , x)
-eval (app t u)         s           = (eval t s) idWk (eval u s)
-eval (box t)           s           = box (eval t (lock s nil))
-eval (unbox t nil)     (lock s e') = unbox' (eval t s) e'
-eval (unbox t (ext e)) (s , _)     = eval (unbox t e) s
+eval (var x)     s = substVar' x s
+eval (lam t)     s = λ e x → eval t (wkSub' e s , x)
+eval (app t u)   s = (eval t s) idWk (eval u s)
+eval (box t)     s = box (eval t (lock s nil))
+eval (unbox t e) s = let (_ , s' , e') = unlock' (LFExt' e s) in unbox' (eval t s') e' -- = ^(eval t) ∘ LFExt' e
 
 -- retraction of interpretation
 quot : (Sub'- Γ →̇ Tm'- a) → Nf Γ a
@@ -173,10 +179,9 @@ Nfₛ- Δ Γ = Nfₛ Γ Δ
 
 -- interpretation of substitutions
 evalₛ : Sub Γ Δ → Sub'- Γ  →̇ Sub'- Δ
-evalₛ []               s'          = tt
-evalₛ (s `, t)         s'          = (evalₛ s s') , eval t s'
-evalₛ (lock s nil)     (lock s' e) = lock (evalₛ s s') e
-evalₛ (lock s (ext e)) (s' , _)    = evalₛ (lock s e) s'
+evalₛ []         γ = tt
+evalₛ (s `, t)   γ = evalₛ s γ , eval t γ
+evalₛ (lock s e) γ = let (_ , γ' , e') = unlock' (LFExt' e γ) in lock (evalₛ s γ') e' -- = Lock (evalₛ s ∘ LFExt' e)
 
 -- retraction of evalₛ
 quotₛ : Sub'- Γ →̇ Nfₛ- Γ

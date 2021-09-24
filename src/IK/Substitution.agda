@@ -21,8 +21,8 @@ private
 
 data Sub : Ctx → Ctx → Set where
   []   : Sub Δ []
-  _`,_ : Sub Δ Γ → Tm Δ a → Sub Δ (Γ `, a)
-  lock : Sub ΔL Γ → LFExt Δ (ΔL 🔒) ΔR → Sub Δ (Γ 🔒)
+  _`,_ : (σ : Sub Δ Γ) → (t : Tm Δ a) → Sub Δ (Γ `, a)
+  lock : (σ : Sub ΔL Γ) → (e : LFExt Δ (ΔL 🔒) ΔR) → Sub Δ (Γ 🔒)
 
 -- composition operation for weakening after substitution
 trimSub : Δ ⊆ Γ → Sub Γ' Γ → Sub Γ' Δ

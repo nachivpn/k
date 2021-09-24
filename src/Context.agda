@@ -23,8 +23,8 @@ open import Data.Product  using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂ ; proj₂)
 
 data Ctx : Set where
   []   : Ctx
-  _`,_ : Ctx → Ty → Ctx
-  _🔒   : Ctx → Ctx
+  _`,_ : (Γ : Ctx) → (a : Ty) → Ctx
+  _🔒   : (Γ : Ctx) → Ctx
 
 [🔒] : Ctx
 [🔒] = [] 🔒
@@ -179,8 +179,8 @@ assocWk (keep🔒 w3) (keep🔒 w2) (keep🔒 w1) = cong keep🔒 (assocWk w3 w2
 
 data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
   nil  : Ext θ Γ Γ []
-  ext  : Ext θ Γ ΓL ΓR → Ext θ (Γ `, a) ΓL (ΓR `, a)
-  ext🔒 : WL θ → Ext θ Γ ΓL ΓR → Ext θ (Γ 🔒) ΓL (ΓR 🔒)
+  ext  : (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ `, a) ΓL (ΓR `, a)
+  ext🔒 : WL θ → (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ 🔒) ΓL (ΓR 🔒)
 
 -- Lock-Free Extension
 LFExt : Ctx → Ctx → Ctx → Set

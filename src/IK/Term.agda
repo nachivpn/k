@@ -14,23 +14,25 @@ open import Context (Ty) public
 
 data Tm : Ctx → Ty → Set where
 
-  var  : Var Γ a
-       ---------
+  var  : (v : Var Γ a)
+       ---------------
        → Tm Γ a
 
-  lam  : Tm (Γ `, a) b
-         -------------
+  lam  : (t : Tm (Γ `, a) b)
+         -------------------
        → Tm Γ (a ⇒ b)
 
-  app  : Tm Γ (a ⇒ b) → Tm Γ a
-         ---------------------
+  app  : (t : Tm Γ (a ⇒ b))
+       → (u : Tm Γ a)
+         ------------------
        → Tm Γ b
 
-  box   : Tm (Γ 🔒) a
-        ------------
+  box   : (t : Tm (Γ 🔒) a)
+        ------------------
         → Tm Γ (◻ a)
 
-  unbox : Tm ΓL (◻ a) → LFExt Γ (ΓL 🔒) ΓR
+  unbox : (t : Tm ΓL (◻ a))
+        → (e : LFExt Γ (ΓL 🔒) ΓR)
         -------------------------
         → Tm Γ a
 

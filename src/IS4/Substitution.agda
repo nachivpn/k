@@ -59,12 +59,16 @@ dropₛ s = wkSub fresh s
 keepₛ : Sub Γ Δ → Sub (Γ `, a) (Δ `, a)
 keepₛ s = dropₛ s `, var ze
 
+-- "keep" the lock in the context
+keep🔒ₛ : Sub Γ Δ → Sub (Γ 🔒) (Δ 🔒)
+keep🔒ₛ s = lock s new
+
 -- embed a weakening to substitution
 embWk : Δ ⊆ Γ → Sub Γ Δ
 embWk base      = []
 embWk (drop w)  = dropₛ (embWk w)
 embWk (keep w)  = keepₛ (embWk w)
-embWk (keep🔒 w) = lock (embWk w) new
+embWk (keep🔒 w) = keep🔒ₛ (embWk w)
 
 -- identity substitution
 idₛ : Sub Γ Γ

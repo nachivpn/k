@@ -54,7 +54,7 @@ substTm s                                (lam t)
 substTm s                                (app t u)
   = app (substTm s t) (substTm s u)
 substTm s                                (box t)
-  = box (substTm (lock s new) t)
+  = box (substTm (keep🔒ₛ s) t)
 substTm s                                (unbox t nil)
   = unbox (substTm s t) nil
 substTm (s `, _)                         (unbox t (ext e))

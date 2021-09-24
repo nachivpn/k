@@ -116,7 +116,7 @@ reflect : Ne Γ a  → Tm' Γ a
 -- interpretation of neutrals
 reflect {a = 𝕓} n     = up𝕓 n
 reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
-reflect {a = ◻ a} n   = box (reflect (unbox n nil))
+reflect {a = ◻ a} n   = box (reflect (unbox n new))
 
 -- reify values to normal forms
 reify {a = 𝕓}     x       = x
@@ -128,7 +128,7 @@ reify {a = ◻ a}   (box x) = box (reify x)
 idₛ' : Sub' Γ Γ
 idₛ' {[]}     = tt
 idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , reflect (var ze)
-idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) nil
+idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) new
 
 -- interpretation of variables
 substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)

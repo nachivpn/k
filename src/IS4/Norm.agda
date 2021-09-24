@@ -117,13 +117,13 @@ reflect {a = ◻ a} n  = λ e → reflect (unbox n e)
 -- reify values to normal forms
 reify {a = 𝕓}     x  = x
 reify {a = a ⇒ b} x  = lam (reify (x (drop idWk) (reflect (var ze))))
-reify {a = ◻ a}  bx = box (reify (bx (ext🔒- nil)))
+reify {a = ◻ a}  bx = box (reify (bx new))
 
 -- identity substitution
 idₛ' : Sub' Γ Γ
 idₛ' {[]}     = tt
 idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , reflect (var ze)
-idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) (ext🔒- nil)
+idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) new
 
 -- interpretation of variables
 substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)

@@ -16,6 +16,12 @@ private
   variable
     a b c d : Ty
 
+-- extension that "generates a new context frame"
+new : CExt (Γ 🔒) Γ ([] 🔒) -- Γ R Γ 🔒
+new = ext🔒- nil
+
+new[_] = λ Γ → new {Γ}
+
 ----------------
 -- Substitutions
 ----------------
@@ -43,12 +49,6 @@ wkSub w []          = []
 wkSub w (s `, t)    = (wkSub w s) `, wkTm w t
 wkSub w (lock s e)  = lock (wkSub (factor2≤ e w) s) (factor2Ext e w)
 
--- identity substitution
-idₛ : Sub Γ Γ
-idₛ {[]}     = []
-idₛ {Γ `, x} = wkSub fresh idₛ `, (var ze)
-idₛ {Γ 🔒}    = lock (idₛ {Γ}) (ext🔒- nil)
-
 -- NOTE: composition requires parallel substitution for terms
 
 -- "drop" the last variable in the context
@@ -64,7 +64,13 @@ embWk : Δ ⊆ Γ → Sub Γ Δ
 embWk base      = []
 embWk (drop w)  = dropₛ (embWk w)
 embWk (keep w)  = keepₛ (embWk w)
-embWk (keep🔒 w) = lock (embWk w) (ext🔒- nil)
+embWk (keep🔒 w) = lock (embWk w) new
+
+-- identity substitution
+idₛ : Sub Γ Γ
+idₛ = embWk idWk
+
+idₛ[_] = λ Γ → idₛ {Γ}
 
 ExtToSub : CExt Γ ΓL ΓR → Sub Γ (ΓL 🔒)
 ExtToSub e = lock idₛ e

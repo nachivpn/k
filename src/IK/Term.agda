@@ -50,7 +50,7 @@ substTm : Sub Δ Γ → Tm Γ a → Tm Δ a
 substTm s (var x)     = substVar s x
 substTm s (lam t)     = lam (substTm (wkSub fresh s `, var ze) t)
 substTm s (app t u)   = app (substTm s t) (substTm s u)
-substTm s (box t)     = box (substTm (lock s nil) t)
+substTm s (box t)     = box (substTm (lock s new) t)
 substTm (s `, _) (unbox t (ext e)) = substTm s (unbox t e)
 substTm (lock s x) (unbox t nil) = unbox (substTm s t) x
 

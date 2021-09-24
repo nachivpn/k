@@ -9,9 +9,9 @@ private
   variable
     a b c d : Ty
 
-infixl 4 _🔒
-infix  3 _⊆_
-infix  3 _,,_
+infixl 6 _🔒 _`,_
+infix  5 _⊆_
+infixl 5 _,,_
 
 open import Data.Empty using (⊥)
 open import Data.Unit  using (⊤ ; tt)

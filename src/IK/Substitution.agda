@@ -7,6 +7,8 @@ module IK.Substitution (Ty : Set)
   (wkTm  : ∀ {Γ' Γ a} → I⊆ Ty Γ Γ' → Tm Γ a → Tm Γ' a)
   where
 
+open import Data.Product using (∃; _×_; _,_; proj₁; proj₂; -,_)
+
 open import Relation.Binary.PropositionalEquality
 
 open import Context (Ty)
@@ -74,6 +76,17 @@ idₛ : Sub Γ Γ
 idₛ = embWk idWk
 
 idₛ[_] = λ Γ → idₛ {Γ}
+
+private
+  factor2 : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × LFExt Δ (ΔL 🔒) ΔR
+  factor2 nil     (lock s e) = -, -, s , e
+  factor2 (ext e) (s `, t)   = factor2 e s
+
+factor2Sub : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → Sub _ ΓL
+factor2Sub = λ e s → factor2 e s .proj₂ .proj₂ .proj₁
+
+factor2R : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → LFExt Δ _ _
+factor2R = λ e s → factor2 e s .proj₂ .proj₂ .proj₂
 
 --------------------
 -- Substitution laws

@@ -51,12 +51,10 @@ substTm s (var x)     = substVar s x
 substTm s (lam t)     = lam (substTm (wkSub fresh s `, var ze) t)
 substTm s (app t u)   = app (substTm s t) (substTm s u)
 substTm s (box t)     = box (substTm (keep🔒ₛ s) t)
-substTm (s `, _) (unbox t (ext e)) = substTm s (unbox t e)
-substTm (lock s x) (unbox t nil) = unbox (substTm s t) x
+substTm s (unbox t e) = unbox (substTm (factor2Sub e s) t) (factor2R e s)
 
 -- substitution composition
 _∙ₛ_ : Sub Δ Γ → Sub Δ' Δ → Sub Δ' Γ
-[]             ∙ₛ s'    = []
-(s `, t)       ∙ₛ s'    = (s ∙ₛ s') `, substTm s' t
-lock s (ext e) ∙ₛ (s' `, x) = lock s e ∙ₛ s'
-lock s nil     ∙ₛ lock s' x = lock (s ∙ₛ s') x
+[]        ∙ₛ s = []
+(s' `, t) ∙ₛ s = s' ∙ₛ s `, substTm s t
+lock s' e ∙ₛ s = lock (s' ∙ₛ factor2Sub e s) (factor2R e s)

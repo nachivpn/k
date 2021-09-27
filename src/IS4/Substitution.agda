@@ -7,7 +7,7 @@ module IS4.Substitution (Ty : Set)
   (wkTm  : ∀ {Γ' Γ a} → I⊆ Ty Γ Γ' → Tm Γ a → Tm Γ' a)
   where
 
-open import Data.Product
+open import Data.Product using (∃; _×_; _,_; proj₁; proj₂; -,_)
 open import Relation.Binary.PropositionalEquality
 
 open import Context Ty hiding (ext🔒)
@@ -78,6 +78,18 @@ idₛ[_] = λ Γ → idₛ {Γ}
 
 ExtToSub : CExt Γ ΓL ΓR → Sub Γ (ΓL 🔒)
 ExtToSub e = lock idₛ e
+
+private
+  factor2 : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × CExt Δ ΔL ΔR
+  factor2 nil        s           = -, -, s , nil
+  factor2 (ext e)    (s `, t)    = factor2 e s
+  factor2 (ext🔒- e) (lock s e')  = let (ΔL , ΔR , s' , e'') = factor2 e s in -, -, s' , extRAssoc e'' e'
+
+factor2Sub : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub _ ΓL
+factor2Sub = λ e s → factor2 e s .proj₂ .proj₂ .proj₁
+
+factor2Extₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ _ _
+factor2Extₛ = λ e s → factor2 e s .proj₂ .proj₂ .proj₂
 
 --------------------
 -- Substitution laws

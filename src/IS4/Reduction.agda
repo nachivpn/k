@@ -21,17 +21,17 @@ open _≡_
 
 data _⟶_ : Tm Γ a → Tm Γ a → Set where
 
-  red-fun : {t : Tm (Γ `, a) b} {u : Tm Γ a}
+  red-fun : (t : Tm (Γ `, a) b) (u : Tm Γ a)
     → (app (lam t) u) ⟶ substTm (idₛ `, u) t
 
-  exp-fun : {t : Tm Γ (a ⇒ b)}
+  exp-fun : (t : Tm Γ (a ⇒ b))
     → t ⟶ lam (app (wkTm fresh t) (var ze))
 
-  red-box : {t : Tm (ΓL 🔒) a} {e : Ext tt Γ ΓL ΓR}
+  red-box : (t : Tm (ΓL 🔒) a) (e : Ext tt Γ ΓL ΓR)
     → unbox (box t) e ⟶ substTm (lock idₛ e) t
 
-  exp-box : {t : Tm Γ (◻ a)}
-    → t ⟶ box (unbox t (ext🔒- nil))
+  exp-box : (t : Tm Γ (◻ a))
+    → t ⟶ box (unbox t new)
 
   cong-lam : {t t' : Tm (Γ `, a) b}
     → t ⟶ t'

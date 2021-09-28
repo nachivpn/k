@@ -123,9 +123,8 @@ data Var : Ctx → Ty → Set where
   su : (v : Var Γ a) → Var (Γ `, b) a
 
 wkVar : Γ ⊆ Γ' → Var Γ a → Var Γ' a
-wkVar (drop e) ze     = su (wkVar e ze)
+wkVar (drop e) v      = su (wkVar e v)
 wkVar (keep e) ze     = ze
-wkVar (drop e) (su v) = su (wkVar e (su v))
 wkVar (keep e) (su v) = su (wkVar e v)
 
 wkVarPresId : (x : Var Γ a) → wkVar idWk x ≡ x

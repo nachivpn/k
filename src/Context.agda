@@ -407,7 +407,7 @@ f2LCtx : CExt Γ ΓL ΓR → Γ ⊆ Γ' → Ctx
 f2LCtx {Γ = Γ}      {Γ' = Γ'}       nil        w
   = Γ'
 f2LCtx {Γ = Γ `, a} {Γ' = Γ' `, b}  (ext e)    (drop w)
-  = f2LCtx e (fresh {Γ}  ∙ w)
+  = f2LCtx (ext e) w
 f2LCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)    (keep w)
   = f2LCtx e w
 f2LCtx {Γ = Γ 🔒} {Γ' = Γ' `, a}     (ext🔒- e) (drop w)
@@ -420,7 +420,7 @@ f2RCtx : CExt Γ ΓL ΓR → Γ ⊆ Γ' → Ctx
 f2RCtx  {Γ = Γ}     {Γ' = Γ'}      nil       w
   = []
 f2RCtx {Γ = Γ `, a} {Γ' = Γ' `, b} (ext e)   (drop w)
-  = f2RCtx e (fresh ∙ w) `, b
+  = f2RCtx (ext e) w `, b
 f2RCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)  (keep w)
   = f2RCtx e w `, a
 f2RCtx {Γ = Γ 🔒}    {Γ' = Γ' `, a} (ext🔒- e) (drop  {a = a} w)
@@ -431,7 +431,7 @@ f2RCtx {Γ = Γ 🔒}    {Γ' = Γ' 🔒}    (ext🔒- e) (keep🔒 w)
 --
 factor2Ext : (e : CExt Γ ΓL ΓR) → (w : Γ ⊆ Γ') → CExt Γ' (f2LCtx e w) (f2RCtx e w)
 factor2Ext nil       w         = nil
-factor2Ext (ext e)   (drop w)  = ext (factor2Ext e (fresh ∙ w))
+factor2Ext (ext e)   (drop w)  = ext (factor2Ext (ext e) w)
 factor2Ext (ext  e)  (keep w)  = ext (factor2Ext e w)
 factor2Ext (ext🔒- e) (drop w)  = ext (factor2Ext (ext🔒- e) w)
 factor2Ext (ext🔒- e) (keep🔒 w) = ext🔒- (factor2Ext e w)
@@ -439,7 +439,7 @@ factor2Ext (ext🔒- e) (keep🔒 w) = ext🔒- (factor2Ext e w)
 --
 factor2≤ : (e : CExt Γ ΓL ΓR) → (w : Γ ⊆ Γ') → ΓL ⊆ (f2LCtx e w)
 factor2≤ nil       w         = w
-factor2≤ (ext e)   (drop w)  = factor2≤ e (fresh ∙ w)
+factor2≤ (ext e)   (drop w)  = factor2≤ (ext e) w
 factor2≤ (ext e)   (keep w)  = factor2≤ e w
 factor2≤ (ext🔒- e) (drop w)  = factor2≤ (ext🔒- e) w
 factor2≤ (ext🔒- e) (keep🔒 w) = factor2≤ e w

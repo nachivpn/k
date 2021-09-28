@@ -83,10 +83,12 @@ data _⊆_  : Ctx → Ctx → Set where
 -}
 
 -- weakening is reflexive
-idWk : Γ ⊆ Γ
-idWk {[]}     = base
-idWk {Γ `, x} = keep idWk
-idWk {Γ 🔒}    = keep🔒 idWk
+idWk[_] : (Γ : Ctx) → Γ ⊆ Γ
+idWk[_] []       = base
+idWk[_] (Γ `, x) = keep idWk[ Γ ]
+idWk[_] (Γ 🔒)    = keep🔒 idWk[ Γ ]
+
+idWk = λ {Γ} → idWk[ Γ ]
 
 -- weakening is transitive (or can be composed)
 _∙_ : {Σ : Ctx} → Σ ⊆ Δ → Δ ⊆ Γ → Σ ⊆ Γ
@@ -480,7 +482,7 @@ factor2ExtPresId {Γ} e = let open HE.≅-Reasoning in begin
   e                                            ∎
 
 factor2≤Id : (e : CExt Γ ΓL ΓR)
-  → factor2≤ e idWk ≅ idWk {ΓL}
+  → factor2≤ e idWk ≅ idWk[ ΓL ]
 factor2≤Id nil        = HE.refl
 factor2≤Id (ext e)    = factor2≤Id e
 factor2≤Id (ext🔒 x e) = factor2≤Id e

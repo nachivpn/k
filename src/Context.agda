@@ -456,41 +456,56 @@ factor2≤ (ext🔒- e) (keep🔒 w) = factor2≤ e w
 -- Factorisation laws for general extensions
 --------------------------------------------
 
-f2LCtxId : (e : CExt Γ ΓL ΓR) → ΓL ≡ f2LCtx e idWk
-f2LCtxId nil       = refl
-f2LCtxId (ext e)   = f2LCtxId e
-f2LCtxId (ext🔒- e) = f2LCtxId e
+f2LCtxPresId : (e : CExt Γ ΓL ΓR) → f2LCtx e idWk ≡ ΓL
+f2LCtxPresId nil       = refl
+f2LCtxPresId (ext e)   = f2LCtxPresId e
+f2LCtxPresId (ext🔒- e) = f2LCtxPresId e
 
-f2RCtxId : (e : CExt Γ ΓL ΓR) → ΓR ≡ f2RCtx e idWk
-f2RCtxId nil       = refl
-f2RCtxId (ext e)   = cong (_`, _) (f2RCtxId e)
-f2RCtxId (ext🔒- e) = cong _🔒 (f2RCtxId e)
+f2RCtxPresId : (e : CExt Γ ΓL ΓR) → f2RCtx e idWk ≡ ΓR
+f2RCtxPresId nil       = refl
+f2RCtxPresId (ext e)   = cong (_`, _) (f2RCtxPresId e)
+f2RCtxPresId (ext🔒- e) = cong _🔒 (f2RCtxPresId e)
 
-open import Relation.Binary.HeterogeneousEquality as HE using (_≅_)
+factor2≤PresId : (e : CExt Γ ΓL ΓR) → subst (ΓL ⊆_) (f2LCtxPresId e) (factor2≤ e idWk) ≡ idWk[ ΓL ]
+factor2≤PresId nil       = refl
+factor2≤PresId (ext e)   = factor2≤PresId e
+factor2≤PresId (ext🔒- e) = factor2≤PresId e
 
--- TODO: add to Relation.Binary.HeterogeneousEquality
-private
-  module _ where
-    open import Level           using (Level)
-    open import Relation.Binary using (REL)
+factor2ExtPresId : (e : CExt Γ ΓL ΓR) → subst₂ (CExt Γ) (f2LCtxPresId e) (f2RCtxPresId e) (factor2Ext e idWk) ≡ e
+factor2ExtPresId _ = ExtIsProp _ _
 
-    variable
-      ℓ : Level
-      A : Set ℓ
-      B : Set ℓ
+f2LCtxPres∙ : (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → f2LCtx e (w ∙ w') ≡ f2LCtx (factor2Ext e w) w'
+f2LCtxPres∙ nil         w           w'         = refl
+f2LCtxPres∙ e@(ext _)   w@(drop _)  (drop w')  = f2LCtxPres∙ e w w'
+f2LCtxPres∙ e@(ext _)   w@(keep _)  (drop w')  = f2LCtxPres∙ e w w'
+f2LCtxPres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = f2LCtxPres∙ e w w'
+f2LCtxPres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = f2LCtxPres∙ e w w'
+f2LCtxPres∙ e@(ext _)   (drop w)    (keep w')  = f2LCtxPres∙ e w w'
+f2LCtxPres∙ e@(ext🔒- _) (drop w)    (keep w')  = f2LCtxPres∙ e w w'
+f2LCtxPres∙ (ext e)     (keep w)    (keep w')  = f2LCtxPres∙ e w w'
+f2LCtxPres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = f2LCtxPres∙ e w w'
 
-    ≡-subst₂-removable : ∀ (R : REL A B ℓ) {x y u v} (eq₁ : x ≡ y) (eq₂ : u ≡ v) z → subst₂ R eq₁ eq₂ z ≅ z
-    ≡-subst₂-removable P refl refl z = HE.refl
+f2RCtxPres∙ : (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → f2RCtx e (w ∙ w') ≡ f2RCtx (factor2Ext e w) w'
+f2RCtxPres∙ nil         w           w'         = refl
+f2RCtxPres∙ e@(ext _)   w@(drop _)  (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
+f2RCtxPres∙ e@(ext _)   w@(keep _)  (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
+f2RCtxPres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
+f2RCtxPres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
+f2RCtxPres∙ e@(ext _)   (drop w)    (keep w')  = cong (_`, _) (f2RCtxPres∙ e w w')
+f2RCtxPres∙ e@(ext🔒- _) (drop w)    (keep w')  = cong (_`, _) (f2RCtxPres∙ e w w')
+f2RCtxPres∙ (ext e)     (keep w)    (keep w')  = cong (_`, _) (f2RCtxPres∙ e w w')
+f2RCtxPres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = cong _🔒 (f2RCtxPres∙ e w w')
 
-factor2ExtPresId :  (e : CExt Γ ΓL ΓR)
-  → factor2Ext e idWk ≅ e
-factor2ExtPresId {Γ} e = let open HE.≅-Reasoning in begin
-  factor2Ext e idWk                            ≡⟨ ExtIsProp _ _ ⟩
-  subst₂ (CExt Γ) (f2LCtxId e) (f2RCtxId e) e  ≅⟨ ≡-subst₂-removable _ _ _ e ⟩
-  e                                            ∎
+factor2≤Pres∙ : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → subst (ΓL ⊆_) (f2LCtxPres∙ e w w') (factor2≤ e (w ∙ w')) ≡ factor2≤ e w ∙ factor2≤ (factor2Ext e w) w'
+factor2≤Pres∙ nil         w           w'         = refl
+factor2≤Pres∙ e@(ext _)   w@(drop _)  (drop w')  = factor2≤Pres∙ e w w'
+factor2≤Pres∙ e@(ext _)   w@(keep _)  (drop w')  = factor2≤Pres∙ e w w'
+factor2≤Pres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = factor2≤Pres∙ e w w'
+factor2≤Pres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = factor2≤Pres∙ e w w'
+factor2≤Pres∙ e@(ext _)   (drop w)    (keep w')  = factor2≤Pres∙ e w w'
+factor2≤Pres∙ e@(ext🔒- _) (drop w)    (keep w')  = factor2≤Pres∙ e w w'
+factor2≤Pres∙ (ext e)     (keep w)    (keep w')  = factor2≤Pres∙ e w w'
+factor2≤Pres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = factor2≤Pres∙ e w w'
 
-factor2≤Id : (e : CExt Γ ΓL ΓR)
-  → factor2≤ e idWk ≅ idWk[ ΓL ]
-factor2≤Id nil        = HE.refl
-factor2≤Id (ext e)    = factor2≤Id e
-factor2≤Id (ext🔒 x e) = factor2≤Id e
+factor2ExtPres∙ : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → subst₂ (CExt Γ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w')) ≡ factor2Ext (factor2Ext e w) w'
+factor2ExtPres∙ _ _ _ = ExtIsProp _ _

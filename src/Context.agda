@@ -30,7 +30,10 @@ data Ctx : Set where
 [🔒] = [] 🔒
 
 variable
-  Γ Δ Γ' Δ' ΓL ΓR : Ctx
+  Γ Γ' Γ'' ΓL ΓR : Ctx
+  Δ Δ' Δ'' ΔL ΔR : Ctx
+  Θ Θ' Θ'' ΘL ΘR : Ctx
+  Ξ Ξ' Ξ'' ΞL ΞR : Ctx
 
 -- append contexts (++)
 _,,_ : Ctx → Ctx → Ctx
@@ -82,6 +85,9 @@ data _⊆_  : Ctx → Ctx → Set where
 
 -}
 
+variable
+  w w' w'' : Γ ⊆ Γ'
+
 -- weakening is reflexive
 idWk[_] : (Γ : Ctx) → Γ ⊆ Γ
 idWk[_] []       = base
@@ -91,7 +97,7 @@ idWk[_] (Γ 🔒)    = keep🔒 idWk[ Γ ]
 idWk = λ {Γ} → idWk[ Γ ]
 
 -- weakening is transitive (or can be composed)
-_∙_ : {Σ : Ctx} → Σ ⊆ Δ → Δ ⊆ Γ → Σ ⊆ Γ
+_∙_ : Θ ⊆ Δ → Δ ⊆ Γ → Θ ⊆ Γ
 w       ∙ base     = w
 w       ∙ drop w'  = drop (w ∙ w')
 drop w  ∙ keep w'  = drop (w ∙ w')
@@ -103,8 +109,7 @@ fresh : Γ ⊆ (Γ `, a)
 fresh = drop idWk
 
 variable
-  ΓL' ΓR' Γ'' ΓL'' ΓR'' : Ctx
-  ΔL ΔR : Ctx
+  ΓL' ΓR' ΓL'' ΓR'' : Ctx
 
 data Flag : Set where tt ff : Flag
 
@@ -192,6 +197,9 @@ CExt : Ctx → Ctx → Ctx → Set
 CExt = Ext tt
 
 pattern ext🔒- e = ext🔒 tt e
+
+variable
+  e e' e'' : Ext θ Γ ΓL ΓR
 
 -- Proof of WL is irrelevant
 WLIsProp : (x x' : WL θ) → x ≡ x'

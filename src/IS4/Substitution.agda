@@ -31,6 +31,10 @@ data Sub : Ctx → Ctx → Set where
   _`,_ : (σ : Sub Δ Γ) → (t : Tm Δ a) → Sub Δ (Γ `, a)
   lock : (σ : Sub ΔL Γ) → (e : CExt Δ ΔL ΔR) → Sub Δ (Γ 🔒)
 
+variable
+  σ σ' σ'' : Sub Δ Γ
+  τ τ' τ'' : Sub Δ Γ
+
 -- composition operation for weakening after substitution
 trimSub : Δ ⊆ Γ → Sub Γ' Γ → Sub Γ' Δ
 trimSub base      []         = []

@@ -2,16 +2,9 @@ module IK.Soundness.Soundness where
 
 open import Data.Unit
   using (⊤ ; tt)
-open import Data.Sum
-  using (inj₁ ; inj₂)
 open import Data.Product
   using (Σ ; _×_ ; _,_ ; ∃)
 open import Relation.Binary.PropositionalEquality
-open import Relation.Binary.Construct.Closure.ReflexiveTransitive
-  using (Star)
-  renaming (_◅◅_ to multi) public
-
-open Star
 
 import Context
 open import IK.Term

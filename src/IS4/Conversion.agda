@@ -3,18 +3,24 @@ module IS4.Conversion where
 open import IS4.Term
 open import IS4.Reduction
 
-open import Data.Sum
+import Data.Sum as Sum
 
-open import Relation.Nullary using (¬_)
+open import Relation.Nullary
+  using (¬_)
+
 open import Relation.Binary.Construct.Closure.Equivalence
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
+  as ReflexiveTransitive
   using (Star)
-  renaming (_◅◅_ to trans)
-open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; cong ; cong₂)
 
-open Star
-open _≡_
+open import Relation.Binary.PropositionalEquality
+  using (_≡_ ; refl ; cong ; cong₂)
+
+open Sum public
+  using (inj₁ ; inj₂)
+open ReflexiveTransitive public
+  using    (ε ; _◅_)
+  renaming (_◅◅_ to multi)
 
 -- Convertibility is defined taking the
 -- equivalence closure of the reduction relation.

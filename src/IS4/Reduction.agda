@@ -4,16 +4,19 @@ open import IS4.Term
 --open import IS4.HellOfSyntacticLemmas
 --  using (beta-wk-lemma ; keepFreshLemma ; sliceCompLemma)
 
-open import Relation.Nullary using (¬_)
+open import Relation.Nullary
+  using (¬_)
+
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
+  as ReflexiveTransitive
   using (Star)
-  renaming (_◅◅_ to multi) public
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; cong ; cong₂)
+  using (_≡_ ; refl ; cong ; cong₂)
 
-open Star
-open _≡_
+open ReflexiveTransitive public
+  using    (ε ; _◅_)
+  renaming (_◅◅_ to multi)
 
 -------------------
 -- Reduction rules
@@ -56,13 +59,13 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
 
 -- zero or more steps of reduction
 _⟶*_ : Tm Γ a → Tm Γ a → Set
-_⟶*_ = Star (_⟶_)
+_⟶*_ = Star _⟶_
 
 zero : {t t' : Tm Γ a} → t ≡ t' → t ⟶* t'
 zero refl = ε
 
 one : {t t' : Tm Γ a} → t ⟶ t' → t ⟶* t'
-one t = t Star.◅ ε
+one t = t ◅ ε
 
 cong-box* : {t t' : Tm (Γ 🔒) a}
   → t ⟶* t'

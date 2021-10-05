@@ -129,6 +129,10 @@ data Var : Ctx → Ty → Set where
   ze : Var (Γ `, a) a
   su : (v : Var Γ a) → Var (Γ `, b) a
 
+pattern v0 = ze
+pattern v1 = su v0
+pattern v2 = su v1
+
 wkVar : Γ ⊆ Γ' → Var Γ a → Var Γ' a
 wkVar (drop e) v      = su (wkVar e v)
 wkVar (keep e) ze     = ze

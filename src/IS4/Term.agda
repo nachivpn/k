@@ -40,6 +40,10 @@ variable
   t t' t'' : Tm Γ a
   u u' u'' : Tm Γ a
 
+pattern var0 = var v0
+pattern var1 = var v1
+pattern var2 = var v2
+
 wkTm : Γ ⊆ Γ' → Tm Γ a → Tm Γ' a
 wkTm w (var x)     = var (wkVar w x)
 wkTm w (lam t)     = lam (wkTm (keep w) t)

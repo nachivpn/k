@@ -19,10 +19,18 @@ data Ne where
   app   : Ne Γ (a ⇒ b) → Nf Γ a → Ne Γ b
   unbox : Ne ΓL (◻ a) → CExt Γ ΓL ΓR → Ne Γ a
 
+pattern var0 = var v0
+pattern var1 = var v1
+pattern var2 = var v2
+
 data Nf where
   up𝕓 : Ne Γ 𝕓 → Nf Γ 𝕓
   lam : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
   box : Nf (Γ 🔒) a → Nf Γ (◻ a)
+
+pattern var0 = up𝕓 (var v0)
+pattern var1 = up𝕓 (var v1)
+pattern var2 = up𝕓 (var v2)
 
 -- embedding into terms
 

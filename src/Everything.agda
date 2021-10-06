@@ -8,6 +8,7 @@ import IK.HellOfSyntacticLemmas
 import IK.Norm
 import IK.Reduction
 import IK.Term
+import IK.Type
 
 import IK.Applications.Experiments
 import IK.Applications.Neutrality
@@ -26,3 +27,7 @@ import IS4.Conversion
 import IS4.Norm
 --import IS4.Reduction
 import IS4.Term
+
+import IS4.Applications.Metalanguage
+--import IS4.Applications.Purity
+import IS4.Applications.Staged

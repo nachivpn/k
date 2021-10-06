@@ -201,19 +201,13 @@ run (print x x₁) = let-print-in x (run x₁)
 run (app x x₁ x₂) = let-app-in x x₁ (run x₂)
 run (unbox x x₁ x₂) = let-unbox-in x x₁ (run x₂)
 
-runTM' : Print (TM' a) →̇ TM' a
-runTM' {Unit} m = tt
-runTM' {𝕔} m = join m
-runTM' {a ⇒ b} m = λ e t → {!!}
-runTM' {◻ a} m = λ e → {!!}
-
 reflect : VAR a →̇ TM' a
 reify : TM' a →̇ Print (NF a)
 
 reify {Unit} x = η unit
 reify {𝕔} x = fmap var x
-reify {a ⇒ b} {Γ} x = η (lam (run (fmap ret (reify (runTM' {b} {Γ `, a} (x (drop idWk) (reflect {a} ze)))))))
-reify {◻ a} t = η (box (run (fmap ret (reify (runTM' {a} (t (ext🔒- nil)))))))
+reify {a ⇒ b} {Γ} x = η (lam (run (bind (λ y → fmap ret (reify {b} y)) (x (drop idWk) (reflect {a} ze)))))
+reify {◻ a} t = η (box (run (bind (λ x → fmap ret (reify {a} x)) (t (ext🔒- nil)))))
 
 reflect {Unit} v = tt
 reflect {𝕔} v = η v
@@ -221,8 +215,8 @@ reflect {a ⇒ b} v = λ e x → bind-int (λ e' n → app (wkVar e' v) n (η (r
 reflect {◻ a} v = λ e → unbox v e (η (reflect {a} ze))
 
 -- semantic counterpart of `unbox` from `Tm`
-unbox' : TM' (◻ a) ΓL → CExt Γ ΓL ΓR → TM' a Γ
-unbox' bx e = {!!}
+unbox' : TM' (◻ a) ΓL → CExt Γ ΓL ΓR → Print (TM' a) Γ
+unbox' bx e = bx e
 
 -- interpretation of variables
 substVar' : Var Γ a → (SUB' Γ →̇ TM' a)

@@ -142,7 +142,7 @@ wkPrint : (∀ {Δ} {Δ'} → (Δ ⊆ Δ') → A Δ → A Δ') → Γ ⊆ Γ' �
 wkPrint f e (η x) = η (f e x)
 wkPrint f e (print x p) = print (wkNf e x) (wkPrint f (keep e) p)
 wkPrint f e (app x x₁ t) = app (wkVar e x) (wkNf e x₁) (wkPrint f (keep e) t)
-wkPrint f e (unbox x x₁ t) = unbox  x {!!} (wkPrint f (keep e) t)
+wkPrint f e (unbox x x₁ t) = unbox (wkVar (factor2≤ x₁ e) x) (factor2Ext x₁ e) (wkPrint f (keep e) t)
 
 TM' : Ty → (Ctx → Set)
 TM' Unit = ⊤'

@@ -146,7 +146,7 @@ wkPrint f e (unbox x x₁ t) = unbox  x {!!} (wkPrint f (keep e) t)
 
 TM' : Ty → (Ctx → Set)
 TM' Unit = ⊤'
-TM' 𝕔 = NC 𝕔
+TM' 𝕔 = Print (VAR 𝕔)
 TM' (a ⇒ b) = (TM' a) ⇒' Print (TM' b)
 TM' (◻ a) = Box (Print (TM' a))
 
@@ -157,7 +157,7 @@ SUB' (Γ 🔒)   = Lock (SUB' Γ)
 
 -- values in the model can be weakened
 wkTM' : Γ ⊆ Γ' → TM' a Γ → TM' a Γ'
-wkTM' {a = 𝕔}  w n  = wkNc w n
+wkTM' {a = 𝕔}  w n  = wkPrint wkVar w n
 wkTM' {a = a ⇒ b} w f  = λ w' y → f (w ∙ w') y
 wkTM' {a = ◻ a}  w bx = λ e → wkPrint (wkTM' {a = a}) (factor1≤ e w) ((bx (factor1Ext e w)))
 wkTM' {a = Unit} w n  = tt
@@ -203,21 +203,21 @@ run (unbox x x₁ x₂) = let-unbox-in x x₁ (run x₂)
 
 runTM' : Print (TM' a) →̇ TM' a
 runTM' {Unit} m = tt
-runTM' {𝕔} m = run m
+runTM' {𝕔} m = join m
 runTM' {a ⇒ b} m = λ e t → {!!}
 runTM' {◻ a} m = λ e → {!!}
 
 reflect : VAR a →̇ TM' a
-reify : TM' a →̇ Print (NC a)
+reify : TM' a →̇ Print (NF a)
 
-reify {Unit} x = η (ret unit)
-reify {𝕔} x = η x
-reify {a ⇒ b} {Γ} x = η (ret (lam (run (reify (runTM' {b} {Γ `, a} (x (drop idWk) (reflect {a} ze)))))))
-reify {◻ a} t = η (ret (box (run (reify (runTM' {a} (t (ext🔒- nil)))))))
+reify {Unit} x = η unit
+reify {𝕔} x = fmap var x
+reify {a ⇒ b} {Γ} x = η (lam (run (fmap ret (reify (runTM' {b} {Γ `, a} (x (drop idWk) (reflect {a} ze)))))))
+reify {◻ a} t = η (box (run (fmap ret (reify (runTM' {a} (t (ext🔒- nil)))))))
 
 reflect {Unit} v = tt
-reflect {𝕔} v = ret (var v)
-reflect {a ⇒ b} v = λ e x → app (wkVar e v) {!!} (η (reflect {b} ze))
+reflect {𝕔} v = η v
+reflect {a ⇒ b} v = λ e x → bind-int (λ e' n → app (wkVar e' v) n (η (reflect {b} ze))) e (reify {a} x)
 reflect {◻ a} v = λ e → unbox v e (η (reflect {a} ze))
 
 -- semantic counterpart of `unbox` from `Tm`

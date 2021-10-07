@@ -9,45 +9,45 @@ import Data.Sum as Sum
 open import Relation.Nullary
   using (¬_)
 
+open import Relation.Binary
+  using (Setoid)
+
 open import Relation.Binary.Construct.Closure.Equivalence
-open import Relation.Binary.Construct.Closure.Equivalence.Properties
-  using (a—↠b⇒a↔b)
+  using (setoid)
+import Relation.Binary.Construct.Closure.Equivalence.Properties
+  as EquivalenceProperties
 
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   as ReflexiveTransitive
   using (Star)
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; refl ; cong ; cong₂)
+  using    (_≡_ ; cong ; cong₂)
+  renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
 open Sum public
   using (inj₁ ; inj₂)
 open ReflexiveTransitive public
-  using    (ε ; _◅_)
-  renaming (_◅◅_ to multi)
+  using (ε ; _◅_)
+open EquivalenceProperties public
+  using    ()
+  renaming (a—↠b⇒a↔b to ⟶*-to-≈)
 
 -- Convertibility is defined taking the
 -- equivalence closure of the reduction relation.
-_≈_  : Tm Γ a → Tm Γ a → Set
-_≈_   = EqClosure _⟶_
+Tm-setoid : (Γ : Ctx) → (a : Ty) → Setoid _ _
+Tm-setoid Γ a = setoid (_⟶_ {Γ} {a})
 
-refl-≈ : {t : Tm Γ a} → t ≈ t
-refl-≈ = ε
+module _ {Γ : Ctx} {a : Ty} where
+  open Setoid (Tm-setoid Γ a) public
+    using    (_≈_)
+    renaming (refl to ≈-refl ; reflexive to ≡-to-≈ ; sym to ≈-sym ; trans to ≈-trans ; isEquivalence to ≈-equiv)
 
-sym-≈ : {t t' : Tm Γ a} → t ≈ t' → t' ≈ t
-sym-≈ = symmetric _⟶_
-
-trans-≈ : {t t' u : Tm Γ a} → t ≈ t' → t' ≈ u → t ≈ u
-trans-≈ = transitive _⟶_
-
-≡-to-≈ : {t t' : Tm Γ b} → t ≡ t' → t ≈ t'
-≡-to-≈ refl = ε
+≡˘-to-≈ : t' ≡ t → t ≈ t'
+≡˘-to-≈ t'≡t = ≡-to-≈ (≡-sym t'≡t)
 
 ⟶-to-≈ : t ⟶ t' → t ≈ t'
 ⟶-to-≈ p = inj₁ p ◅ ε
-
-⟶*-to-≈ : t ⟶* t' → t ≈ t'
-⟶*-to-≈ = a—↠b⇒a↔b
 
 module _ {t : Tm Γ a → Tm Δ b} (cong-t : ∀ {u u' : Tm Γ a} → (u⟶u' : u ⟶ u') → t u ⟶ t u') where
   -- XXX: fold
@@ -78,7 +78,7 @@ cong-app2≈ : ∀ (u≈u' : u ≈ u') → app t u ≈ app t u'
 cong-app2≈ = cong-⟶-to-cong-≈ Reduction.cong-app2
 
 cong-app≈ : ∀ (t≈t' : t ≈ t') (u≈u' : u ≈ u') → app t u ≈ app t' u'
-cong-app≈ t≈t' u≈u' = trans-≈ (cong-app1≈ t≈t') (cong-app2≈ u≈u')
+cong-app≈ t≈t' u≈u' = ≈-trans (cong-app1≈ t≈t') (cong-app2≈ u≈u')
 
 cong-box≈ : ∀ (t≈t' : t ≈ t') → box t ≈ box t'
 cong-box≈ = cong-⟶-to-cong-≈ Reduction.cong-box

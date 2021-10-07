@@ -7,16 +7,20 @@ open import IK.HellOfSyntacticLemmas
 open import Relation.Nullary
   using (¬_)
 
+open import Relation.Binary
+  using (Preorder)
+
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   as ReflexiveTransitive
   using (Star)
+open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties
+  using (preorder)
 
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; refl ; cong ; cong₂)
 
 open ReflexiveTransitive public
-  using    (ε ; _◅_)
-  renaming (_◅◅_ to multi)
+  using (ε ; _◅_)
 
 -------------------
 -- Reduction rules
@@ -57,11 +61,13 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → unbox t e ⟶ unbox t' e
 
 -- zero or more steps of reduction
-_⟶*_ : Tm Γ a → Tm Γ a → Set
-_⟶*_ = Star _⟶_
+Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _
+Tm-preorder Γ a = preorder (_⟶_ {Γ} {a})
 
-zero : {t t' : Tm Γ a} → t ≡ t' → t ⟶* t'
-zero refl = ε
+module _ {Γ : Ctx} {a : Ty} where
+  open Preorder (Tm-preorder Γ a) public
+    using    ()
+    renaming (_∼_ to _⟶*_ ; refl to ⟶-refl ; reflexive to zero ; trans to multi)
 
 one : {t t' : Tm Γ a} → t ⟶ t' → t ⟶* t'
 one t = t ◅ ε

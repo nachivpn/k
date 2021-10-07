@@ -25,7 +25,7 @@ open ReflexiveTransitive public
 data _⟶_ : Tm Γ a → Tm Γ a → Set where
 
   red-fun : {t : Tm (Γ `, a) b} {u : Tm Γ a}
-    → (app (lam t) u) ⟶ substTm (idₛ `, u) t
+    → app (lam t) u ⟶ substTm (idₛ `, u) t
 
   exp-fun : {t : Tm Γ (a ⇒ b)}
     → t ⟶ lam (app (wkTm fresh t) (var ze))
@@ -38,24 +38,23 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
 
   cong-lam : {t t' : Tm (Γ `, a) b}
     → t ⟶ t'
-    → (lam t) ⟶ (lam t')
+    → lam t ⟶ lam t'
 
   cong-app1 : {t t' : Tm Γ (a ⇒ b)} {u : Tm Γ a}
     → t ⟶ t'
-    → (app t u) ⟶ (app t' u)
+    → app t u ⟶ app t' u
 
   cong-app2 : {t : Tm Γ (a ⇒ b)} {u u' : Tm Γ a}
     → u ⟶ u'
-    → (app t u) ⟶ (app t u')
+    → app t u ⟶ app t u'
 
   cong-box : {t t' : Tm (Γ 🔒) a}
     → t ⟶ t'
-    → (box t) ⟶ (box t')
+    → box t ⟶ box t'
 
   cong-unbox : {t t' : Tm ΓL (◻ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
     → t ⟶ t'
-    → (unbox t e) ⟶ (unbox t' e)
-
+    → unbox t e ⟶ unbox t' e
 
 -- zero or more steps of reduction
 _⟶*_ : Tm Γ a → Tm Γ a → Set
@@ -67,31 +66,48 @@ zero refl = ε
 one : {t t' : Tm Γ a} → t ⟶ t' → t ⟶* t'
 one t = t ◅ ε
 
+module _ {t : Tm Γ a → Tm Δ b} (cong-t : ∀ {u u' : Tm Γ a} → (u⟶u' : u ⟶ u') → t u ⟶* t u') where
+  cong-⟶*-to-cong-⟶* : ∀ (u⟶*u' : u ⟶* u') → t u ⟶* t u'
+  cong-⟶*-to-cong-⟶* ε                 = ε
+  cong-⟶*-to-cong-⟶* (u⟶u'' ◅ u''⟶*u') = multi (cong-t u⟶u'') (cong-⟶*-to-cong-⟶* u''⟶*u')
+
+cong-⟶-to-cong-⟶* : {t : Tm Γ a → Tm Δ b} (cong-t : ∀ {u u' : Tm Γ a} → (u⟶u' : u ⟶ u') → t u ⟶ t u') (u⟶*u' : u ⟶* u') → t u ⟶* t u'
+cong-⟶-to-cong-⟶* cong-t = cong-⟶*-to-cong-⟶* (λ u⟶u' → one (cong-t u⟶u'))
+
+cong-app : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
+  → t ⟶ t' → u ⟶ u'
+  → app t u ⟶* app t' u'
+cong-app t⟶t' u⟶u' = cong-app1 t⟶t' ◅ cong-app2 u⟶u' ◅ ε
+
 cong-box* : {t t' : Tm (Γ 🔒) a}
   → t ⟶* t'
-  → (box t) ⟶* (box t')
-cong-box* ε       = ε
-cong-box* (x ◅ r) = cong-box x ◅ cong-box* r
+  → box t ⟶* box t'
+cong-box* = cong-⟶-to-cong-⟶* cong-box
 
 cong-unbox* : {t t' : Tm ΓL (◻ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
   → t ⟶* t'
-  → (unbox t e) ⟶* (unbox t' e)
-cong-unbox* ε       = ε
-cong-unbox* (x ◅ r) = cong-unbox x ◅ cong-unbox* r
+  → unbox t e ⟶* unbox t' e
+cong-unbox* = cong-⟶-to-cong-⟶* cong-unbox
 
 cong-lam* : {t t' : Tm (Γ `, a) b}
   → t ⟶* t'
-  → (lam t) ⟶* (lam t')
-cong-lam* ε       = ε
-cong-lam* (x ◅ r) = cong-lam x ◅ cong-lam* r
+  → lam t ⟶* lam t'
+cong-lam* = cong-⟶-to-cong-⟶* cong-lam
+
+cong-app1* : {t t' : Tm Γ (a ⇒ b)} {u : Tm Γ  a}
+  → t ⟶* t'
+  → app t u ⟶* app t' u
+cong-app1* = cong-⟶-to-cong-⟶* cong-app1
+
+cong-app2* : {t : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
+  → u ⟶* u'
+  → app t u ⟶* app t u'
+cong-app2* = cong-⟶-to-cong-⟶* cong-app2
 
 cong-app*  : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → t ⟶* t' → u ⟶* u'
-  → (app t u) ⟶* (app t' u')
-cong-app* ε        ε        = ε
-cong-app* (x ◅ r1) ε        = cong-app1 x ◅ cong-app* r1 ε
-cong-app* r1       (x ◅ r2) = cong-app2 x ◅ cong-app* r1 r2
-
+  → app t u ⟶* app t' u'
+cong-app* t⟶*t' u⟶*u' = multi (cong-app1* t⟶*t') (cong-app2* u⟶*u')
 
 invRed :  {t t' : Tm Γ a}
   → (w : Γ ⊆ Δ)
@@ -120,5 +136,4 @@ invRed* :  {t t' : Tm Γ a}
   → (w : Γ ⊆ Δ)
   → t ⟶* t'
   → wkTm w t ⟶* wkTm w t'
-invRed* w ε       = ε
-invRed* w (x ◅ r) = multi (invRed w x) (invRed* w r)
+invRed* w = cong-⟶*-to-cong-⟶* (invRed w)

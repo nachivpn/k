@@ -3,7 +3,7 @@ module IS4.Applications.Staged where
 open import Data.Unit  using (⊤ ; tt)
 open import Data.Product  using (Σ ; _×_ ; _,_; proj₁; proj₂; ∃)
 
-open import IS4.Term
+open import IS4.Term.Base
 
 ---------------
 -- Normal forms

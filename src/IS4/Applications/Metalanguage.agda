@@ -1,5 +1,8 @@
 module IS4.Applications.Metalanguage where
 
+open import Data.Unit  using (⊤ ; tt)
+open import Data.Product  using (∃ ; Σ ; _×_ ; _,_ ; -,_ ; proj₁ ; proj₂)
+
 data Ty : Set where
   Unit : Ty
   𝕔    : Ty
@@ -61,7 +64,31 @@ wkTm w (print t) = print (wkTm w t)
 wkTm w (let-in t u) = let-in (wkTm w t) (wkTm (keep w) u)
 wkTm w (ret t) = ret (wkTm w t)
 
-open import IS4.Substitution Ty Tm var wkTm public
+-- extension that "generates a new context frame"
+new : CExt (Γ 🔒) Γ ([] 🔒) -- Γ R Γ 🔒
+new = ext🔒- nil
+
+new[_] = λ Γ → new {Γ}
+
+open Substitution Tm var wkTm CExt new f2LCtx factor2≤ f2RCtx factor2Ext public
+  renaming (module Composition to SubstitutionComposition)
+
+factor2 : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × CExt Δ ΔL ΔR
+factor2 nil        s           = -, -, s , nil
+factor2 (ext e)    (s `, t)    = factor2 e s
+factor2 (ext🔒- e) (lock s e')  = let (ΔL , ΔR , s' , e'') = factor2 e s in -, -, s' , extRAssoc e'' e'
+
+f2LCtxₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
+f2LCtxₛ = λ e s → factor2 e s .proj₁
+
+f2RCtxₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
+f2RCtxₛ = λ e s → factor2 e s .proj₂ .proj₁
+
+factor2Sub : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub (f2LCtxₛ e s) ΓL
+factor2Sub = λ e s → factor2 e s .proj₂ .proj₂ .proj₁
+
+factor2Extₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ (f2LCtxₛ e s) _
+factor2Extₛ = λ e s → factor2 e s .proj₂ .proj₂ .proj₂
 
 -- apply substitution to a term
 substTm : Sub Δ Γ → Tm Γ a → Tm Δ a
@@ -73,20 +100,8 @@ substTm s                                (app t u)
   = app (substTm s t) (substTm s u)
 substTm s                                (box t)
   = box (substTm (lock s (ext🔒- nil)) t)
-substTm s                                (unbox t nil)
-  = unbox (substTm s t) nil
-substTm (s `, _)                         (unbox t (ext e))
-  = substTm s (unbox t e)
-substTm (lock s nil)                     (unbox t (ext🔒- e))
-  = substTm s (unbox t e)
-substTm (lock s (ext e'))                (unbox t (ext🔒- e))
-  = wkTm fresh (substTm (lock s e') (unbox t (ext🔒- e)))
-substTm (lock s (ext🔒- e'))             (unbox t (ext🔒- nil))
-  = unbox (substTm s t) (ext🔒- e')
-substTm (lock (s `, _) (ext🔒- e'))      (unbox t (ext🔒- (ext e)))
-  = substTm (lock s (ext🔒- e')) (unbox t (ext🔒- e))
-substTm (lock (lock s e'') (ext🔒- e')) (unbox t (ext🔒- (ext🔒- e)))
-  = substTm (lock s (ext🔒- (extRAssoc e'' e'))) (unbox t (ext🔒- e))
+substTm s                                (unbox t e)
+  = unbox (substTm (factor2Sub e s) t) (factor2Extₛ e s)
 substTm s                                unit
   = unit
 substTm s                                (print t)
@@ -95,25 +110,7 @@ substTm s                                (let-in t u)
   = let-in (substTm s t) (substTm (wkSub fresh s `, var ze) u)
 substTm s (ret t) = ret (substTm s t)
 
--- substitution composition
-_∙ₛ_ : Sub Δ Γ → Sub Δ' Δ → Sub Δ' Γ
-[]                          ∙ₛ s'
-  = []
-(s `, t)                    ∙ₛ s'
-  = (s ∙ₛ s') `, substTm s' t
-lock s nil                  ∙ₛ s'
-  = lock (s ∙ₛ s') nil
-lock s (ext e)              ∙ₛ (s' `, _)
-  = lock s e ∙ₛ s'
-lock s (ext🔒- nil)        ∙ₛ lock s' e'
-  = lock (s ∙ₛ s') e'
-lock s (ext🔒- (ext e))    ∙ₛ lock (s' `, _) e'
-  = lock s (ext🔒- e) ∙ₛ lock s' e'
-lock s (ext🔒- (ext🔒- e)) ∙ₛ lock (lock s' e'') e'
-  = lock s (ext🔒- e) ∙ₛ lock s' (extRAssoc e'' e')
-
-open import Data.Unit  using (⊤ ; tt)
-open import Data.Product  using (Σ ; _×_ ; _,_)
+open SubstitutionComposition substTm f2LCtxₛ factor2Sub f2RCtxₛ factor2Extₛ public
 
 ---------------
 -- Normal forms

@@ -1,21 +1,15 @@
 module IS4.Completeness.Completeness where
 
-open import Data.Unit
-  using (⊤ ; tt)
-open import Data.Product
-  using (Σ ; _×_ ; _,_ ; ∃)
+open import Data.Unit    using (⊤ ; tt)
+open import Data.Product using (Σ ; _×_ ; _,_ ; ∃)
+
 open import Relation.Binary.PropositionalEquality
-open import Relation.Binary.HeterogeneousEquality as HE
-  using (_≅_)
+  using (_≡_ ; refl ; sym ; trans ; subst ; subst₂ ; cong ; cong₂ ; module ≡-Reasoning)
 
 open import HEUtil
-open import IS4.Term
-open import IS4.Conversion
-open import IS4.Reduction using (_⟶_)
-open import IS4.Norm
-open import IS4.HellOfSyntacticLemmas
 
-open _⟶_
+open import IS4.Norm
+open import IS4.Term
 
 quotTm : Tm' Γ a → Tm Γ a
 quotTm x = embNf (reify x)
@@ -209,7 +203,7 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
     (≈ₛ-reflexive
       (trans
         (cong₂ lock refl extLeftUnit)
-        (≅-to-≡ (HE.icong (CExt _ _) ,,-leftUnit (lock _) (≡-subst-removable (CExt _ _) _ e)))))
+        (≅-to-≡ (≅-cong (CExt _ _) ,,-leftUnit (lock _) (≡-subst-removable (CExt _ _) _ e)))))
   --
   unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ≈ substTm (lock (wkSub w s) e) t
   unbox-box-reduces = begin
@@ -277,7 +271,7 @@ fund (unbox {ΓL = ΓL} t e) {s = s} {s'} sRs'
         w1 ≅ w2 →
         e1 ≅ e2 →
         eval t s1 w1 e1 ≅ eval t s2 w2 e2
-      evalt-cong≅ refl refl HE.refl HE.refl HE.refl = HE.refl
+      evalt-cong≅ refl refl ≅-refl ≅-refl ≅-refl = ≅-refl
       -- ≡-congruence for `eval t`
       evalt-cong≡ :  {ΔL ΔR : Ctx} →
         {s1 s2 : Sub' ΔL ΓL} {w1 w2 : ΔL ⊆ ΔL}

@@ -1,24 +1,15 @@
-module IS4.Reduction where
+module IS4.Term.Reduction where
 
-open import IS4.Term
-open import IS4.HellOfSyntacticLemmas
+open import Relation.Binary using (Preorder)
 
-open import Relation.Nullary
-  using (¬_)
+import      Relation.Binary.Construct.Closure.ReflexiveTransitive            as ReflexiveTransitive
+open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties using (preorder)
 
-open import Relation.Binary
-  using (Preorder)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; cong₂)
 
-open import Relation.Binary.Construct.Closure.ReflexiveTransitive
-  as ReflexiveTransitive
-  using (Star)
-open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties
-  using (preorder)
-open import Relation.Binary.PropositionalEquality as PE
-  using (_≡_ ; refl ; sym ; trans ; cong ; cong₂)
+open import IS4.Term.Base
 
-open ReflexiveTransitive public
-  using (ε ; _◅_)
+open ReflexiveTransitive public using (ε ; _◅_)
 
 -------------------
 -- Reduction rules

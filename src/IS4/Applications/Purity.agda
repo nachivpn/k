@@ -61,7 +61,36 @@ wkTm w (print t)    = print (wkTm w t)
 wkTm w (let-in t u) = let-in (wkTm w t) (wkTm (keep w) u)
 wkTm w (ret t)      = ret (wkTm w t)
 
-open import IS4.Substitution Ty Tm var wkTm public
+-- extension that "generates a new context frame"
+new : CExt (Γ 🔒) Γ ([] 🔒) -- Γ R Γ 🔒
+new = ext🔒- nil
+
+new[_] = λ Γ → new {Γ}
+
+open Substitution Tm var wkTm CExt new lCtx factorWk rCtx factorExt public
+  renaming (module Composition to SubstitutionComposition)
+
+-- "Left" context of factoring with a substitution (see factorExtₛ)
+lCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
+lCtxₛ {Δ = Δ} nil       s           = Δ
+lCtxₛ         (ext e)   (s `, t)    = lCtxₛ e s
+lCtxₛ         (ext🔒- e) (lock s e') = lCtxₛ e s
+
+-- "Right" context of factoring with a substitution (see factorExtₛ)
+rCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
+rCtxₛ nil       s                     = []
+rCtxₛ (ext e)   (s `, t)              = rCtxₛ e s
+rCtxₛ (ext🔒- e) (lock {ΔR = ΔR} s e') = rCtxₛ e s ,, ΔR
+
+factorExtₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ (lCtxₛ e s) (rCtxₛ e s)
+factorExtₛ nil       s           = nil
+factorExtₛ (ext e)   (s `, _)    = factorExtₛ e s
+factorExtₛ (ext🔒- e) (lock s e') = extRAssoc (factorExtₛ e s) e'
+
+factorSubₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub (lCtxₛ e s) ΓL
+factorSubₛ nil       s           = s
+factorSubₛ (ext e)   (s `, t)    = factorSubₛ e s
+factorSubₛ (ext🔒- e) (lock s e') = factorSubₛ e s
 
 -- apply substitution to a term
 substTm : Sub Δ Γ → Tm Γ a → Tm Δ a
@@ -96,22 +125,7 @@ substTm s                               (let-in t u)
 substTm s                               (ret t)
   = ret (substTm s t)
 
--- substitution composition
-_∙ₛ_ : Sub Δ Γ → Sub Δ' Δ → Sub Δ' Γ
-[]                          ∙ₛ s'
-  = []
-(s `, t)                    ∙ₛ s'
-  = (s ∙ₛ s') `, substTm s' t
-lock s nil                  ∙ₛ s'
-  = lock (s ∙ₛ s') nil
-lock s (ext e)              ∙ₛ (s' `, _)
-  = lock s e ∙ₛ s'
-lock s (ext🔒- nil)        ∙ₛ lock s' e'
-  = lock (s ∙ₛ s') e'
-lock s (ext🔒- (ext e))    ∙ₛ lock (s' `, _) e'
-  = lock s (ext🔒- e) ∙ₛ lock s' e'
-lock s (ext🔒- (ext🔒- e)) ∙ₛ lock (lock s' e'') e'
-  = lock s (ext🔒- e) ∙ₛ lock s' (extRAssoc e'' e')
+open SubstitutionComposition substTm lCtxₛ factorSubₛ rCtxₛ factorExtₛ public
 
 open import Data.Unit  using (⊤ ; tt)
 open import Data.Product  using (Σ ; _×_ ; _,_)

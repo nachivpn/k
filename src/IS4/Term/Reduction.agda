@@ -1,8 +1,6 @@
-module IS4.Reduction where
+module IS4.Term.Reduction where
 
-open import IS4.Term
---open import IS4.HellOfSyntacticLemmas
---  using (beta-wk-lemma ; keepFreshLemma ; sliceCompLemma)
+open import IS4.Term.Base
 
 open import Relation.Nullary
   using (¬_)
@@ -114,34 +112,3 @@ cong-app*  : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → t ⟶* t' → u ⟶* u'
   → app t u ⟶* app t' u'
 cong-app* t⟶*t' u⟶*u' = multi (cong-app1* t⟶*t') (cong-app2* u⟶*u')
-
-{-
-invRed :  {t t' : Tm Γ a}
-  → (w : Δ ≤ Γ)
-  → t ⟶ t'
-  → wkTm w t ⟶* wkTm w t'
-invRed w (red-fun {t = t} {u = u})
-  = multi (one red-fun) (zero (beta-wk-lemma w u t))
-invRed w exp-fun
-  = multi (one exp-fun) (zero (cong lam (cong₂ app keepFreshLemma refl)))
-invRed w (red-box {e = e})
-  = multi (one red-box) (zero (sliceCompLemma w e _))
-invRed w exp-box
-  = one exp-box
-invRed w (cong-lam r)
-  = cong-lam* (invRed (keep w) r)
-invRed w (cong-box r)
-  = cong-box* (invRed (keep🔒 w) r)
-invRed w (cong-unbox r)
-  = cong-unbox* (invRed (sliceLeft _ w) r)
-invRed w (cong-app1 r)
-  = cong-app* (invRed w r) ε
-invRed w (cong-app2 r)
-  = cong-app* ε (invRed w r)
-
-invRed* :  {t t' : Tm Γ a}
-  → (w : Δ ≤ Γ)
-  → t ⟶* t'
-  → wkTm w t ⟶* wkTm w t'
-invRed* w = cong-⟶*-to-cong-⟶* (invRed w)
--}

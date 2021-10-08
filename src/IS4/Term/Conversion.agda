@@ -1,7 +1,7 @@
-module IS4.Conversion where
+module IS4.Term.Conversion where
 
-open import IS4.Term
-open import IS4.Reduction
+open import IS4.Term.Base
+open import IS4.Term.Reduction
   as Reduction
 
 import Data.Sum as Sum

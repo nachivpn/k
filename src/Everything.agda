@@ -21,12 +21,12 @@ import IK.Soundness.Soundness
 import IK.Completeness.Trace
 import IK.Completeness.Completeness
 
-import IS4.Substitution
-import IS4.Conversion
---import IS4.HellOfSyntacticLemmas
-import IS4.Norm
---import IS4.Reduction
 import IS4.Term
+import IS4.Term.Conversion
+import IS4.Term.NormalForm
+import IS4.Term.Reduction
+
+import IS4.Norm
 
 import IS4.Applications.IS4Plus
 import IS4.Applications.Purity

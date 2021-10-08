@@ -623,3 +623,91 @@ factor2≤PresTrans e  (ext🔒- e')   (keep🔒 w) = factor2≤PresTrans e e' w
 
 factor2ExtPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst₂ (CExt Θ') (f2LCtxPresTrans e e' w) (f2RCtxPresTrans e e' w) (factor2Ext (extRAssoc e e') w) ≡ extRAssoc (factor2Ext e (factor2≤ e' w)) (factor2Ext e' w)
 factor2ExtPresTrans _e _e' _w = ExtIsProp _ _
+
+----------------
+-- Substitutions
+----------------
+
+module Substitution
+  (Tm          : (Γ : Ctx) → (a : Ty) → Set)
+  (var         : {Γ : Ctx} → {a : Ty} → (v : Var Γ a) → Tm Γ a)
+  (wkTm        : {Γ' Γ : Ctx} → {a : Ty} → (w : Γ ⊆ Γ') → (t : Tm Γ a) → Tm Γ' a)
+  (Acc         : (Δ Γ ΓR : Ctx) → Set)
+  {newR        : (Γ : Ctx) → Ctx}
+  (new         : ∀ {Γ : Ctx} → Acc (Γ 🔒) Γ (newR Γ))
+  (f2LCtx      : {Δ Γ ΓR Δ' : Ctx} → (e : Acc Δ Γ ΓR) → (w : Δ ⊆ Δ') → Ctx)
+  (factor2≤    : ∀ {Δ Γ ΓR Δ' : Ctx} (e : Acc Δ Γ ΓR) (w : Δ ⊆ Δ') → Γ ⊆ f2LCtx e w)
+  (f2RCtx      : {Δ Γ ΓR Δ' : Ctx} → (e : Acc Δ Γ ΓR) → (w : Δ ⊆ Δ') → Ctx)
+  (factor2Ext  : ∀ {Δ Γ ΓR Δ' : Ctx} (e : Acc Δ Γ ΓR) (w : Δ ⊆ Δ') → Acc Δ' (f2LCtx e w) (f2RCtx e w))
+  where
+
+  data Sub : Ctx → Ctx → Set where
+    []   : Sub Δ []
+    _`,_ : (σ : Sub Δ Γ) → (t : Tm Δ a) → Sub Δ (Γ `, a)
+    lock : (σ : Sub ΔL Γ) → (e : Acc Δ ΔL ΔR) → Sub Δ (Γ 🔒)
+
+  variable
+    σ σ' σ'' : Sub Δ Γ
+    τ τ' τ'' : Sub Δ Γ
+
+  -- weaken a substitution, composition operation for weakening before substitution
+  wkSub : Γ ⊆ Γ' → Sub Γ Δ → Sub Γ' Δ
+  wkSub w []         = []
+  wkSub w (s `, t)   = wkSub w s `, wkTm w t
+  wkSub w (lock s e) = lock (wkSub (factor2≤ e w) s) (factor2Ext e w)
+
+  -- composition operation for weakening after substitution
+  trimSub : Δ ⊆ Γ → Sub Γ' Γ → Sub Γ' Δ
+  trimSub base      []         = []
+  trimSub (drop w)  (s `, t)   = trimSub w s
+  trimSub (keep w)  (s `, t)   = trimSub w s `, t
+  trimSub (keep🔒 w) (lock s e) = lock (trimSub w s) e
+
+  -- "drop" the last variable in the context
+  dropₛ : Sub Γ Δ → Sub (Γ `, a) Δ
+  dropₛ s = wkSub fresh s
+
+  -- "keep" the last variable in the context
+  keepₛ : Sub Γ Δ → Sub (Γ `, a) (Δ `, a)
+  keepₛ s = dropₛ s `, var ze
+
+  -- "keep" the lock in the context
+  keep🔒ₛ : Sub Γ Δ → Sub (Γ 🔒) (Δ 🔒)
+  keep🔒ₛ s = lock s new
+
+  -- embed a weakening to substitution
+  embWk : Δ ⊆ Γ → Sub Γ Δ
+  embWk base      = []
+  embWk (drop w)  = dropₛ (embWk w)
+  embWk (keep w)  = keepₛ (embWk w)
+  embWk (keep🔒 w) = keep🔒ₛ (embWk w)
+
+  -- identity substitution
+  idₛ : Sub Γ Γ
+  idₛ = embWk idWk
+
+  idₛ[_] = λ Γ → idₛ {Γ}
+
+  ExtToSub : (e : Acc Δ Γ ΓR) → Sub Δ (Γ 🔒)
+  ExtToSub e = lock idₛ e
+
+  -- apply substitution to a variable
+  substVar : Sub Γ Δ → Var Δ a → Tm Γ a
+  substVar (s `, t) ze     = t
+  substVar (s `, t) (su v) = substVar s v
+
+  module Composition
+    (substTm     : {Δ Γ : Ctx} → {a : Ty} → (σ : Sub Δ Γ) → (t : Tm Γ a) → Tm Δ a)
+    (f2LCtxₛ     : {Δ Γ ΓR Θ : Ctx} → (e : Acc Δ Γ ΓR) → (σ : Sub Θ Δ) → Ctx)
+    (factor2Sub  : ∀ {Δ Γ ΓR Θ : Ctx} (e : Acc Δ Γ ΓR) (σ : Sub Θ Δ) → Sub (f2LCtxₛ e σ) Γ)
+    (f2RCtxₛ     : {Δ Γ ΓR Θ : Ctx} → (e : Acc Δ Γ ΓR) → (σ : Sub Θ Δ) → Ctx)
+    (factor2Extₛ : ∀ {Δ Γ ΓR Θ : Ctx} (e : Acc Δ Γ ΓR) (σ : Sub Θ Δ) → Acc Θ (f2LCtxₛ e σ) (f2RCtxₛ e σ))
+    where
+
+    infixr 20 _∙ₛ_
+
+    -- substitution composition
+    _∙ₛ_ : Sub Δ Γ → Sub Δ' Δ → Sub Δ' Γ
+    []        ∙ₛ s = []
+    (s' `, t) ∙ₛ s = s' ∙ₛ s `, substTm s t
+    lock s' e ∙ₛ s = lock (s' ∙ₛ factor2Sub e s) (factor2Extₛ e s)

@@ -62,7 +62,7 @@ open import IS4.Substitution Ty Tm var wkTm public
 -- apply substitution to a term
 substTm : Sub Δ Γ → Tm Γ a → Tm Δ a
 substTm s (var x)     = substVar s x
-substTm s (lam t)     = lam (substTm (wkSub fresh s `, var ze) t)
+substTm s (lam t)     = lam (substTm (keepₛ s) t)
 substTm s (app t u)   = app (substTm s t) (substTm s u)
 substTm s (box t)     = box (substTm (keep🔒ₛ s) t)
 substTm s (unbox t e) = unbox (substTm (factor2Sub e s) t) (factor2Extₛ e s)

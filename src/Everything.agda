@@ -26,6 +26,10 @@ import IS4.Term.Conversion
 import IS4.Term.NormalForm
 import IS4.Term.Reduction
 
+import IS4.NbE
+import IS4.NbE.Model
+import IS4.NbE.Reification
+
 import IS4.Norm
 
 import IS4.Applications.IS4Plus

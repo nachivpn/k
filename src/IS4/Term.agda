@@ -12,6 +12,8 @@ open Context public using (Var)
 open Context public hiding (ext🔒)
 open Type    public
 
+infixr 20 _∙ₛ_
+
 -------------------------------------
 -- Variables, terms and substitutions
 -------------------------------------

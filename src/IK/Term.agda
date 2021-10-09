@@ -5,8 +5,12 @@ module IK.Term where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import IK.Type public
-open import Context (Ty) public
+open import IK.Type    as Type    using (Ty)
+import      Context Ty as Context
+
+open Context public using (Var)
+open Context public
+open Type    public
 
 -------------------------------------
 -- Variables, terms and substitutions

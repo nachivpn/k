@@ -5,8 +5,12 @@ module IS4.Term where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import IK.Type public
-open import Context (Ty) hiding (ext🔒) public
+open import IK.Type    as Type    using (Ty)
+import      Context Ty as Context
+
+open Context public using (Var)
+open Context public hiding (ext🔒)
+open Type    public
 
 -------------------------------------
 -- Variables, terms and substitutions

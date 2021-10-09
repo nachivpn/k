@@ -28,7 +28,10 @@ import IS4.Term.NormalForm
 import IS4.Term.Reduction
 
 import IS4.Norm
-import IS4.Completeness.Completeness
+import IS4.Norm.NbE.Model
+import IS4.Norm.NbE.Reification
+import IS4.Norm.Properties.Completeness
+import IS4.Norm.Properties.Soundness
 
 import IS4.Applications.IS4Plus
 import IS4.Applications.Purity

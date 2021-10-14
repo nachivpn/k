@@ -53,6 +53,13 @@ wkTm w (app t u)              = app (wkTm w t) (wkTm w u)
 wkTm w (box t)                = box (wkTm (keep🔒 w) t)
 wkTm w (unbox t e)            = unbox (wkTm (sliceLeft e w) t) (wkLFExt e w)
 
+leftWkTm : (t : Tm Γ a) → Tm (Δ ,, Γ) a
+leftWkTm (var v)     = var (leftWkVar v)
+leftWkTm (lam t)     = lam (leftWkTm t)
+leftWkTm (app t u)   = app (leftWkTm t) (leftWkTm u)
+leftWkTm (box t)     = box (leftWkTm t)
+leftWkTm (unbox t e) = unbox (leftWkTm t) (leftWkLFExt e)
+
 open import IK.Substitution Ty Tm var wkTm public
 
 -- apply substitution to a term

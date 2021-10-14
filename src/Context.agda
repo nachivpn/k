@@ -138,6 +138,11 @@ wkVar (drop e) v      = su (wkVar e v)
 wkVar (keep e) ze     = ze
 wkVar (keep e) (su v) = su (wkVar e v)
 
+-- OBS: in general, Γ ⊈ Δ ,, Γ
+leftWkVar : (v : Var Γ a) → Var (Δ ,, Γ) a
+leftWkVar ze     = ze
+leftWkVar (su v) = su (leftWkVar v)
+
 wkVarPresId : (x : Var Γ a) → wkVar idWk x ≡ x
 wkVarPresId ze = refl
 wkVarPresId (su x) = cong su (wkVarPresId x)
@@ -347,6 +352,11 @@ wkLFExt : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ ⊆ Γ' → LFExt Γ' ((←🔒 �
 wkLFExt e       (drop w)  = ext (wkLFExt e w)
 wkLFExt nil     (keep🔒 w) = nil
 wkLFExt (ext e) (keep w)  = ext (wkLFExt e w)
+
+-- left weaken the (lock-free) extension of a context
+leftWkLFExt : (e : LFExt Γ ΓL ΓR) → LFExt (Δ ,, Γ) (Δ ,, ΓL) ΓR
+leftWkLFExt nil     = nil
+leftWkLFExt (ext e) = ext (leftWkLFExt e)
 
 -- left unweaken the (lock-free) extension of a context
 leftUnwkLFExt : (e : LFExt (Δ ,, Γ) (Δ ,, ΓL) ΓR) → LFExt Γ ΓL ΓR

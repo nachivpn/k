@@ -1,5 +1,6 @@
 name: k
 depend:
-  standard-library
+  -- agda-2.6.2
+  standard-library-1.7
 include :
   src

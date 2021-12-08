@@ -1,7 +1,7 @@
 module Context (Ty : Set) where
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; _≢_ ; cong ; cong₂ ; sym ; trans ; subst ; subst₂)
+  using (_≡_ ; _≢_ ; cong ; cong₂ ; sym ; trans ; subst ; subst₂ ; subst-application)
 
 open _≡_
 
@@ -301,6 +301,11 @@ private
     Γ🔒RΓ-impossible : Ext θ Γ (Γ 🔒) ΓR → A
     Γ🔒RΓ-impossible e = Γ≡Γ🔒-impossible₁ (extIs,, e)
 
+[]-unit-left : [] ,, Γ ≡ Γ
+[]-unit-left {Γ = []}     = refl
+[]-unit-left {Γ = Γ `, a} = cong (_`, a) []-unit-left
+[]-unit-left {Γ = Γ 🔒}    = cong _🔒 []-unit-left
+
 ,,-injective-right : Δ ,, Γ ≡ Δ ,, Γ' → Γ ≡ Γ'
 ,,-injective-right {Δ} {[]}     {[]}       p = refl
 ,,-injective-right {Δ} {[]}     {Γ' `, a}  p = Γ≡Γ,a-impossible₂ p
@@ -342,6 +347,15 @@ extRAssoc : Ext θ ΓL ΓLL ΓLR → Ext θ Γ ΓL ΓR → Ext θ Γ ΓLL (ΓLR 
 extRAssoc el nil         = el
 extRAssoc el (ext er)    = ext (extRAssoc el er)
 extRAssoc el (ext🔒 x er) = ext🔒 x (extRAssoc el er)
+
+module _ {A A' : Set} (E : A → A → Set) {E' : A' → A' → Set} (f : A → A') (g : ∀ {x y} → E x y → E' (f x) (f y)) where
+  lem : ∀ {x y y' : A} (y≡y' : y ≡ y') (e : E x y) → subst (E' (f x)) (cong f y≡y') (g e) ≡ g (subst (E x) y≡y' e)
+  lem refl e = refl
+
+-- nil-unit-left : subst (Ext θ Γ ΓL) []-unit-left (extRAssoc nil e) ≡ e
+-- nil-unit-left {e = nil}          = refl
+-- nil-unit-left {θ} {Γ} {ΓL} {e = ext {a = a} e} = trans (lem (λ Γ ΓR → Ext θ Γ ΓL ΓR) {E' = λ Γ ΓR → Ext θ Γ ΓL ΓR} (_`, a) (ext {a = a}) []-unit-left (extRAssoc nil e)) (cong ext nil-unit-left)
+-- nil-unit-left {e = ext🔒 θ e}     = {!!}
 
 -------------------------------------
 -- Operations on lock-free extensions

@@ -22,7 +22,7 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   using (Star)
 
 open import Relation.Binary.PropositionalEquality
-  using    (_≡_ ; cong ; cong₂)
+  using    (_≡_ ; cong ; cong₂ ; subst)
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
 open Sum public
@@ -92,8 +92,8 @@ cong-unbox1≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
 cong-unbox2≈ : ∀ (e≡e' : e ≡ e') → unbox t e ≈ unbox t e'
 cong-unbox2≈ e≡e' = ≡-to-≈ (cong₂ unbox ≡-refl e≡e')
 
-cong-unbox≈ : ∀ (t≈t' : t ≈ t') (e≡e' : e ≡ e') → unbox t e ≈ unbox t' e'
-cong-unbox≈ t≈t' e≡e' = ≈-trans (cong-unbox1≈ t≈t') (cong-unbox2≈ e≡e')
+cong-unbox≈ : ∀ (t≈t' : t ≈ t') (ΓR≡ΓR' : ΓR ≡ ΓR') (e≡e' : subst (CExt Γ ΓL) ΓR≡ΓR' e ≡ e') → unbox t e ≈ unbox t' e'
+cong-unbox≈ t≈t' ≡-refl e≡e' = ≈-trans (cong-unbox1≈ t≈t') (cong-unbox2≈ e≡e')
 
 --------------------
 -- Derived equations

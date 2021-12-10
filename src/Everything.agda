@@ -32,8 +32,7 @@ import IS4.NbE.Reification
 
 import IS4.Norm
 
-import IS4.Applications.Metalanguage
---import IS4.Applications.Purity
+import IS4.Applications.Purity
 import IS4.Applications.Staged
 
 import Semantics.Clouston.Evaluation.IML

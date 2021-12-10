@@ -32,6 +32,7 @@ import IS4.NbE.Reification
 
 import IS4.Norm
 
+import IS4.Applications.IS4Plus
 import IS4.Applications.Purity
 import IS4.Applications.Staged
 

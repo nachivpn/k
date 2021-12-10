@@ -61,8 +61,6 @@ wkTm w true = true
 wkTm w false = false
 wkTm w (ifte e t t₁ t₂) = ifte (factor2Ext e w) (wkTm (factor2≤ e w) t) (wkTm w t₁) (wkTm w t₂)
 
-open import IS4.Substitution Ty Tm var wkTm public
-
 open import Data.Unit  using (⊤ ; tt)
 open import Data.Product  using (Σ ; _×_ ; _,_ ) renaming (proj₂ to snd)
 

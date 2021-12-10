@@ -427,7 +427,7 @@ sliceRightId e rewrite wkLFExtPresId e = refl
 -- Operations on general extensions
 -----------------------------------
 
-module carlostome/k/src/IS4/Term-agda where
+module _ where
 
   private
 

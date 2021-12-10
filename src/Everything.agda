@@ -28,5 +28,6 @@ import IS4.Norm
 --import IS4.Reduction
 import IS4.Term
 
+import IS4.Applications.IS4Plus
 import IS4.Applications.Purity
 import IS4.Applications.Staged

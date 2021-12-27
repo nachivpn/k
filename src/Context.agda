@@ -587,3 +587,39 @@ factor2≤Pres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = factor2≤Pres�
 
 factor2ExtPres∙ : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → subst₂ (CExt Γ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w')) ≡ factor2Ext (factor2Ext e w) w'
 factor2ExtPres∙ _ _ _ = ExtIsProp _ _
+
+f2LCtxPresRefl : ∀ (w : Γ ⊆ Γ') → f2LCtx (nil {Γ = Γ}) w ≡ Γ'
+f2LCtxPresRefl _w = refl
+
+f2RCtxPresRefl : ∀ (w : Γ ⊆ Γ') → f2RCtx (nil {Γ = Γ}) w ≡ []
+f2RCtxPresRefl _w = refl
+
+factor2≤PresRefl : ∀ (w : Γ ⊆ Γ') → subst (Γ ⊆_) (f2LCtxPresRefl w) (factor2≤ (nil {Γ = Γ}) w) ≡ w
+factor2≤PresRefl _w = refl
+
+factor2ExtPresRefl : ∀ (w : Γ ⊆ Γ') → subst₂ (CExt Γ') (f2LCtxPresRefl w) (f2RCtxPresRefl w) (factor2Ext (nil {Γ = Γ}) w) ≡ nil {Γ = Γ'}
+factor2ExtPresRefl _w = ExtIsProp _ _
+
+f2LCtxPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → f2LCtx (extRAssoc e e') w ≡ f2LCtx e (factor2≤ e' w)
+f2LCtxPresTrans _e nil          _w        = refl
+f2LCtxPresTrans e  e'@(ext _)   (drop w)  = f2LCtxPresTrans e e' w
+f2LCtxPresTrans e  (ext e')     (keep w)  = f2LCtxPresTrans e e' w
+f2LCtxPresTrans e  e'@(ext🔒- _) (drop w)  = f2LCtxPresTrans e e' w
+f2LCtxPresTrans e  (ext🔒- e')   (keep🔒 w) = f2LCtxPresTrans e e' w
+
+f2RCtxPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → f2RCtx (extRAssoc e e') w ≡ f2RCtx e (factor2≤ e' w) ,, f2RCtx e' w
+f2RCtxPresTrans _e nil         _w               = refl
+f2RCtxPresTrans e e'@(ext _)   (drop {a = a} w) = cong (_`, a) (f2RCtxPresTrans e e' w)
+f2RCtxPresTrans e (ext e')     (keep {a = a} w) = cong (_`, a) (f2RCtxPresTrans e e' w)
+f2RCtxPresTrans e e'@(ext🔒- _) (drop {a = a} w) = cong (_`, a) (f2RCtxPresTrans e e' w)
+f2RCtxPresTrans e (ext🔒- e')   (keep🔒 w)        = cong (_🔒) (f2RCtxPresTrans e e' w)
+
+factor2≤PresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst (Γ ⊆_) (f2LCtxPresTrans e e' w) (factor2≤ (extRAssoc e e') w) ≡ factor2≤ e (factor2≤ e' w)
+factor2≤PresTrans _e nil          _w        = refl
+factor2≤PresTrans e  e'@(ext _)   (drop w)  = factor2≤PresTrans e e' w
+factor2≤PresTrans e  (ext e')     (keep w)  = factor2≤PresTrans e e' w
+factor2≤PresTrans e  e'@(ext🔒- _) (drop w)  = factor2≤PresTrans e e' w
+factor2≤PresTrans e  (ext🔒- e')   (keep🔒 w) = factor2≤PresTrans e e' w
+
+factor2ExtPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst₂ (CExt Θ') (f2LCtxPresTrans e e' w) (f2RCtxPresTrans e e' w) (factor2Ext (extRAssoc e e') w) ≡ extRAssoc (factor2Ext e (factor2≤ e' w)) (factor2Ext e' w)
+factor2ExtPresTrans _e _e' _w = ExtIsProp _ _

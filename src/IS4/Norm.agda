@@ -74,7 +74,7 @@ data Lock (A : Ctx → Set) : Ctx → Set where
 Tm' : Ctx → Ty → Set
 Tm' Γ  𝕓       = Nf Γ 𝕓
 Tm' Γ  (a ⇒ b) = {Γ' : Ctx} → Γ ⊆ Γ' → (Tm' Γ' a → Tm' Γ' b)
-Tm' ΓL (◻ a)  = {Γ ΓR : Ctx} → CExt Γ ΓL ΓR → Tm' Γ a
+Tm' ΓL (◻ a)  = {ΓL' Γ ΓR : Ctx} → ΓL ⊆ ΓL' → CExt Γ ΓL' ΓR → Tm' Γ a
 
 -- interpretation of contexts
 Sub' : Ctx → Ctx → Set
@@ -86,7 +86,7 @@ Sub' Δ (Γ 🔒)    = Lock (λ Γ' → Sub' Γ' Γ) Δ
 wkTm' : Γ ⊆ Γ' → Tm' Γ a → Tm' Γ' a
 wkTm' {a = 𝕓}     w n  = wkNf w n
 wkTm' {a = a ⇒ b} w f  = λ w' y → f (w ∙ w') y
-wkTm' {a = ◻ a}  w bx = λ e → wkTm' (factor1≤ e w) (bx (factor1Ext e w))
+wkTm' {a = ◻ a}  w bx = λ w' e → bx (w ∙ w') e
 
 -- substitutions in the model can be weakened
 wkSub' : Γ ⊆ Γ' → Sub' Γ Δ → Sub' Γ' Δ
@@ -96,7 +96,7 @@ wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (factor2≤ e w) s) (facto
 
 -- semantic counterpart of `unbox` from `Tm`
 unbox' : Tm' ΓL (◻ a) → CExt Γ ΓL ΓR → Tm' Γ a
-unbox' bx e = bx e
+unbox' bx e = bx idWk e
 
 unlock' : Sub' Δ (Γ 🔒) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × CExt Δ ΔL ΔR }
 unlock' (lock γ e) = _ , γ , e
@@ -119,13 +119,13 @@ reflect : Ne Γ a  → Tm' Γ a
 
 -- interpretation of neutrals
 reflect {a = 𝕓} n     = up𝕓 n
-reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
-reflect {a = ◻ a} n  = λ e → reflect (unbox n e)
+reflect {a = a ⇒ b} n = λ w x → reflect (app (wkNe w n) (reify x))
+reflect {a = ◻ a} n  = λ w e → reflect (unbox (wkNe w n) e)
 
 -- reify values to normal forms
 reify {a = 𝕓}     x  = x
 reify {a = a ⇒ b} x  = lam (reify (x (drop idWk) (reflect (var ze))))
-reify {a = ◻ a}  bx = box (reify (bx new))
+reify {a = ◻ a}  bx = box (reify (bx idWk new))
 
 -- identity substitution
 idₛ' : Sub' Γ Γ
@@ -139,16 +139,16 @@ substVar' ze     (_ , x) = x
 substVar' (su x) (γ , _) = substVar' x γ
 
 CExt' : CExt Γ ΓL ΓR → Sub'- Γ →̇ Sub'- (ΓL 🔒)
-CExt' nil       γ           = lock γ nil                                                              -- = η            ("return")
-CExt' (ext e)   (γ , _)     = CExt' e γ                                                               -- = CExt' e ∘ π₁
+CExt' nil       γ           = lock γ nil                                                             -- = η            ("return")
+CExt' (ext e)   (γ , _)     = CExt' e γ                                                              -- = CExt' e ∘ π₁
 CExt' (ext🔒- e) (lock γ e') = let (_ , γ' , e'') = unlock' (CExt' e γ) in lock γ' (extRAssoc e'' e') -- = ^(CExt' e)   ("bind")
 
 -- interpretation of terms
 eval : Tm Γ a → (Sub'- Γ →̇ Tm'- a)
 eval (var x)     s = substVar' x s
-eval (lam t)     s = λ e x → eval t (wkSub' e s , x)
+eval (lam t)     s = λ w x → eval t (wkSub' w s , x)
 eval (app t u)   s = (eval t s) idWk (eval u s)
-eval (box t)     s = λ e → eval t (lock s e)
+eval (box t)     s = λ w e → eval t (lock (wkSub' w s) e)
 eval (unbox t e) s = let (_ , s' , e') = unlock' (CExt' e s) in unbox' (eval t s') e' -- = ^(eval t) ∘ CExt' e
 
 -- retraction of interpretation

@@ -51,7 +51,7 @@ substVar (s `, t) (su x) = substVar s x
 wkSub : Γ ⊆ Γ' → Sub Γ Δ → Sub Γ' Δ
 wkSub w []          = []
 wkSub w (s `, t)    = (wkSub w s) `, wkTm w t
-wkSub w (lock s e)  = lock (wkSub (factor2≤ e w) s) (factor2Ext e w)
+wkSub w (lock s e)  = lock (wkSub (factorWk e w) s) (factorExt e w)
 
 -- NOTE: composition requires parallel substitution for terms
 

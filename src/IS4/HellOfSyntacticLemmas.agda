@@ -71,20 +71,20 @@ wkTmPresId (box t)     = cong box (wkTmPresId t)
 wkTmPresId {Γ = Γ} {a = a} (unbox {ΓL = ΓL} {ΓR = ΓR} t e) = begin
   wkTm idWk (unbox t e)
     ≡⟨⟩
-  unbox {ΓL = f2LCtx e idWk} {ΓR = f2RCtx e idWk} (wkTm (factor2≤ e idWk[ Γ ]) t) (factor2Ext e idWk[ Γ ])
+  unbox {ΓL = lCtx e idWk} {ΓR = rCtx e idWk} (wkTm (factorWk e idWk[ Γ ]) t) (factorExt e idWk[ Γ ])
     ≅⟨ xcong
       (λ ΓL → Tm ΓL (◻ a)) (CExt Γ)
-      (f2LCtxPresId e) (f2RCtxPresId e)
+      (lCtxPresId e) (rCtxPresId e)
       unbox
-      factor2≤PresId-under-wkTm
-      (≡-subst₂-addable (CExt Γ) _ _ (factor2Ext _ _)) ⟩
-  unbox {ΓL = ΓL} {ΓR = ΓR} (wkTm idWk[ ΓL ] t) (subst₂ (CExt Γ) (f2LCtxPresId e) (f2RCtxPresId e) (factor2Ext e idWk))
-    ≡⟨ cong₂ unbox (wkTmPresId t) (factor2ExtPresId e) ⟩
+      factorWkPresId-under-wkTm
+      (≡-subst₂-addable (CExt Γ) _ _ (factorExt _ _)) ⟩
+  unbox {ΓL = ΓL} {ΓR = ΓR} (wkTm idWk[ ΓL ] t) (subst₂ (CExt Γ) (lCtxPresId e) (rCtxPresId e) (factorExt e idWk))
+    ≡⟨ cong₂ unbox (wkTmPresId t) (factorExtPresId e) ⟩
   unbox t e ∎
     where
-      factor2≤PresId-under-wkTm : wkTm (factor2≤ e idWk) t ≅ wkTm idWk t
-      factor2≤PresId-under-wkTm = HE.icong (ΓL ⊆_) (f2LCtxPresId e) (λ w → wkTm w t)
-        (HE.trans (≡-subst-addable _ _ _) (HE.≡-to-≅ (factor2≤PresId e)))
+      factorWkPresId-under-wkTm : wkTm (factorWk e idWk) t ≅ wkTm idWk t
+      factorWkPresId-under-wkTm = HE.icong (ΓL ⊆_) (lCtxPresId e) (λ w → wkTm w t)
+        (HE.trans (≡-subst-addable _ _ _) (HE.≡-to-≅ (factorWkPresId e)))
 
 wkSubPresId : (s : Sub Δ Γ) → wkSub idWk s ≡ s
 wkSubPresId []         = refl
@@ -92,20 +92,20 @@ wkSubPresId (s `, t)   = cong₂ _`,_ (wkSubPresId s) (wkTmPresId t)
 wkSubPresId {Δ = Δ} (lock {ΔL = ΔL} {Γ = Γ} s e) = begin
   wkSub idWk (lock s e)
     ≡⟨⟩
-  lock (wkSub (factor2≤ e idWk) s) (factor2Ext e idWk)
+  lock (wkSub (factorWk e idWk) s) (factorExt e idWk)
     ≅⟨ xcong
       (λ ΔL → Sub ΔL Γ) (CExt Δ)
-      (f2LCtxPresId e) (f2RCtxPresId e)
+      (lCtxPresId e) (rCtxPresId e)
       lock
-      factor2≤PresId-under-wkSub
-      (≡-subst₂-addable (CExt Δ) _ _ (factor2Ext _ _)) ⟩
-  lock (wkSub idWk s) (subst₂ (CExt Δ) (f2LCtxPresId e) (f2RCtxPresId e) (factor2Ext e idWk))
-    ≡⟨ cong₂ lock (wkSubPresId s) (factor2ExtPresId e) ⟩
+      factorWkPresId-under-wkSub
+      (≡-subst₂-addable (CExt Δ) _ _ (factorExt _ _)) ⟩
+  lock (wkSub idWk s) (subst₂ (CExt Δ) (lCtxPresId e) (rCtxPresId e) (factorExt e idWk))
+    ≡⟨ cong₂ lock (wkSubPresId s) (factorExtPresId e) ⟩
   lock s e ∎
     where
-      factor2≤PresId-under-wkSub : wkSub (factor2≤ e idWk) s ≅ wkSub idWk s
-      factor2≤PresId-under-wkSub = HE.icong (ΔL ⊆_) (f2LCtxPresId e) (λ w → wkSub w s)
-        (HE.trans (≡-subst-addable _ _ _) (HE.≡-to-≅ (factor2≤PresId e)))
+      factorWkPresId-under-wkSub : wkSub (factorWk e idWk) s ≅ wkSub idWk s
+      factorWkPresId-under-wkSub = HE.icong (ΔL ⊆_) (lCtxPresId e) (λ w → wkSub w s)
+        (HE.trans (≡-subst-addable _ _ _) (HE.≡-to-≅ (factorWkPresId e)))
 
 wkNePresId : (n : Ne Γ a) → wkNe idWk n ≡ n
 wkNfPresId : (n : Nf Γ a) → wkNf idWk n ≡ n
@@ -115,20 +115,20 @@ wkNePresId (app n m)   = cong₂ app (wkNePresId n) (wkNfPresId m)
 wkNePresId {Γ = Γ} (unbox {ΓL = ΓL} {a = a} n e) = begin
   wkNe idWk (unbox n e)
     ≡⟨⟩
-  unbox (wkNe (factor2≤ e idWk) n) (factor2Ext e idWk)
+  unbox (wkNe (factorWk e idWk) n) (factorExt e idWk)
     ≅⟨ xcong
       (λ ΓL → Ne ΓL (◻ a)) (CExt Γ)
-      (f2LCtxPresId e) (f2RCtxPresId e)
+      (lCtxPresId e) (rCtxPresId e)
       unbox
-      factor2≤PresId-under-wkNe
-      (≡-subst₂-addable (CExt Γ) _ _ (factor2Ext _ _)) ⟩
-  unbox (wkNe idWk n) (subst₂ (CExt Γ) (f2LCtxPresId e) (f2RCtxPresId e) (factor2Ext e idWk))
-    ≡⟨ cong₂ unbox (wkNePresId n) (factor2ExtPresId e) ⟩
+      factorWkPresId-under-wkNe
+      (≡-subst₂-addable (CExt Γ) _ _ (factorExt _ _)) ⟩
+  unbox (wkNe idWk n) (subst₂ (CExt Γ) (lCtxPresId e) (rCtxPresId e) (factorExt e idWk))
+    ≡⟨ cong₂ unbox (wkNePresId n) (factorExtPresId e) ⟩
   unbox n e ∎
     where
-      factor2≤PresId-under-wkNe : wkNe (factor2≤ e idWk) n ≅ wkNe idWk n
-      factor2≤PresId-under-wkNe = HE.icong (ΓL ⊆_) (f2LCtxPresId e) (λ w → wkNe w n)
-        (HE.trans (≡-subst-addable _ _ _) (HE.≡-to-≅ (factor2≤PresId e)))
+      factorWkPresId-under-wkNe : wkNe (factorWk e idWk) n ≅ wkNe idWk n
+      factorWkPresId-under-wkNe = HE.icong (ΓL ⊆_) (lCtxPresId e) (λ w → wkNe w n)
+        (HE.trans (≡-subst-addable _ _ _) (HE.≡-to-≅ (factorWkPresId e)))
 
 wkNfPresId (up𝕓 n) = cong up𝕓 (wkNePresId n)
 wkNfPresId (lam n) = cong lam (wkNfPresId n)
@@ -143,26 +143,26 @@ wkTmPres∙ w w' (box t)     = cong box (wkTmPres∙ (keep🔒 w) (keep🔒 w') 
 wkTmPres∙ {Γ = Γ} {Γ' = Γ'} {Γ'' = Γ''} w w' (unbox {ΓL = ΓL} {a = a} {ΓR = ΓR} t e) = begin
   wkTm w' (wkTm w (unbox t e))
     ≡⟨⟩
-  unbox {ΓL = f2LCtx (factor2Ext e w) w'} {ΓR = f2RCtx (factor2Ext e w) w'}
-    (wkTm (factor2≤ (factor2Ext e w) w') (wkTm (factor2≤ e w) t))
-    (factor2Ext (factor2Ext e w) w')
-    ≡⟨ cong₂ unbox (wkTmPres∙ _ _ t) (sym (factor2ExtPres∙ _ _ _)) ⟩
-  unbox {ΓL = f2LCtx (factor2Ext e w) w'} {ΓR = f2RCtx (factor2Ext e w) w'}
-    (wkTm (factor2≤ e w ∙ factor2≤ (factor2Ext e w) w') t)
-    (subst₂ (CExt Γ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w')))
+  unbox {ΓL = lCtx (factorExt e w) w'} {ΓR = rCtx (factorExt e w) w'}
+    (wkTm (factorWk (factorExt e w) w') (wkTm (factorWk e w) t))
+    (factorExt (factorExt e w) w')
+    ≡⟨ cong₂ unbox (wkTmPres∙ _ _ t) (sym (factorExtPres∙ _ _ _)) ⟩
+  unbox {ΓL = lCtx (factorExt e w) w'} {ΓR = rCtx (factorExt e w) w'}
+    (wkTm (factorWk e w ∙ factorWk (factorExt e w) w') t)
+    (subst₂ (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w')))
     ≅⟨ xcong
       (λ ΓL → Tm ΓL (◻ a)) (CExt Γ'')
-      (sym (f2LCtxPres∙ e w w')) (sym (f2RCtxPres∙ e w w'))
+      (sym (lCtxPres∙ e w w')) (sym (rCtxPres∙ e w w'))
       unbox
-      factor2≤Pres∙-under-wkTm
-      (≡-subst₂-removable (CExt Γ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w'))) ⟩
-  unbox {ΓL = f2LCtx e (w ∙ w')} {ΓR = f2RCtx e (w ∙ w')} (wkTm (factor2≤ e (w ∙ w')) t) (factor2Ext e (w ∙ w'))
+      factorWkPres∙-under-wkTm
+      (≡-subst₂-removable (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w'))) ⟩
+  unbox {ΓL = lCtx e (w ∙ w')} {ΓR = rCtx e (w ∙ w')} (wkTm (factorWk e (w ∙ w')) t) (factorExt e (w ∙ w'))
     ≡⟨⟩
   wkTm (w ∙ w') (unbox t e) ∎
     where
-      factor2≤Pres∙-under-wkTm :  wkTm (factor2≤ e w ∙ factor2≤ (factor2Ext e w) w') t ≅ wkTm (factor2≤ e (w ∙ w')) t
-      factor2≤Pres∙-under-wkTm = HE.icong (ΓL ⊆_) (sym (f2LCtxPres∙ e w w')) (λ w → wkTm w t)
-        (HE.trans (HE.≡-to-≅ (sym (factor2≤Pres∙ e w w'))) (≡-subst-removable _ _ _))
+      factorWkPres∙-under-wkTm :  wkTm (factorWk e w ∙ factorWk (factorExt e w) w') t ≅ wkTm (factorWk e (w ∙ w')) t
+      factorWkPres∙-under-wkTm = HE.icong (ΓL ⊆_) (sym (lCtxPres∙ e w w')) (λ w → wkTm w t)
+        (HE.trans (HE.≡-to-≅ (sym (factorWkPres∙ e w w'))) (≡-subst-removable _ _ _))
 
 wkSubPres∙ : (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') (s : Sub Δ Γ)
   → wkSub w' (wkSub w s) ≡ wkSub (w ∙ w') s
@@ -171,24 +171,24 @@ wkSubPres∙ w w' (s `, t)   = cong₂ _`,_ (wkSubPres∙ w w' s) (wkTmPres∙ w
 wkSubPres∙ {Δ'' = Δ''} w w' (lock {ΔL = ΔL} {Γ = Γ} s e) = begin
   wkSub w' (wkSub w (lock s e))
     ≡⟨⟩
-  lock (wkSub (factor2≤ (factor2Ext e w) w') (wkSub (factor2≤ e w) s)) (factor2Ext (factor2Ext e w) w')
-    ≡⟨ cong₂ lock (wkSubPres∙ _ _ _ ) (sym (factor2ExtPres∙ _ _ _)) ⟩
+  lock (wkSub (factorWk (factorExt e w) w') (wkSub (factorWk e w) s)) (factorExt (factorExt e w) w')
+    ≡⟨ cong₂ lock (wkSubPres∙ _ _ _ ) (sym (factorExtPres∙ _ _ _)) ⟩
   lock
-    (wkSub (factor2≤ e w ∙ factor2≤ (factor2Ext e w) w') s)
-    (subst₂ (CExt Δ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w')))
+    (wkSub (factorWk e w ∙ factorWk (factorExt e w) w') s)
+    (subst₂ (CExt Δ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w')))
     ≅⟨ xcong
       (λ ΔL → Sub ΔL Γ) (CExt Δ'')
-      (sym (f2LCtxPres∙ e w w')) (sym (f2RCtxPres∙ e w w'))
+      (sym (lCtxPres∙ e w w')) (sym (rCtxPres∙ e w w'))
       lock
-      factor2≤Pres∙-under-wkSub
-      (≡-subst₂-removable (CExt Δ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w'))) ⟩
-  lock (wkSub (factor2≤ e (w ∙ w')) s) (factor2Ext e (w ∙ w'))
+      factorWkPres∙-under-wkSub
+      (≡-subst₂-removable (CExt Δ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w'))) ⟩
+  lock (wkSub (factorWk e (w ∙ w')) s) (factorExt e (w ∙ w'))
     ≡⟨⟩
   wkSub (w ∙ w') (lock s e) ∎
     where
-      factor2≤Pres∙-under-wkSub :  wkSub (factor2≤ e w ∙ factor2≤ (factor2Ext e w) w') s ≅ wkSub (factor2≤ e (w ∙ w')) s
-      factor2≤Pres∙-under-wkSub = HE.icong (ΔL ⊆_) (sym (f2LCtxPres∙ e w w')) (λ w → wkSub w s)
-        (HE.trans (HE.≡-to-≅ (sym (factor2≤Pres∙ e w w'))) (≡-subst-removable _ _ _))
+      factorWkPres∙-under-wkSub :  wkSub (factorWk e w ∙ factorWk (factorExt e w) w') s ≅ wkSub (factorWk e (w ∙ w')) s
+      factorWkPres∙-under-wkSub = HE.icong (ΔL ⊆_) (sym (lCtxPres∙ e w w')) (λ w → wkSub w s)
+        (HE.trans (HE.≡-to-≅ (sym (factorWkPres∙ e w w'))) (≡-subst-removable _ _ _))
 
 wkNePres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (n : Ne Γ a)
   → wkNe w' (wkNe w n) ≡ wkNe (w ∙ w') n
@@ -201,25 +201,25 @@ wkNePres∙ {Γ'' = Γ''} w w' (unbox {ΓL = ΓL} {a = a} n e) = begin
   wkNe w' (wkNe w (unbox n e))
     ≡⟨⟩
   unbox
-    (wkNe (factor2≤ (factor2Ext e w) w') (wkNe (factor2≤ e w) n))
-    (factor2Ext (factor2Ext e w) w')
-    ≡⟨ cong₂ unbox (wkNePres∙ _ _ n) (sym (factor2ExtPres∙ _ _ _)) ⟩
+    (wkNe (factorWk (factorExt e w) w') (wkNe (factorWk e w) n))
+    (factorExt (factorExt e w) w')
+    ≡⟨ cong₂ unbox (wkNePres∙ _ _ n) (sym (factorExtPres∙ _ _ _)) ⟩
   unbox
-    (wkNe (factor2≤ e w ∙ factor2≤ (factor2Ext e w) w') n)
-    (subst₂ (CExt Γ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w')))
+    (wkNe (factorWk e w ∙ factorWk (factorExt e w) w') n)
+    (subst₂ (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w')))
     ≅⟨ xcong
       (λ ΓL → Ne ΓL (◻ a)) (CExt Γ'')
-      (sym (f2LCtxPres∙ e w w')) (sym (f2RCtxPres∙ e w w'))
+      (sym (lCtxPres∙ e w w')) (sym (rCtxPres∙ e w w'))
       unbox
-      factor2≤Pres∙-under-wkNe
-      (≡-subst₂-removable (CExt Γ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w'))) ⟩
-  unbox {ΓL = f2LCtx e (w ∙ w')} {ΓR = f2RCtx e (w ∙ w')} (wkNe (factor2≤ e (w ∙ w')) n) (factor2Ext e (w ∙ w'))
+      factorWkPres∙-under-wkNe
+      (≡-subst₂-removable (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w'))) ⟩
+  unbox {ΓL = lCtx e (w ∙ w')} {ΓR = rCtx e (w ∙ w')} (wkNe (factorWk e (w ∙ w')) n) (factorExt e (w ∙ w'))
     ≡⟨⟩
   wkNe (w ∙ w') (unbox n e) ∎
     where
-      factor2≤Pres∙-under-wkNe :  wkNe (factor2≤ e w ∙ factor2≤ (factor2Ext e w) w') n ≅ wkNe (factor2≤ e (w ∙ w')) n
-      factor2≤Pres∙-under-wkNe = HE.icong (ΓL ⊆_) (sym (f2LCtxPres∙ e w w')) (λ w → wkNe w n)
-        (HE.trans (HE.≡-to-≅ (sym (factor2≤Pres∙ e w w'))) (≡-subst-removable _ _ _))
+      factorWkPres∙-under-wkNe :  wkNe (factorWk e w ∙ factorWk (factorExt e w) w') n ≅ wkNe (factorWk e (w ∙ w')) n
+      factorWkPres∙-under-wkNe = HE.icong (ΓL ⊆_) (sym (lCtxPres∙ e w w')) (λ w → wkNe w n)
+        (HE.trans (HE.≡-to-≅ (sym (factorWkPres∙ e w w'))) (≡-subst-removable _ _ _))
 
 wkNfPres∙ w w' (up𝕓 n) = cong up𝕓 (wkNePres∙ w w' n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)

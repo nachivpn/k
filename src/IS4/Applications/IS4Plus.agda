@@ -55,11 +55,11 @@ wkTm w (var x)     = var (wkVar w x)
 wkTm w (lam t)     = lam (wkTm (keep w) t)
 wkTm w (app t u)   = app (wkTm w t) (wkTm w u)
 wkTm w (box t)     = box (wkTm (keep🔒 w) t)
-wkTm w (unbox t e) = unbox (wkTm (factor2≤ e w) t) (factor2Ext e w)
+wkTm w (unbox t e) = unbox (wkTm (factorWk e w) t) (factorExt e w)
 wkTm w unit = unit
 wkTm w true = true
 wkTm w false = false
-wkTm w (ifte e t t₁ t₂) = ifte (factor2Ext e w) (wkTm (factor2≤ e w) t) (wkTm w t₁) (wkTm w t₂)
+wkTm w (ifte e t t₁ t₂) = ifte (factorExt e w) (wkTm (factorWk e w) t) (wkTm w t₁) (wkTm w t₂)
 
 open import Data.Unit  using (⊤ ; tt)
 open import Data.Product  using (Σ ; _×_ ; _,_ ) renaming (proj₂ to snd)
@@ -108,14 +108,14 @@ wkNf : Γ ⊆ Γ' → Nf Γ a → Nf Γ' a
 
 wkNe w (var x)      = var (wkVar w x)
 wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
-wkNe w (unbox n e)  = unbox (wkNe (factor2≤ e w) n) (factor2Ext e w)
+wkNe w (unbox n e)  = unbox (wkNe (factorWk e w) n) (factorExt e w)
 
 wkNf w (up𝕔 x) = up𝕔 (wkNe w x)
 wkNf w (lam n) = lam (wkNf (keep w) n)
 wkNf w (box n) = box (wkNf (keep🔒 w) n)
 wkNf w true = true
 wkNf w false = false
-wkNf w (ifte e m n n₁) = ifte (factor2Ext e w) (wkNe (factor2≤ e w) m) (wkNf w n) (wkNf w n₁)
+wkNf w (ifte e m n n₁) = ifte (factorExt e w) (wkNe (factorWk e w) m) (wkNf w n) (wkNf w n₁)
 wkNf w unit = unit
 
 NF NE : Ty → Ctx → Set
@@ -143,7 +143,7 @@ _×'_ : (Ctx → Set) → (Ctx → Set) → (Ctx → Set)
 _×'_ A B Γ = A Γ × B Γ
 
 Box : (Ctx → Set) → (Ctx → Set)
-Box A ΓL = {Γ ΓR : Ctx} → CExt Γ ΓL ΓR → A Γ
+Box A ΓL = {ΓL' Γ ΓR : Ctx} → ΓL ⊆ ΓL' → CExt Γ ΓL' ΓR → A Γ
 
 -- semantic counterpart of `lock` from `Sub`
 data Lock (A : Ctx → Set) : Ctx → Set where
@@ -160,7 +160,7 @@ wkCov : (Γ ⊆ Γ' → A Γ → A Γ') → Γ ⊆ Γ' → Cov A Γ → Cov A Γ
 wkCov wk w (ret x)
   = ret (wk w x)
 wkCov wk w (ifte' e n m m₁)
-  = ifte' (factor2Ext e w) (wkNe (factor2≤ e w) n) (wkCov wk w m) (wkCov wk w m₁)
+  = ifte' (factorExt e w) (wkNe (factorWk e w) n) (wkCov wk w m) (wkCov wk w m₁)
 
 fmapCov : (A →̇ B) → (Cov A →̇ Cov B)
 fmapCov f (ret x) = ret (f x)
@@ -183,59 +183,58 @@ collect (ifte' e x m m₁) = ifte e x (collect m) (collect m₁)
 
 open import Data.Bool renaming (Bool to Bool')
 
-TM' : Ty → (Ctx → Set)
-TM' Unit = ⊤'
-TM' 𝕔 = Cov (NE 𝕔)
-TM' (a ⇒ b) = (TM' a) ⇒' (TM' b)
-TM' (◻ a) = Box (TM' a)
-TM' Bool = Cov (λ _ → Bool')
+Tm'- : Ty → (Ctx → Set)
+Tm'- Unit    = ⊤'
+Tm'- 𝕔       = Cov (NE 𝕔)
+Tm'- (a ⇒ b) = (Tm'- a) ⇒' (Tm'- b)
+Tm'- (◻ a)  = Box (Tm'- a)
+Tm'- Bool    = Cov (λ _ → Bool')
 
-SUB' : Ctx → (Ctx → Set)
-SUB' []       = ⊤'
-SUB' (Γ `, a) = SUB' Γ ×' TM' a
-SUB' (Γ 🔒)   = Lock (SUB' Γ)
+Sub'- : Ctx → (Ctx → Set)
+Sub'- []       = ⊤'
+Sub'- (Γ `, a) = Sub'- Γ ×' Tm'- a
+Sub'- (Γ 🔒)    = Lock (Sub'- Γ)
 
 -- values in the model can be weakened
-wkTM' : Γ ⊆ Γ' → TM' a Γ → TM' a Γ'
-wkTM' {a = 𝕔}  w m  = wkCov wkNe w m
-wkTM' {a = a ⇒ b} w f  = λ w' y → f (w ∙ w') y
-wkTM' {a = ◻ a}  w bx = λ e → wkTM' {a = a} (factor1≤ e w) (bx (factor1Ext e w))
-wkTM' {a = Unit} w n  = tt
-wkTM' {a = Bool} w n  = ret false
+wkTm'- : Γ ⊆ Γ' → Tm'- a Γ → Tm'- a Γ'
+wkTm'- {a = 𝕔}     w m  = wkCov wkNe w m
+wkTm'- {a = a ⇒ b} w f  = λ w' y → f (w ∙ w') y
+wkTm'- {a = ◻ a}  w bx = λ w' e → bx (w ∙ w') e
+wkTm'- {a = Unit}  w n  = tt
+wkTm'- {a = Bool}  w m  = wkCov (λ _ z → z) w m
 
 -- substitutions in the model can be weakened
-wkSUB' : Γ ⊆ Γ' → SUB' Δ Γ → SUB' Δ Γ'
-wkSUB' {Δ = []}     w tt          = tt
-wkSUB' {Δ = Δ `, a} w (s , x)     = wkSUB' {Δ = Δ} w s , wkTM' {a = a} w x
-wkSUB' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSUB' {Δ = Δ} (factor2≤ e w) s) (factor2Ext e w)
+wkSub'- : Γ ⊆ Γ' → Sub'- Δ Γ → Sub'- Δ Γ'
+wkSub'- {Δ = []}     w tt          = tt
+wkSub'- {Δ = Δ `, a} w (s , x)     = wkSub'- {Δ = Δ} w s , wkTm'- {a = a} w x
+wkSub'- {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub'- {Δ = Δ} (factorWk e w) s) (factorExt e w)
 
 -- semantic counterpart of `unbox` from `Tm`
-unbox' : Box (TM' a) ΓL → CExt Γ ΓL ΓR → TM' a Γ
-unbox' bx e = bx e
+unbox' : Box (Tm'- a) ΓL → CExt Γ ΓL ΓR → Tm'- a Γ
+unbox' bx e = bx idWk e
 
-
-unboxCov : Cov (Box (TM' a)) Δ → CExt Γ Δ ΓR → Cov (TM' a) Γ
+unboxCov : Cov (Box (Tm'- a)) Δ → CExt Γ Δ ΓR → Cov (Tm'- a) Γ
 unboxCov (ret x) e
-  = ret (x e)
-unboxCov {a = a} (ifte' e' x m m₁) e
-  = ifte' (extRAssoc e' e) x (unboxCov {a = a} m₁ e) (unboxCov {a = a} m₁ e)
+  = ret (x idWk e)
+unboxCov {a = a} (ifte' e' x m1 m2) e
+  = ifte' (extRAssoc e' e) x (unboxCov {a = a} m1 e) (unboxCov {a = a} m2 e)
 
-appCov : Cov (TM' (a ⇒ b)) Γ → Cov (TM' a) Γ → Cov (TM' b) Γ
-runCov : Cov (TM' a) →̇ TM' a
+appCov : Cov (Tm'- (a ⇒ b)) Γ → Cov (Tm'- a) Γ → Cov (Tm'- b) Γ
+runCov : Cov (Tm'- a) →̇ Tm'- a
 
 appCov {a = a} (ret f) m
   = ret (f idWk (runCov {a = a} m))
-appCov {a = a} {b = b} (ifte' x x₁ f f₁) m
-  = ifte' x x₁ (appCov {a = a} {b = b} f₁ m) (appCov {a = a} {b = b} f₁ m)
+appCov {a = a} {b = b} (ifte' e n m1 m2) m
+  = ifte' e n (appCov {a = a} {b = b} m1 m) (appCov {a = a} {b = b} m2 m)
 
 runCov {Unit}   m
   = tt
 runCov {𝕔}      m
   = joinCov m
-runCov {a ⇒ b} m
-  = λ w x → runCov {b} (appCov {a = a} {b = b} (wkCov (wkTM' {a = a ⇒ b}) w m) (ret x))
+runCov {a ⇒ b}  m
+  = λ w x → runCov {b} (appCov {a = a} {b = b} (wkCov (wkTm'- {a = a ⇒ b}) w m) (ret x))
 runCov {◻ a}   m
-  = λ e → runCov {a} (unboxCov {a = a} m e)
+  = λ w e → runCov {a} (unboxCov {a = a} (wkCov (wkTm'- {a = ◻ a}) w m) e)
 runCov {Bool}   m
   = joinCov m
 
@@ -246,79 +245,82 @@ runCov {Bool}   m
 VAR : Ty → Ctx → Set
 VAR a Γ = Var Γ a
 
-reify   : TM' a →̇ NF a
-reflect : NE a  →̇ TM' a
+reify   : Tm'- a →̇ NF a
+reflect : NE a  →̇ Tm'- a
 
-reify {Unit} t = unit
-reify {𝕔} t = collect (mapCov (λ _ n → up𝕔 n) idWk t)
-reify {a ⇒ b} t = lam (reify {b} (t (drop idWk) (reflect {a} (var ze))))
-reify {◻ a} t = box (reify (t (ext🔒- nil)))
-reify {Bool} t = true
+reify {Unit}  x = unit
+reify {𝕔}     x = collect (mapCov (λ _ n → up𝕔 n) idWk x)
+reify {a ⇒ b} x = lam (reify {b} (x (drop idWk) (reflect {a} (var ze))))
+reify {◻ a}  x = box (reify (x idWk (ext🔒- nil)))
+reify {Bool}  x = true
 
-reflect {Unit} x = tt
-reflect {𝕔} x = ret x
-reflect {a ⇒ b} x = λ e t → reflect {b} (app (wkNe e x) (reify t))
-reflect {◻ a} x = λ e → reflect (unbox x e)
-reflect {Bool} x = ifte' nil x (ret true) (ret false)
+reflect {Unit}  n = tt
+reflect {𝕔}     n = ret n
+reflect {a ⇒ b} n = λ e t → reflect {b} (app (wkNe e n) (reify t))
+reflect {◻ a}  n = λ w e → reflect (unbox (wkNe w n) e)
+reflect {Bool}  n = ifte' nil n (ret true) (ret false)
 
 -- identity substitution
-idₛ' : SUB' Γ Γ
+idₛ' : Sub'- Γ Γ
 idₛ' {[]}     = tt
-idₛ' {Γ `, a} = wkSUB' {Δ = Γ} (drop idWk) (idₛ' {Γ = Γ}) , reflect {a} (var ze)
-idₛ' {Γ 🔒}   = lock (idₛ' {Γ}) (ext🔒- nil)
+idₛ' {Γ `, a} = wkSub'- {Δ = Γ} (drop idWk) (idₛ' {Γ = Γ}) , reflect {a} (var ze)
+idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) (ext🔒- nil)
 
 -- interpretation of variables
-substVar' : Var Γ a → (SUB' Γ →̇ TM' a)
+substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
 substVar' ze     (_ , x) = x
 substVar' (su x) (γ , _) = substVar' x γ
 
-unlock' : SUB' (Γ 🔒) Δ → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → SUB' Γ ΔL × CExt Δ ΔL ΔR }
+unlock' : Sub'- (Γ 🔒) Δ → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub'- Γ ΔL × CExt Δ ΔL ΔR }
 unlock' (lock γ e) = _ , γ , e
 
-CExt' : CExt Γ ΓL ΓR → SUB' Γ →̇ SUB' (ΓL 🔒)
+CExt' : CExt Γ ΓL ΓR → Sub'- Γ →̇ Sub'- (ΓL 🔒)
 CExt' nil       γ                         = lock γ nil
 CExt' (ext e)   (γ , _)                   = CExt' e γ
 CExt' {Γ = Γ} {ΓL} {ΓR} (ext🔒- e) (lock γ e') with unlock' {Γ = ΓL} (CExt' e γ) .snd
 ... | (γ' , e'') = lock γ' (extRAssoc e'' e')
 
 eval-ifte : CExt Γ ΓL ΓR → Cov (λ _ → Bool') ΓL → Cov A Γ → Cov A Γ → Cov A Γ
-eval-ifte e (ret false) m1 m2 = m2
-eval-ifte e (ret true) m1 m2 = m2
-eval-ifte e (ifte' x x₁ m m₁) m1 m2 = ifte' (extRAssoc x e) x₁ m2 m2
+eval-ifte e (ret false)        m1 m2 = m2
+eval-ifte e (ret true)         m1 m2 = m2
+eval-ifte e (ifte' e' n c1 c2) m1 m2  = ifte' (extRAssoc e' e) n (eval-ifte e c1 m1 m2) (eval-ifte e c2 m1 m2)
 
 -- interpretation of terms
-eval : Tm Γ a → (SUB' Γ →̇ TM' a)
-eval (var x)                     s
+eval : Tm Γ a → (Sub'- Γ →̇ Tm'- a)
+eval (var x)                       s
   = substVar' x s
-eval {Γ = Γ} (lam t)                     s
-  = λ e x → eval t (wkSUB' {Δ = Γ} e s , x)
-eval (app t u)                   s
+eval {Γ = Γ} (lam t)               s
+  = λ e x → eval t (wkSub'- {Δ = Γ} e s , x)
+eval (app t u)                     s
   = (eval t s) idWk (eval u s)
-eval (box t)                     s
-  = λ e → eval t (lock s e)
-eval {a = a} (unbox t nil)               s
+eval {Γ = Γ} (box t)               s
+  = λ w e → eval t (lock (wkSub'- {Δ = Γ} w s) e)
+eval {a = a} (unbox t nil)         s
   = unbox' {a = a} (eval t s) nil
-eval (unbox t (ext e))           (s , _)
+eval (unbox t (ext e))             (s , _)
   = eval (unbox t e) s
-eval (unbox t (ext🔒- e))         (lock s nil)
+eval (unbox t (ext🔒- e))           (lock s nil)
   = eval (unbox t e) s
-eval {Γ} {a = a} (unbox t (ext🔒- e))         (lock s (ext {a = b} e'))
-  = wkTM' {_} {_} {a} (fresh {a = b}) (eval (unbox t (ext🔒- e)) (lock s e'))
-eval {a = a} (unbox t (ext🔒- nil))       (lock s (ext🔒- e'))
+eval {a = a} (unbox t (ext🔒- e))   (lock s (ext {a = b} e'))
+  = wkTm'- {_} {_} {a} (fresh {a = b}) (eval (unbox t (ext🔒- e)) (lock s e'))
+eval {a = a} (unbox t (ext🔒- nil)) (lock s (ext🔒- e'))
   = unbox' {a} (eval t s) (ext🔒- e')
-eval (unbox t (ext🔒- (ext e)))   (lock (s , _) (ext🔒- e'))
+eval (unbox t (ext🔒- (ext e)))     (lock (s , _) (ext🔒- e'))
   = eval (unbox t (ext🔒- e)) (lock s (ext🔒- e'))
-eval (unbox t (ext🔒- (ext🔒- e))) (lock (lock s e'') (ext🔒- e'))
+eval (unbox t (ext🔒- (ext🔒- e)))   (lock (lock s e'') (ext🔒- e'))
   = eval (unbox t (ext🔒- e)) (lock s (ext🔒- (extRAssoc e'' e')))
-eval unit s = tt
-eval true s = ret true
-eval false s = ret false
+eval unit                          s
+  = tt
+eval true                          s
+  = ret true
+eval false                         s
+  = ret false
 eval {Γ = Γ} {a = a} (ifte {ΓL = ΓL} e t t₁ t₂) {Δ = Δ} s with unlock' {Γ = ΓL} (CExt' e s)
 ... | ((ΓL' , ΓR') , s' , e')
   = runCov {a = a} (eval-ifte e' (eval t s') (ret (eval t₁ s)) (ret (eval t₁ s)))
 
 -- retraction of interpretation
-quot : (SUB' Γ →̇ TM' a) → Nf Γ a
+quot : (Sub'- Γ →̇ Tm'- a) → Nf Γ a
 quot {Γ} f = reify (f (idₛ' {Γ}))
 
 -- normalization function

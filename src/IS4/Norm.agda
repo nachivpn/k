@@ -52,7 +52,7 @@ wkNf : Γ ⊆ Γ' → Nf Γ a → Nf Γ' a
 
 wkNe w (var x)      = var (wkVar w x)
 wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
-wkNe w (unbox n e)  = unbox (wkNe (factor2≤ e w) n) (factor2Ext e w)
+wkNe w (unbox n e)  = unbox (wkNe (factorWk e w) n) (factorExt e w)
 
 wkNf e (up𝕓 x) = up𝕓 (wkNe e x)
 wkNf e (lam n) = lam (wkNf (keep e) n)
@@ -92,7 +92,7 @@ wkTm' {a = ◻ a}  w bx = λ w' e → bx (w ∙ w') e
 wkSub' : Γ ⊆ Γ' → Sub' Γ Δ → Sub' Γ' Δ
 wkSub' {Δ = []}     w tt          = tt
 wkSub' {Δ = Δ `, a} w (s , x)     = wkSub' w s , wkTm' w x
-wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (factor2≤ e w) s) (factor2Ext e w)
+wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (factorWk e w) s) (factorExt e w)
 
 -- semantic counterpart of `unbox` from `Tm`
 unbox' : Tm' ΓL (◻ a) → CExt Γ ΓL ΓR → Tm' Γ a

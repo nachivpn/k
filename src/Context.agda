@@ -445,6 +445,7 @@ module _ where
     ⊑-trans : Transitive _R_
     ⊑-trans (_ , Γ⊑Δ) (_ , Δ⊑Ε) = _ , extRAssoc Γ⊑Δ Δ⊑Ε
 
+    -- we don't use factor1 anymore
     factor1 : Γ R Δ → Γ' ⊆ Γ → ∃ λ Δ' → Δ' ⊆ Δ × Γ' R Δ'
     factor1 nil⊑           Γ'≤Γ
       = _ , Γ'≤Γ , nil⊑
@@ -455,6 +456,8 @@ module _ where
     ... | Δ' , Δ'≤Δ , Γ'⊑Δ'
       = (Δ' 🔒) , keep🔒 Δ'≤Δ , ⊑-trans Γ'⊑Δ' (ext🔒⊑ tt extRId)
 
+    -- not used directly, but serves as a specification of
+    -- what is expected from factorExt and factorWk
     factor2 : Γ R Δ → Δ ⊆ Δ' → ∃ λ Γ' → Γ ⊆ Γ' × Γ' R Δ'
     factor2 nil⊑           Δ≤Δ'
       = _ , Δ≤Δ' , nil⊑
@@ -464,162 +467,140 @@ module _ where
     ... | Γ' , Γ≤Γ' , Γ'⊑Δ'
       = Γ' , Γ≤Γ' , ⊑-trans Γ'⊑Δ' (⊑-trans (ext🔒⊑ tt extRId) (_ , upLFExt (wkLFExt extRId Δ≤Δ')))
 
--- f1LRCtx e w == proj₁ (factor1 (_ , e) w)
-f1LRCtx : CExt Δ Γ ΓR → Γ' ⊆ Γ → Ctx
-f1LRCtx {Γ' = Γ'} nil       w = Γ'
-f1LRCtx {Γ' = Γ'} (ext e)   w = f1LRCtx e w
-f1LRCtx {Γ' = Γ'} (ext🔒- e) w = (f1LRCtx e w) 🔒
-
--- f1RCtx e w == proj₁ (proj₂ (proj₂ (factor1 (_ , e) w)))
-f1RCtx : CExt Δ Γ ΓR → Γ' ⊆ Γ → Ctx
-f1RCtx nil       w = []
-f1RCtx (ext e)   w = f1RCtx e w
-f1RCtx (ext🔒- e) w = (f1RCtx e w) 🔒
-
---
-factor1Ext : (e : CExt Δ Γ ΓR) → (w : Γ' ⊆ Γ) → CExt (f1LRCtx e w) Γ' (f1RCtx e w)
-factor1Ext nil        w = nil
-factor1Ext (ext e)    w = factor1Ext e w
-factor1Ext (ext🔒- e) w = ext🔒- (factor1Ext e w)
-
---
-factor1≤ : (e : CExt Δ Γ ΓR) → (w : Γ' ⊆ Γ) → (f1LRCtx e w) ⊆ Δ
-factor1≤ nil        w = w
-factor1≤ (ext e)    w = drop (factor1≤ e w)
-factor1≤ (ext🔒- e) w = keep🔒 (factor1≤ e w)
-
--- f2LCtx e w == proj₁ (factor2 (_ , e) w)
-f2LCtx : CExt Γ ΓL ΓR → Γ ⊆ Γ' → Ctx
-f2LCtx {Γ = Γ}      {Γ' = Γ'}       nil        w
+-- "Left" context of factoring (see type of factorExt)
+-- lCtx e w == proj₁ (factor2 (_ , e) w)
+lCtx : CExt Γ ΓL ΓR → Γ ⊆ Γ' → Ctx
+lCtx {Γ = Γ}      {Γ' = Γ'}       nil        w
   = Γ'
-f2LCtx {Γ = Γ `, a} {Γ' = Γ' `, b}  (ext e)    (drop w)
-  = f2LCtx (ext e) w
-f2LCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)    (keep w)
-  = f2LCtx e w
-f2LCtx {Γ = Γ 🔒} {Γ' = Γ' `, a}     (ext🔒- e) (drop w)
-  = f2LCtx  (ext🔒- e) w
-f2LCtx {Γ = Γ 🔒} {Γ' = Γ' 🔒}        (ext🔒- e) (keep🔒 w)
-  = f2LCtx e w
+lCtx {Γ = Γ `, a} {Γ' = Γ' `, b}  (ext e)    (drop w)
+  = lCtx (ext e) w
+lCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)    (keep w)
+  = lCtx e w
+lCtx {Γ = Γ 🔒} {Γ' = Γ' `, a}     (ext🔒- e) (drop w)
+  = lCtx  (ext🔒- e) w
+lCtx {Γ = Γ 🔒} {Γ' = Γ' 🔒}        (ext🔒- e) (keep🔒 w)
+  = lCtx e w
 
--- f2LCtx e w == proj₁ (proj₂ (proj₂ (factor2 (_ , e) w)))
-f2RCtx : CExt Γ ΓL ΓR → Γ ⊆ Γ' → Ctx
-f2RCtx  {Γ = Γ}     {Γ' = Γ'}      nil       w
+-- "Right" context of factoring (see type of factorExt)
+-- rCtx e w == proj₁ (proj₂ (proj₂ (factor2 (_ , e) w)))
+rCtx : CExt Γ ΓL ΓR → Γ ⊆ Γ' → Ctx
+rCtx  {Γ = Γ}     {Γ' = Γ'}      nil       w
   = []
-f2RCtx {Γ = Γ `, a} {Γ' = Γ' `, b} (ext e)   (drop w)
-  = f2RCtx (ext e) w `, b
-f2RCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)  (keep w)
-  = f2RCtx e w `, a
-f2RCtx {Γ = Γ 🔒}    {Γ' = Γ' `, a} (ext🔒- e) (drop  {a = a} w)
-  = f2RCtx (ext🔒- e) w `, a
-f2RCtx {Γ = Γ 🔒}    {Γ' = Γ' 🔒}    (ext🔒- e) (keep🔒 w)
-  = (f2RCtx e w) 🔒
+rCtx {Γ = Γ `, a} {Γ' = Γ' `, b} (ext e)   (drop w)
+  = rCtx (ext e) w `, b
+rCtx {Γ = Γ `, a} {Γ' = Γ' `, .a} (ext e)  (keep w)
+  = rCtx e w `, a
+rCtx {Γ = Γ 🔒}    {Γ' = Γ' `, a} (ext🔒- e) (drop  {a = a} w)
+  = rCtx (ext🔒- e) w `, a
+rCtx {Γ = Γ 🔒}    {Γ' = Γ' 🔒}    (ext🔒- e) (keep🔒 w)
+  = (rCtx e w) 🔒
 
---
-factor2Ext : (e : CExt Γ ΓL ΓR) → (w : Γ ⊆ Γ') → CExt Γ' (f2LCtx e w) (f2RCtx e w)
-factor2Ext nil       w         = nil
-factor2Ext (ext e)   (drop w)  = ext (factor2Ext (ext e) w)
-factor2Ext (ext  e)  (keep w)  = ext (factor2Ext e w)
-factor2Ext (ext🔒- e) (drop w)  = ext (factor2Ext (ext🔒- e) w)
-factor2Ext (ext🔒- e) (keep🔒 w) = ext🔒- (factor2Ext e w)
+-- factorExt e w == proj₂ (proj₂ (proj₂ (factor2 (_ , e) w)))
+factorExt : (e : CExt Γ ΓL ΓR) → (w : Γ ⊆ Γ') → CExt Γ' (lCtx e w) (rCtx e w)
+factorExt nil       w         = nil
+factorExt (ext e)   (drop w)  = ext (factorExt (ext e) w)
+factorExt (ext  e)  (keep w)  = ext (factorExt e w)
+factorExt (ext🔒- e) (drop w)  = ext (factorExt (ext🔒- e) w)
+factorExt (ext🔒- e) (keep🔒 w) = ext🔒- (factorExt e w)
 
---
-factor2≤ : (e : CExt Γ ΓL ΓR) → (w : Γ ⊆ Γ') → ΓL ⊆ (f2LCtx e w)
-factor2≤ nil       w         = w
-factor2≤ (ext e)   (drop w)  = factor2≤ (ext e) w
-factor2≤ (ext e)   (keep w)  = factor2≤ e w
-factor2≤ (ext🔒- e) (drop w)  = factor2≤ (ext🔒- e) w
-factor2≤ (ext🔒- e) (keep🔒 w) = factor2≤ e w
+-- factorWk e w == proj₁ (proj₂ (factor2 (_ , e) w))
+factorWk : (e : CExt Γ ΓL ΓR) → (w : Γ ⊆ Γ') → ΓL ⊆ (lCtx e w)
+factorWk nil       w         = w
+factorWk (ext e)   (drop w)  = factorWk (ext e) w
+factorWk (ext e)   (keep w)  = factorWk e w
+factorWk (ext🔒- e) (drop w)  = factorWk (ext🔒- e) w
+factorWk (ext🔒- e) (keep🔒 w) = factorWk e w
 
 --------------------------------------------
 -- Factorisation laws for general extensions
 --------------------------------------------
 
-f2LCtxPresId : (e : CExt Γ ΓL ΓR) → f2LCtx e idWk ≡ ΓL
-f2LCtxPresId nil       = refl
-f2LCtxPresId (ext e)   = f2LCtxPresId e
-f2LCtxPresId (ext🔒- e) = f2LCtxPresId e
+lCtxPresId : (e : CExt Γ ΓL ΓR) → lCtx e idWk ≡ ΓL
+lCtxPresId nil       = refl
+lCtxPresId (ext e)   = lCtxPresId e
+lCtxPresId (ext🔒- e) = lCtxPresId e
 
-f2RCtxPresId : (e : CExt Γ ΓL ΓR) → f2RCtx e idWk ≡ ΓR
-f2RCtxPresId nil       = refl
-f2RCtxPresId (ext e)   = cong (_`, _) (f2RCtxPresId e)
-f2RCtxPresId (ext🔒- e) = cong _🔒 (f2RCtxPresId e)
+rCtxPresId : (e : CExt Γ ΓL ΓR) → rCtx e idWk ≡ ΓR
+rCtxPresId nil       = refl
+rCtxPresId (ext e)   = cong (_`, _) (rCtxPresId e)
+rCtxPresId (ext🔒- e) = cong _🔒 (rCtxPresId e)
 
-factor2≤PresId : (e : CExt Γ ΓL ΓR) → subst (ΓL ⊆_) (f2LCtxPresId e) (factor2≤ e idWk) ≡ idWk[ ΓL ]
-factor2≤PresId nil       = refl
-factor2≤PresId (ext e)   = factor2≤PresId e
-factor2≤PresId (ext🔒- e) = factor2≤PresId e
+factorWkPresId : (e : CExt Γ ΓL ΓR) → subst (ΓL ⊆_) (lCtxPresId e) (factorWk e idWk) ≡ idWk[ ΓL ]
+factorWkPresId nil       = refl
+factorWkPresId (ext e)   = factorWkPresId e
+factorWkPresId (ext🔒- e) = factorWkPresId e
 
-factor2ExtPresId : (e : CExt Γ ΓL ΓR) → subst₂ (CExt Γ) (f2LCtxPresId e) (f2RCtxPresId e) (factor2Ext e idWk) ≡ e
-factor2ExtPresId _ = ExtIsProp _ _
+factorExtPresId : (e : CExt Γ ΓL ΓR) → subst₂ (CExt Γ) (lCtxPresId e) (rCtxPresId e) (factorExt e idWk) ≡ e
+factorExtPresId _ = ExtIsProp _ _
 
-f2LCtxPres∙ : (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → f2LCtx e (w ∙ w') ≡ f2LCtx (factor2Ext e w) w'
-f2LCtxPres∙ nil         w           w'         = refl
-f2LCtxPres∙ e@(ext _)   w@(drop _)  (drop w')  = f2LCtxPres∙ e w w'
-f2LCtxPres∙ e@(ext _)   w@(keep _)  (drop w')  = f2LCtxPres∙ e w w'
-f2LCtxPres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = f2LCtxPres∙ e w w'
-f2LCtxPres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = f2LCtxPres∙ e w w'
-f2LCtxPres∙ e@(ext _)   (drop w)    (keep w')  = f2LCtxPres∙ e w w'
-f2LCtxPres∙ e@(ext🔒- _) (drop w)    (keep w')  = f2LCtxPres∙ e w w'
-f2LCtxPres∙ (ext e)     (keep w)    (keep w')  = f2LCtxPres∙ e w w'
-f2LCtxPres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = f2LCtxPres∙ e w w'
+lCtxPres∙ : (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → lCtx e (w ∙ w') ≡ lCtx (factorExt e w) w'
+lCtxPres∙ nil         w           w'         = refl
+lCtxPres∙ e@(ext _)   w@(drop _)  (drop w')  = lCtxPres∙ e w w'
+lCtxPres∙ e@(ext _)   w@(keep _)  (drop w')  = lCtxPres∙ e w w'
+lCtxPres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = lCtxPres∙ e w w'
+lCtxPres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = lCtxPres∙ e w w'
+lCtxPres∙ e@(ext _)   (drop w)    (keep w')  = lCtxPres∙ e w w'
+lCtxPres∙ e@(ext🔒- _) (drop w)    (keep w')  = lCtxPres∙ e w w'
+lCtxPres∙ (ext e)     (keep w)    (keep w')  = lCtxPres∙ e w w'
+lCtxPres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = lCtxPres∙ e w w'
 
-f2RCtxPres∙ : (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → f2RCtx e (w ∙ w') ≡ f2RCtx (factor2Ext e w) w'
-f2RCtxPres∙ nil         w           w'         = refl
-f2RCtxPres∙ e@(ext _)   w@(drop _)  (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
-f2RCtxPres∙ e@(ext _)   w@(keep _)  (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
-f2RCtxPres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
-f2RCtxPres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = cong (_`, _) (f2RCtxPres∙ e w w')
-f2RCtxPres∙ e@(ext _)   (drop w)    (keep w')  = cong (_`, _) (f2RCtxPres∙ e w w')
-f2RCtxPres∙ e@(ext🔒- _) (drop w)    (keep w')  = cong (_`, _) (f2RCtxPres∙ e w w')
-f2RCtxPres∙ (ext e)     (keep w)    (keep w')  = cong (_`, _) (f2RCtxPres∙ e w w')
-f2RCtxPres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = cong _🔒 (f2RCtxPres∙ e w w')
+rCtxPres∙ : (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → rCtx e (w ∙ w') ≡ rCtx (factorExt e w) w'
+rCtxPres∙ nil         w           w'         = refl
+rCtxPres∙ e@(ext _)   w@(drop _)  (drop w')  = cong (_`, _) (rCtxPres∙ e w w')
+rCtxPres∙ e@(ext _)   w@(keep _)  (drop w')  = cong (_`, _) (rCtxPres∙ e w w')
+rCtxPres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = cong (_`, _) (rCtxPres∙ e w w')
+rCtxPres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = cong (_`, _) (rCtxPres∙ e w w')
+rCtxPres∙ e@(ext _)   (drop w)    (keep w')  = cong (_`, _) (rCtxPres∙ e w w')
+rCtxPres∙ e@(ext🔒- _) (drop w)    (keep w')  = cong (_`, _) (rCtxPres∙ e w w')
+rCtxPres∙ (ext e)     (keep w)    (keep w')  = cong (_`, _) (rCtxPres∙ e w w')
+rCtxPres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = cong _🔒 (rCtxPres∙ e w w')
 
-factor2≤Pres∙ : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → subst (ΓL ⊆_) (f2LCtxPres∙ e w w') (factor2≤ e (w ∙ w')) ≡ factor2≤ e w ∙ factor2≤ (factor2Ext e w) w'
-factor2≤Pres∙ nil         w           w'         = refl
-factor2≤Pres∙ e@(ext _)   w@(drop _)  (drop w')  = factor2≤Pres∙ e w w'
-factor2≤Pres∙ e@(ext _)   w@(keep _)  (drop w')  = factor2≤Pres∙ e w w'
-factor2≤Pres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = factor2≤Pres∙ e w w'
-factor2≤Pres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = factor2≤Pres∙ e w w'
-factor2≤Pres∙ e@(ext _)   (drop w)    (keep w')  = factor2≤Pres∙ e w w'
-factor2≤Pres∙ e@(ext🔒- _) (drop w)    (keep w')  = factor2≤Pres∙ e w w'
-factor2≤Pres∙ (ext e)     (keep w)    (keep w')  = factor2≤Pres∙ e w w'
-factor2≤Pres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = factor2≤Pres∙ e w w'
+factorWkPres∙ : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → subst (ΓL ⊆_) (lCtxPres∙ e w w') (factorWk e (w ∙ w')) ≡ factorWk e w ∙ factorWk (factorExt e w) w'
+factorWkPres∙ nil         w           w'         = refl
+factorWkPres∙ e@(ext _)   w@(drop _)  (drop w')  = factorWkPres∙ e w w'
+factorWkPres∙ e@(ext _)   w@(keep _)  (drop w')  = factorWkPres∙ e w w'
+factorWkPres∙ e@(ext🔒- _) w@(drop _)  (drop w')  = factorWkPres∙ e w w'
+factorWkPres∙ e@(ext🔒- _) w@(keep🔒 _) (drop w')  = factorWkPres∙ e w w'
+factorWkPres∙ e@(ext _)   (drop w)    (keep w')  = factorWkPres∙ e w w'
+factorWkPres∙ e@(ext🔒- _) (drop w)    (keep w')  = factorWkPres∙ e w w'
+factorWkPres∙ (ext e)     (keep w)    (keep w')  = factorWkPres∙ e w w'
+factorWkPres∙ (ext🔒- e)   (keep🔒 w)   (keep🔒 w') = factorWkPres∙ e w w'
 
-factor2ExtPres∙ : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → subst₂ (CExt Γ'') (f2LCtxPres∙ e w w') (f2RCtxPres∙ e w w') (factor2Ext e (w ∙ w')) ≡ factor2Ext (factor2Ext e w) w'
-factor2ExtPres∙ _ _ _ = ExtIsProp _ _
+factorExtPres∙ : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → subst₂ (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w')) ≡ factorExt (factorExt e w) w'
+factorExtPres∙ _ _ _ = ExtIsProp _ _
 
-f2LCtxPresRefl : ∀ (w : Γ ⊆ Γ') → f2LCtx (nil {Γ = Γ}) w ≡ Γ'
-f2LCtxPresRefl _w = refl
+lCtxPresRefl : ∀ (w : Γ ⊆ Γ') → lCtx (nil {Γ = Γ}) w ≡ Γ'
+lCtxPresRefl _w = refl
 
-f2RCtxPresRefl : ∀ (w : Γ ⊆ Γ') → f2RCtx (nil {Γ = Γ}) w ≡ []
-f2RCtxPresRefl _w = refl
+rCtxPresRefl : ∀ (w : Γ ⊆ Γ') → rCtx (nil {Γ = Γ}) w ≡ []
+rCtxPresRefl _w = refl
 
-factor2≤PresRefl : ∀ (w : Γ ⊆ Γ') → subst (Γ ⊆_) (f2LCtxPresRefl w) (factor2≤ (nil {Γ = Γ}) w) ≡ w
-factor2≤PresRefl _w = refl
+factorWkPresRefl : ∀ (w : Γ ⊆ Γ') → subst (Γ ⊆_) (lCtxPresRefl w) (factorWk (nil {Γ = Γ}) w) ≡ w
+factorWkPresRefl _w = refl
 
-factor2ExtPresRefl : ∀ (w : Γ ⊆ Γ') → subst₂ (CExt Γ') (f2LCtxPresRefl w) (f2RCtxPresRefl w) (factor2Ext (nil {Γ = Γ}) w) ≡ nil {Γ = Γ'}
-factor2ExtPresRefl _w = ExtIsProp _ _
+factorExtPresRefl : ∀ (w : Γ ⊆ Γ') → subst₂ (CExt Γ') (lCtxPresRefl w) (rCtxPresRefl w) (factorExt (nil {Γ = Γ}) w) ≡ nil {Γ = Γ'}
+factorExtPresRefl _w = ExtIsProp _ _
 
-f2LCtxPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → f2LCtx (extRAssoc e e') w ≡ f2LCtx e (factor2≤ e' w)
-f2LCtxPresTrans _e nil          _w        = refl
-f2LCtxPresTrans e  e'@(ext _)   (drop w)  = f2LCtxPresTrans e e' w
-f2LCtxPresTrans e  (ext e')     (keep w)  = f2LCtxPresTrans e e' w
-f2LCtxPresTrans e  e'@(ext🔒- _) (drop w)  = f2LCtxPresTrans e e' w
-f2LCtxPresTrans e  (ext🔒- e')   (keep🔒 w) = f2LCtxPresTrans e e' w
+lCtxPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → lCtx (extRAssoc e e') w ≡ lCtx e (factorWk e' w)
+lCtxPresTrans _e nil          _w        = refl
+lCtxPresTrans e  e'@(ext _)   (drop w)  = lCtxPresTrans e e' w
+lCtxPresTrans e  (ext e')     (keep w)  = lCtxPresTrans e e' w
+lCtxPresTrans e  e'@(ext🔒- _) (drop w)  = lCtxPresTrans e e' w
+lCtxPresTrans e  (ext🔒- e')   (keep🔒 w) = lCtxPresTrans e e' w
 
-f2RCtxPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → f2RCtx (extRAssoc e e') w ≡ f2RCtx e (factor2≤ e' w) ,, f2RCtx e' w
-f2RCtxPresTrans _e nil         _w               = refl
-f2RCtxPresTrans e e'@(ext _)   (drop {a = a} w) = cong (_`, a) (f2RCtxPresTrans e e' w)
-f2RCtxPresTrans e (ext e')     (keep {a = a} w) = cong (_`, a) (f2RCtxPresTrans e e' w)
-f2RCtxPresTrans e e'@(ext🔒- _) (drop {a = a} w) = cong (_`, a) (f2RCtxPresTrans e e' w)
-f2RCtxPresTrans e (ext🔒- e')   (keep🔒 w)        = cong (_🔒) (f2RCtxPresTrans e e' w)
+rCtxPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → rCtx (extRAssoc e e') w ≡ rCtx e (factorWk e' w) ,, rCtx e' w
+rCtxPresTrans _e nil         _w               = refl
+rCtxPresTrans e e'@(ext _)   (drop {a = a} w) = cong (_`, a) (rCtxPresTrans e e' w)
+rCtxPresTrans e (ext e')     (keep {a = a} w) = cong (_`, a) (rCtxPresTrans e e' w)
+rCtxPresTrans e e'@(ext🔒- _) (drop {a = a} w) = cong (_`, a) (rCtxPresTrans e e' w)
+rCtxPresTrans e (ext🔒- e')   (keep🔒 w)        = cong (_🔒) (rCtxPresTrans e e' w)
 
-factor2≤PresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst (Γ ⊆_) (f2LCtxPresTrans e e' w) (factor2≤ (extRAssoc e e') w) ≡ factor2≤ e (factor2≤ e' w)
-factor2≤PresTrans _e nil          _w        = refl
-factor2≤PresTrans e  e'@(ext _)   (drop w)  = factor2≤PresTrans e e' w
-factor2≤PresTrans e  (ext e')     (keep w)  = factor2≤PresTrans e e' w
-factor2≤PresTrans e  e'@(ext🔒- _) (drop w)  = factor2≤PresTrans e e' w
-factor2≤PresTrans e  (ext🔒- e')   (keep🔒 w) = factor2≤PresTrans e e' w
+factorWkPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst (Γ ⊆_) (lCtxPresTrans e e' w) (factorWk (extRAssoc e e') w) ≡ factorWk e (factorWk e' w)
+factorWkPresTrans _e nil          _w        = refl
+factorWkPresTrans e  e'@(ext _)   (drop w)  = factorWkPresTrans e e' w
+factorWkPresTrans e  (ext e')     (keep w)  = factorWkPresTrans e e' w
+factorWkPresTrans e  e'@(ext🔒- _) (drop w)  = factorWkPresTrans e e' w
+factorWkPresTrans e  (ext🔒- e')   (keep🔒 w) = factorWkPresTrans e e' w
 
-factor2ExtPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst₂ (CExt Θ') (f2LCtxPresTrans e e' w) (f2RCtxPresTrans e e' w) (factor2Ext (extRAssoc e e') w) ≡ extRAssoc (factor2Ext e (factor2≤ e' w)) (factor2Ext e' w)
-factor2ExtPresTrans _e _e' _w = ExtIsProp _ _
+factorExtPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst₂ (CExt Θ') (lCtxPresTrans e e' w) (rCtxPresTrans e e' w) (factorExt (extRAssoc e e') w) ≡ extRAssoc (factorExt e (factorWk e' w)) (factorExt e' w)
+factorExtPresTrans _e _e' _w = ExtIsProp _ _

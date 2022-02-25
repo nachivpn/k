@@ -244,3 +244,82 @@ nat-substTm {Γ = Γ} {Δ' = Δ'} (unbox {ΓL = ΓL} {a = a} t e) s w
         factorSubₛ-wkSub-comm-under-substTm : substTm (factorSubₛ e (wkSub w s)) t ≅ substTm (wkSub (factorWk (factorExtₛ e s) w) (factorSubₛ e s)) t
         factorSubₛ-wkSub-comm-under-substTm = HE.icong (λ x → Sub x ΓL) (lCtxₛ-lCtx-comm e w s) (λ z → substTm z t)
           (HE.trans (≡-subst-addable _ _ _) (≡-to-≅ (factorSubₛ-wkSub-comm e s w)))
+
+coh-wkSub-∙ₛ  : {Δ'' : Ctx} (s : Sub Δ Γ) (s' : Sub Δ' Δ) (w : Δ' ⊆ Δ'')
+         → wkSub w (s ∙ₛ s') ≡ s ∙ₛ (wkSub w s')
+coh-wkSub-∙ₛ []         s' w = refl
+coh-wkSub-∙ₛ (s `, x)   s' w = cong₂ _`,_  (coh-wkSub-∙ₛ s s' w) (sym (nat-substTm x s' w))
+coh-wkSub-∙ₛ (lock s e) s' w = begin
+  wkSub w (lock s e ∙ₛ s')
+    ≡⟨⟩
+  lock
+    (wkSub (factorWk (factorExtₛ e s') w) (s ∙ₛ factorSubₛ e s'))
+    (factorExt (factorExtₛ e s') w)
+    -- apply IH
+    ≡⟨ cong₂ lock (coh-wkSub-∙ₛ _ _ _) refl ⟩
+ lock
+   (s ∙ₛ wkSub (factorWk (factorExtₛ e s') w) (factorSubₛ e s'))
+   (factorExt (factorExtₛ e s') w)
+   -- applying factoring equalities
+   ≡⟨ cong₂ lock (cong (_ ∙ₛ_) (sym (factorSubₛ-wkSub-comm e s' w))) (sym (factorExtₛ-wkSub-comm e _ _)) ⟩
+ lock
+   (s ∙ₛ subst (λ ΔL → Sub ΔL _) (lCtxₛ-lCtx-comm e w s') (factorSubₛ e (wkSub w s')))
+   (subst₂ (CExt _) (lCtxₛ-lCtx-comm e w s') (rCtxₛ-rCtx-comm e w s') (factorExtₛ e (wkSub w s')))
+   -- remove substs
+   ≅⟨ xcong
+     (λ ΓL → Sub ΓL _) (CExt _)
+     (sym (lCtxₛ-lCtx-comm e w s')) (sym (rCtxₛ-rCtx-comm e w s'))
+     {t2 = s ∙ₛ factorSubₛ e (wkSub w s')}
+     {e2 = factorExtₛ e (wkSub w s')}
+     lock
+     (HE.icong  (λ ΔL → Sub ΔL _) (sym (lCtxₛ-lCtx-comm e w s')) (s ∙ₛ_) (≡-subst-removable _ _ _))
+     (≡-subst₂-removable _ _ _ _) ⟩
+ lock
+   (s ∙ₛ factorSubₛ e (wkSub w s'))
+   (factorExtₛ e (wkSub w s'))
+   ≡⟨⟩
+ lock s e ∙ₛ wkSub w s' ∎
+
+coh-trimSub-wkTm : (t : Tm Γ a) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
+  → substTm (trimSub w s) t ≡ substTm s (wkTm w t)
+coh-trimSub-wkTm (var x) s w
+  = coh-trimSub-wkVar x s w
+coh-trimSub-wkTm (lam t) s w
+  = cong lam (trans
+    (cong (λ p → substTm (p `, var ze) t) (nat-trimSub s w fresh))
+    (coh-trimSub-wkTm t (keepₛ s) (keep w)))
+coh-trimSub-wkTm (app t u) s w
+  = cong₂ app (coh-trimSub-wkTm t s w) (coh-trimSub-wkTm u s w)
+coh-trimSub-wkTm (box t) s w
+  = cong box (coh-trimSub-wkTm t (lock s (ext🔒- nil)) (keep🔒 w))
+coh-trimSub-wkTm (unbox t e) s w
+  = begin
+    substTm (trimSub w s) (unbox t e)
+      ≡⟨⟩
+    unbox
+      (substTm (factorSubₛ e (trimSub w s)) t)
+      (factorExtₛ e (trimSub w s))
+      -- add substs
+      ≅⟨ xcong (λ ΔL → Tm ΔL _) (CExt _)
+           (lCtxₛ-factorExt-trimSub-assoc e s w)
+           (rCtxₛ-factorExt-trimSub-assoc e s w)
+           {t2 = substTm (subst (λ ΔL → Sub ΔL _) (lCtxₛ-factorExt-trimSub-assoc e s w) (factorSubₛ e (trimSub w s))) t}
+           {e2 = subst₂ (CExt _) (lCtxₛ-factorExt-trimSub-assoc e s w) (rCtxₛ-factorExt-trimSub-assoc e s w) (factorExtₛ e (trimSub w s))}
+           unbox
+           (HE.icong (λ ΔL → Sub ΔL _) (lCtxₛ-factorExt-trimSub-assoc e s w) (λ s' → substTm s' t) (≡-subst-addable _ _ _))
+           (≡-subst₂-addable _ _ _ _) ⟩
+    unbox
+      (substTm (subst (λ ΔL → Sub ΔL _) (lCtxₛ-factorExt-trimSub-assoc e s w) (factorSubₛ e (trimSub w s))) t)
+      (subst₂ (CExt _) (lCtxₛ-factorExt-trimSub-assoc e s w) (rCtxₛ-factorExt-trimSub-assoc e s w) (factorExtₛ e (trimSub w s)))
+      -- apply factoring equalities
+      ≡⟨ cong₂ unbox (cong₂ substTm {u = t} (factorSubₛ-trimSub-comm e s w) refl) (factorExtₛ-trimSub-comm e s w) ⟩
+    unbox
+      (substTm (trimSub (factorWk e w) (factorSubₛ (factorExt e w) s)) t)
+      (factorExtₛ (factorExt e w) s)
+      -- aplpy IH
+      ≡⟨ cong₂ unbox (coh-trimSub-wkTm t _ _) refl ⟩
+    unbox
+      (substTm (factorSubₛ (factorExt e w) s) (wkTm (factorWk e w) t))
+      (factorExtₛ (factorExt e w) s)
+      ≡⟨⟩
+    (substTm s (wkTm w (unbox t e))) ∎

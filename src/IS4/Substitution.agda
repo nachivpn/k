@@ -1,3 +1,4 @@
+open import HEUtil
 open import Context using ()
   renaming (Ctx to ICtx ; _⊆_ to I⊆ ; Var to IVar)
 
@@ -9,8 +10,11 @@ module IS4.Substitution (Ty : Set)
 
 open import Data.Product using (∃; _×_; _,_; proj₁; proj₂; -,_)
 open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality.Properties
+open import Relation.Binary.HeterogeneousEquality as HE using (_≅_)
 
 open import Context Ty hiding (ext🔒)
+open ≡-Reasoning
 
 private
   variable
@@ -84,16 +88,97 @@ ExtToSub : CExt Γ ΓL ΓR → Sub Γ (ΓL 🔒)
 ExtToSub e = lock idₛ e
 
 private
-  factor2 : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × CExt Δ ΔL ΔR
-  factor2 nil        s           = -, -, s , nil
-  factor2 (ext e)    (s `, t)    = factor2 e s
-  factor2 (ext🔒- e) (lock s e')  = let (ΔL , ΔR , s' , e'') = factor2 e s in -, -, s' , extRAssoc e'' e'
 
-factor2Sub : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub _ ΓL
-factor2Sub = λ e s → factor2 e s .proj₂ .proj₂ .proj₁
+  factor2ₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × CExt Δ ΔL ΔR
+  factor2ₛ nil        s           = -, -, s , nil
+  factor2ₛ (ext e)    (s `, _)    = factor2ₛ e s
+  factor2ₛ (ext🔒- e) (lock {ΔR = ΔR} s es)  = let (ΔL' , ΔR' , s' , e'') = factor2ₛ e s
+    in ΔL' , (ΔR' ,, ΔR) , s' , extRAssoc e'' es
 
-factor2Extₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ _ _
-factor2Extₛ = λ e s → factor2 e s .proj₂ .proj₂ .proj₂
+  factor2Subₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub _ ΓL
+  factor2Subₛ = λ e s → factor2ₛ e s .proj₂ .proj₂ .proj₁
+
+  factor2Extₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ _ _
+  factor2Extₛ = λ e s → factor2ₛ e s .proj₂ .proj₂ .proj₂
+
+-- "Left" context of factoring with a substitution (see factorExtₛ)
+lCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
+lCtxₛ {Γ = Γ} {Δ = Δ} nil    s          = Δ
+lCtxₛ {Γ = Γ `, a} (ext e)  (s `, t)    = lCtxₛ {Γ = Γ} e s
+lCtxₛ (ext🔒- e)             (lock s e') = lCtxₛ e s
+
+-- "Right" context of factoring with a substitution (see factorExtₛ)
+rCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
+rCtxₛ nil       s                     = []
+rCtxₛ (ext e)   (s `, t)              = rCtxₛ e s
+rCtxₛ (ext🔒- e) (lock {ΔR = ΔR} s e') = rCtxₛ e s ,, ΔR
+
+-- same as factor2Extₛ
+factorExtₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ (lCtxₛ e s) (rCtxₛ e s)
+factorExtₛ nil       s           = nil
+factorExtₛ (ext e)   (s `, _)    = factorExtₛ e s
+factorExtₛ (ext🔒- e) (lock s e') = extRAssoc (factorExtₛ e s) e'
+
+-- same as factor2Subₛ
+factorSubₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub (lCtxₛ e s) ΓL
+factorSubₛ nil       s           = s
+factorSubₛ (ext e)   (s `, t)    = factorSubₛ e s
+factorSubₛ (ext🔒- e) (lock s e') = factorSubₛ e s
+
+-- Left context of weakening and applying a substituion
+-- is the same as the
+-- Left context of applying and then weakening it
+lCtxₛ-lCtx-comm : (e  : CExt Γ ΓL ΓR) (w  : Δ ⊆ Δ') (s  : Sub Δ Γ)
+  → lCtxₛ e (wkSub w s) ≡ lCtx (factorExtₛ e s) w
+lCtxₛ-lCtx-comm nil       w s           = refl
+lCtxₛ-lCtx-comm (ext e)   w (s `, _)    = lCtxₛ-lCtx-comm e w s
+lCtxₛ-lCtx-comm (ext🔒- e) w (lock s e') = trans
+  (lCtxₛ-lCtx-comm e (factorWk e' w) s)
+  (sym (lCtxPresTrans (factorExtₛ e _) e' _))
+
+-- Right context of weakening and applying a substituion
+-- is the same as the
+-- Right context of applying and then weakening it
+rCtxₛ-rCtx-comm : (e  : CExt Γ ΓL ΓR) (w  : Δ ⊆ Δ') (s  : Sub Δ Γ)
+  → rCtxₛ e (wkSub w s) ≡ rCtx (factorExtₛ e s) w
+rCtxₛ-rCtx-comm nil w s                 = refl
+rCtxₛ-rCtx-comm (ext e) w (s `, _)      = rCtxₛ-rCtx-comm e w s
+rCtxₛ-rCtx-comm (ext🔒- e) w (lock s e') = trans
+  (cong₂ _,,_ (rCtxₛ-rCtx-comm e (factorWk e' w) s) refl)
+  (sym (rCtxPresTrans (factorExtₛ e _) e' _))
+
+-- Weakening and factoring a subtitution can be achieved by factoring and then weakening it
+factorSubₛ-wkSub-comm : (e :  CExt Γ ΓL ΓR) (s  : Sub Δ Γ) (w : Δ ⊆ Δ')
+  → subst (λ ΔL → Sub ΔL ΓL) (lCtxₛ-lCtx-comm e w s) (factorSubₛ e (wkSub w s)) ≡ wkSub (factorWk (factorExtₛ e s) w) (factorSubₛ e s)
+factorSubₛ-wkSub-comm nil       s           w = refl
+factorSubₛ-wkSub-comm (ext e)   (s `, t)    w = factorSubₛ-wkSub-comm e s w
+factorSubₛ-wkSub-comm (ext🔒- e) (lock s e') w = begin
+  subst (λ ΔL → Sub ΔL _)
+    (trans (lCtxₛ-lCtx-comm e _ _) (sym (lCtxPresTrans _ e' _)))
+    (factorSubₛ e (wkSub (factorWk e' w) s))
+    -- split `subst _ (trans p q) ...` to `subst _ q (subst _ p ...)`
+    ≡⟨ sym (subst-subst (lCtxₛ-lCtx-comm e _ _)) ⟩
+  subst (λ ΔL → Sub ΔL _)
+    (sym (lCtxPresTrans _ e' _))
+    (subst (λ ΔL → Sub ΔL _) (lCtxₛ-lCtx-comm e _ _)
+      (factorSubₛ e (wkSub (factorWk e' w) s)))
+    -- rewrite inner subst
+    ≡⟨ cong (subst (λ ΔL → Sub ΔL _) _) (factorSubₛ-wkSub-comm e s (factorWk e' w)) ⟩
+  subst (λ ΔL → Sub ΔL _)
+    (sym (lCtxPresTrans _ e' _))
+    (wkSub (factorWk (factorExtₛ e s) (factorWk e' w)) (factorSubₛ e s))
+    -- remove subst and apply factorWkPresTrans
+    ≅⟨ HE.trans (≡-subst-removable _ _ _) factorWkPresTrans-under-wkSub ⟩
+ wkSub (factorWk (extRAssoc (factorExtₛ e s) e') w) (factorSubₛ e s) ∎
+ where
+   factorWkPresTrans-under-wkSub : wkSub (factorWk (factorExtₛ e s) (factorWk e' w)) _ ≅ wkSub (factorWk (extRAssoc (factorExtₛ e s) e') w) _
+   factorWkPresTrans-under-wkSub = HE.icong (_ ⊆_) (sym (lCtxPresTrans _ e' _)) (λ s' → wkSub s' _)
+     (HE.sym (HE.trans (≡-subst-addable _ _ _) (≡-to-≅ (factorWkPresTrans _ e' _))))
+
+-- factorExtₛ counterpart of factorSubₛ-wkSub-comm
+factorExtₛ-wkSub-comm : (e :  CExt Γ ΓL ΓR) (s  : Sub Δ Γ) (w : Δ ⊆ Δ')
+  → subst₂ (CExt Δ') (lCtxₛ-lCtx-comm e w s) (rCtxₛ-rCtx-comm e w s) (factorExtₛ e (wkSub w s)) ≡ factorExt (factorExtₛ e s) w
+factorExtₛ-wkSub-comm _ _ _ = ExtIsProp _ _
 
 --------------------
 -- Substitution laws

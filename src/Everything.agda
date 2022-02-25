@@ -1,6 +1,7 @@
 module Everything where
 
 import Context
+import HEUtil
 
 import IK.Substitution
 import IK.Conversion

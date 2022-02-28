@@ -68,7 +68,7 @@ _→̇_ A B = {Δ : Ctx} → A Δ → B Δ
 
 -- semantic counterpart of `lock` from `Sub`
 data Lock (A : Ctx → Set) : Ctx → Set where
-  lock : A ΓL → CExt Γ ΓL ΓR  → Lock A Γ
+  lock : A ΔL → CExt Γ ΔL ΔR  → Lock A Γ
 
 -- interpretation of types
 Tm' : Ctx → Ty → Set
@@ -143,13 +143,37 @@ CExt' nil       γ           = lock γ nil                                      
 CExt' (ext e)   (γ , _)     = CExt' e γ                                                              -- = CExt' e ∘ π₁
 CExt' (ext🔒- e) (lock γ e') = let (_ , γ' , e'') = unlock' (CExt' e γ) in lock γ' (extRAssoc e'' e') -- = ^(CExt' e)   ("bind")
 
+-- "Left" context of factoring with a substitution (see factorExtₛ)
+lCtxₛ' : (e : CExt Γ ΓL ΓR) (s : Sub' Δ Γ) → Ctx
+lCtxₛ' {Γ = Γ} {Δ = Δ} nil   s          = Δ
+lCtxₛ' {Γ = Γ `, a} (ext e)  (s , t)     = lCtxₛ' {Γ = Γ} e s
+lCtxₛ' (ext🔒- e)             (lock s e') = lCtxₛ' e s
+
+-- "Right" context of factoring with a substitution (see factorExtₛ)
+rCtxₛ' : (e : CExt Γ ΓL ΓR) (s : Sub' Δ Γ) → Ctx
+rCtxₛ' nil       s                     = []
+rCtxₛ' (ext e)   (s , t)               = rCtxₛ' e s
+rCtxₛ' (ext🔒- e) (lock {ΔR = ΔR} s e') = rCtxₛ' e s ,, ΔR
+
+-- same as factor2Extₛ
+factorExtₛ' : (e : CExt Γ ΓL ΓR) (s : Sub' Δ Γ) → CExt Δ (lCtxₛ' e s) (rCtxₛ' e s)
+factorExtₛ' nil       s           = nil
+factorExtₛ' (ext e)   (s , _)     = factorExtₛ' e s
+factorExtₛ' (ext🔒- e) (lock s e') = extRAssoc (factorExtₛ' e s) e'
+
+-- same as factor2Subₛ
+factorSubₛ' : (e : CExt Γ ΓL ΓR) (s : Sub' Δ Γ) → Sub' (lCtxₛ' e s) ΓL
+factorSubₛ' nil       s           = s
+factorSubₛ' (ext e)   (s , t)     = factorSubₛ' e s
+factorSubₛ' (ext🔒- e) (lock s e') = factorSubₛ' e s
+
 -- interpretation of terms
 eval : Tm Γ a → (Sub'- Γ →̇ Tm'- a)
 eval (var x)     s = substVar' x s
 eval (lam t)     s = λ w x → eval t (wkSub' w s , x)
 eval (app t u)   s = (eval t s) idWk (eval u s)
 eval (box t)     s = λ w e → eval t (lock (wkSub' w s) e)
-eval (unbox t e) s = let (_ , s' , e') = unlock' (CExt' e s) in unbox' (eval t s') e' -- = ^(eval t) ∘ CExt' e
+eval (unbox t e) s = unbox' (eval t (factorSubₛ' e s)) (factorExtₛ' e s)
 
 -- retraction of interpretation
 quot : (Sub'- Γ →̇ Tm'- a) → Nf Γ a

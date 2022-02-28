@@ -219,34 +219,9 @@ factorSubₛ-trimSub-comm (ext🔒- e) (s `, t)   (drop w)
 factorSubₛ-trimSub-comm (ext🔒- e) (lock s _) (keep🔒 w)
   = factorSubₛ-trimSub-comm e s w
 
-subst₂-application′ : ∀ {A B : Set} (P Q : A → B → Set) {x y u v}
-  (eq1 : x ≡ y) (g : B → B) (eq2 : u ≡ v)
-  (f : ∀ {x y} → Q x y → P x (g y)) (r : Q x u)
-  → subst₂ P eq1 (cong g eq2) (f r) ≡ f (subst₂ Q eq1 eq2 r)
-subst₂-application′ _ _ refl _ refl _ _ = refl
-
 factorExtₛ-trimSub-comm : (e : CExt Γ ΓL ΓR) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
   → subst₂ (CExt Δ') (lCtxₛ-factorExt-trimSub-assoc e s w) (rCtxₛ-factorExt-trimSub-assoc e s w) (factorExtₛ e (trimSub w s)) ≡ factorExtₛ (factorExt e w) s
-factorExtₛ-trimSub-comm nil       s          w
-  = refl
-factorExtₛ-trimSub-comm (ext e)   (s `, t)   (drop w)
-  = factorExtₛ-trimSub-comm (ext e) s w
-factorExtₛ-trimSub-comm (ext e)   (s `, t)   (keep w)
-  = factorExtₛ-trimSub-comm e s w
-factorExtₛ-trimSub-comm (ext🔒- e) (s `, t)   (drop w)
-  = factorExtₛ-trimSub-comm (ext🔒- e) s w
-factorExtₛ-trimSub-comm (ext🔒- e) (lock s e') (keep🔒 w)
-  = begin
-      subst₂ (CExt _) (lCtxₛ-factorExt-trimSub-assoc e s w) (cong (_,, _) (rCtxₛ-factorExt-trimSub-assoc e s w)) (extRAssoc (factorExtₛ e (trimSub w s)) e')
-        -- massage subst and cong
-        ≡⟨ subst₂-application′
-             (CExt _) (CExt _)
-             (lCtxₛ-factorExt-trimSub-assoc e s w) (_,, _) (rCtxₛ-factorExt-trimSub-assoc e s w)
-             (λ x → extRAssoc x e') _ ⟩
-      extRAssoc (subst₂ (CExt _) (lCtxₛ-factorExt-trimSub-assoc e s w) (rCtxₛ-factorExt-trimSub-assoc e s w) (factorExtₛ e (trimSub w s))) e'
-        -- apply IH
-        ≡⟨ cong₂ extRAssoc (factorExtₛ-trimSub-comm e s w) refl ⟩
-    extRAssoc (factorExtₛ (factorExt e w) s) e' ∎
+factorExtₛ-trimSub-comm _ _ _ = ExtIsProp _ _
 
 --------------------
 -- Substitution laws

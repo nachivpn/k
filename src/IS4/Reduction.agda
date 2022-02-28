@@ -1,8 +1,8 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 module IS4.Reduction where
 
 open import IS4.Term
---open import IS4.HellOfSyntacticLemmas
---  using (beta-wk-lemma ; keepFreshLemma ; sliceCompLemma)
+open import IS4.HellOfSyntacticLemmas
 
 open import Relation.Nullary
   using (¬_)
@@ -15,9 +15,8 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   using (Star)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties
   using (preorder)
-
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; refl ; cong ; cong₂)
+  using (_≡_ ; refl ; sym ; trans ; cong ; cong₂)
 
 open ReflexiveTransitive public
   using (ε ; _◅_)
@@ -59,6 +58,12 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
   cong-unbox : {t t' : Tm ΓL (◻ a)} {e : CExt Γ ΓL ΓR}
     → t ⟶ t'
     → unbox t e ⟶ unbox t' e
+
+--  ???-unbox : {ΓLL ΓLR : Ctx} {t t' : Tm ΓLL (◻ a)} {e : LFExt ΓL ΓLL ΓLR} {e' : CExt Γ ΓL ΓR}
+--   → unbox t (extRAssoc (upLFExt e) e') ⟶ unbox (wkTm (LFExtTo≤ e) t) e'
+
+--  ???-unbox : {ΓLL ΓLR : Ctx} {t t' : Tm ΓLL (◻ (◻ a))} {e : CExt ΓL ΓLL ΓLR} {e' : CExt Γ ΓL ΓR}
+--    → unbox (unbox t e) e' ⟶ unbox (unbox t (extRAssoc e e')) nil
 
 -- zero or more steps of reduction
 Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _
@@ -115,33 +120,43 @@ cong-app*  : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → app t u ⟶* app t' u'
 cong-app* t⟶*t' u⟶*u' = multi (cong-app1* t⟶*t') (cong-app2* u⟶*u')
 
-{-
+substTmPresId : (t : Tm Γ a) → t ⟶* substTm idₛ t
+substTmPresId (var x)     = zero (sym (substVarPresId x))
+substTmPresId (lam t)     = cong-lam* (substTmPresId t)
+substTmPresId (app t u)   = cong-app* (substTmPresId t) (substTmPresId u)
+substTmPresId (box t)     = cong-box* (substTmPresId t)
+substTmPresId (unbox t e) = {!!}
+
+substTmPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (t : Tm Γ a)
+  → substTm s' (substTm s t) ⟶* substTm (s ∙ₛ s') t
+substTmPres∙ = ?
+
 invRed :  {t t' : Tm Γ a}
-  → (w : Δ ≤ Γ)
+  → (w : Γ ⊆ Γ')
   → t ⟶ t'
   → wkTm w t ⟶* wkTm w t'
-invRed w (red-fun {t = t} {u = u})
-  = multi (one red-fun) (zero (beta-wk-lemma w u t))
-invRed w exp-fun
-  = multi (one exp-fun) (zero (cong lam (cong₂ app keepFreshLemma refl)))
-invRed w (red-box {e = e})
-  = multi (one red-box) (zero (sliceCompLemma w e _))
-invRed w exp-box
-  = one exp-box
+invRed w (red-fun t u)
+  = multi (one (red-fun _ _)) (zero (beta-wk-lemma w u t))
+invRed w (exp-fun _)
+  = multi (one (exp-fun _)) (zero (cong lam (cong₂ app keepFreshLemma refl)))
+invRed w (red-box t e)
+  = multi (one (red-box _ _)) (zero (trans (trans (sym (coh-trimSub-wkTm t _ _)) {!!}) (nat-substTm t _ w)))
+  -- use `coh-trimSub-wkSub idₛ idₛ (factorWk e w)` and substitution identities
+invRed w (exp-box _)
+  = one (exp-box _)
 invRed w (cong-lam r)
   = cong-lam* (invRed (keep w) r)
 invRed w (cong-box r)
   = cong-box* (invRed (keep🔒 w) r)
-invRed w (cong-unbox r)
-  = cong-unbox* (invRed (sliceLeft _ w) r)
+invRed w (cong-unbox {e = e} r)
+  = cong-unbox* (invRed (factorWk e w ) r)
 invRed w (cong-app1 r)
   = cong-app* (invRed w r) ε
 invRed w (cong-app2 r)
   = cong-app* ε (invRed w r)
 
-invRed* :  {t t' : Tm Γ a}
-  → (w : Δ ≤ Γ)
+wkTmPres⟶* :  {t t' : Tm Γ a}
+  → (w : Γ ⊆ Γ')
   → t ⟶* t'
   → wkTm w t ⟶* wkTm w t'
-invRed* w = cong-⟶*-to-cong-⟶* (invRed w)
--}
+wkTmPres⟶* w = cong-⟶*-to-cong-⟶* (invRed w)

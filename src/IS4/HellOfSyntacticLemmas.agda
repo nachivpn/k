@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module IS4.HellOfSyntacticLemmas where
 
 -- Welcome to the hell of mind-numbing syntactic lemmas.
@@ -323,3 +325,114 @@ coh-trimSub-wkTm (unbox t e) s w
       (factorExtₛ (factorExt e w) s)
       ≡⟨⟩
     (substTm s (wkTm w (unbox t e))) ∎
+
+coh-trimSub-wkSub  : {Δ₁ : Ctx} (s : Sub Δ Γ) (s' : Sub Δ₁ Δ') (w : Δ ⊆ Δ')
+         → s ∙ₛ (trimSub w s') ≡ (wkSub w s) ∙ₛ s'
+coh-trimSub-wkSub []         s' w
+  = refl
+coh-trimSub-wkSub (s `, x)   s' w
+  = cong₂ _`,_ (coh-trimSub-wkSub s s' w) (coh-trimSub-wkTm x s' w)
+coh-trimSub-wkSub (lock s e) s' w
+  = begin
+    lock s e ∙ₛ trimSub w s'
+      ≡⟨⟩
+    lock
+      (s ∙ₛ factorSubₛ e (trimSub w s'))
+      (factorExtₛ e (trimSub w s'))
+      -- add substs
+      ≅⟨ xcong
+           (λ ΓL → Sub ΓL _) (CExt _)
+           (lCtxₛ-factorExt-trimSub-assoc e s' w) (rCtxₛ-factorExt-trimSub-assoc e s' w)
+           lock
+           (HE.icong  (λ ΔL → Sub ΔL _) (lCtxₛ-factorExt-trimSub-assoc e s' w) (s ∙ₛ_) (≡-subst-addable _ _ _))
+           (≡-subst₂-addable (CExt _) _ _ (factorExtₛ e (trimSub w s'))) ⟩
+    lock
+      (s ∙ₛ (subst (λ ΔL → Sub ΔL _) (lCtxₛ-factorExt-trimSub-assoc e s' w) (factorSubₛ e (trimSub w s'))))
+      (subst₂ (CExt _) (lCtxₛ-factorExt-trimSub-assoc e s' w) (rCtxₛ-factorExt-trimSub-assoc e s' w) (factorExtₛ e (trimSub w s')))
+      -- apply factoring equalities
+      ≡⟨ cong₂ lock (cong (s ∙ₛ_) (factorSubₛ-trimSub-comm e s' w)) (factorExtₛ-trimSub-comm e s' w) ⟩
+    lock
+       (s ∙ₛ (trimSub (factorWk e w) (factorSubₛ (factorExt e w) s')))
+       (factorExtₛ (factorExt e w) s')
+      -- apply IH
+      ≡⟨ cong₂ lock (coh-trimSub-wkSub _ _ _) refl ⟩
+    lock
+      (wkSub (factorWk e w) s ∙ₛ factorSubₛ (factorExt e w) s')
+      (factorExtₛ (factorExt e w) s')
+      ≡⟨⟩
+    (wkSub w (lock s e) ∙ₛ s') ∎
+
+
+private
+  dropKeepLemma : (s' : Sub Δ' Δ) (s : Sub Γ Δ')
+           →  dropₛ (s' ∙ₛ s) ≡ dropₛ {a = a} s' ∙ₛ keepₛ s
+  dropKeepLemma s' s = trans (coh-wkSub-∙ₛ s' s fresh)
+    (trans
+      ((cong (s' ∙ₛ_) (sym (trimSubPresId (dropₛ s)))))
+      (coh-trimSub-wkSub s' (keepₛ s) fresh))
+
+substVarPresId : (x : Var Γ a) → substVar idₛ x ≡ var x
+substVarPresId ze = refl
+substVarPresId (su x) = trans (nat-substVar x idₛ fresh) (trans
+  (cong (wkTm fresh) (substVarPresId x))
+  (cong var (wkIncr x)))
+
+leftIdSub : (s : Sub Γ Γ') → idₛ ∙ₛ s ≡ s
+leftIdSub s = {!!}
+
+rightIdSub : (s : Sub Γ Γ') → s ∙ₛ idₛ ≡ s
+rightIdSub s = {!!}
+
+assocSub : {Γ1 Γ2 Γ3 Γ4 : Ctx} → (s3 : Sub Γ3 Γ4) (s2 : Sub Γ2 Γ3) → (s1 : Sub Γ1 Γ2)
+  → (s3 ∙ₛ s2) ∙ₛ s1 ≡ s3 ∙ₛ (s2 ∙ₛ s1)
+assocSub s3 s2 s1 = {!!}
+
+wkSubId : (w : Γ ⊆ Δ) → wkSub w idₛ ≡ embWk w
+wkSubId w = {!!}
+
+------------------------
+-- Naturality conditions
+------------------------
+
+-- Normal forms and neutrals obey "naturality" of embeddding, i.e.,
+-- weakening can be commuted with embedding.
+
+-- the mutual brothers normal forms and neutrals who,
+-- as always, must be handled (mutually) together
+nat-embNe : (w : Γ ⊆ Γ') (n : Ne Γ a)
+  → wkTm w (embNe n) ≡ embNe (wkNe w n)
+nat-embNf : (w : Γ ⊆ Γ') (n : Nf Γ a)
+  → wkTm w (embNf n) ≡ embNf (wkNf w n)
+
+nat-embNf w (up𝕓 x) = nat-embNe w x
+nat-embNf w (lam n) = cong lam (nat-embNf (keep w) n)
+nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
+
+nat-embNe w (var x)     = refl
+nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
+nat-embNe w (unbox n x) = {!!}
+
+-- Outcast lemmas
+
+keepFreshLemma : {w : Γ ⊆ Γ'} {t : Tm Γ a}
+  → wkTm (fresh {a = b}) (wkTm w t) ≡ wkTm (keep w) (wkTm fresh t)
+keepFreshLemma = trans (wkTmPres∙ _ _ _) (sym (trans
+    (wkTmPres∙ _ _ _)
+    (cong₂ wkTm (cong drop (trans (leftIdWk _) (sym (rightIdWk _)))) refl)))
+
+sliceCompLemma : (w : Γ ⊆ Δ) (e : LFExt Γ (ΓL 🔒) ΓR) (t : Tm (ΓL 🔒) a)
+  → wkTm (LFExtTo≤ (wkLFExt e w)) (wkTm (keep🔒 (sliceLeft e w)) t) ≡      wkTm w (wkTm (LFExtTo≤ e) t)
+sliceCompLemma w e t = (trans (wkTmPres∙ _ _ _) (sym (trans
+  (wkTmPres∙ _ _ _)
+  (cong₂ wkTm (slicingLemma w e) refl))))
+
+
+beta-wk-lemma : (w  : Γ ⊆ Δ) (u : Tm Γ a) (t : Tm (Γ `, a) b)
+  → substTm (idₛ `, wkTm w u) (wkTm (keep w) t) ≡ wkTm w (substTm (idₛ `, u) t)
+beta-wk-lemma w u t = trans
+  (sym (coh-trimSub-wkTm t _ (keep w)))
+  (sym (trans
+    (sym (nat-substTm t _ _))
+    (cong
+      (λ p → substTm (p `, wkTm w u) t)
+      (sym (trans (trimSubId w) (sym (wkSubId w)))))))

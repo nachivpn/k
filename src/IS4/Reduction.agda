@@ -15,7 +15,7 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   using (Star)
 open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties
   using (preorder)
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality as PE
   using (_≡_ ; refl ; sym ; trans ; cong ; cong₂)
 
 open ReflexiveTransitive public
@@ -59,11 +59,9 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → t ⟶ t'
     → unbox t e ⟶ unbox t' e
 
---  ???-unbox : {ΓLL ΓLR : Ctx} {t t' : Tm ΓLL (◻ a)} {e : LFExt ΓL ΓLL ΓLR} {e' : CExt Γ ΓL ΓR}
---   → unbox t (extRAssoc (upLFExt e) e') ⟶ unbox (wkTm (LFExtTo≤ e) t) e'
+  fact-unbox : {t : Tm ΓL (◻ a)} {e : CExt Γ ΓL ΓR}
+    → unbox t e ⟶ unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ)
 
---  ???-unbox : {ΓLL ΓLR : Ctx} {t t' : Tm ΓLL (◻ (◻ a))} {e : CExt ΓL ΓLL ΓLR} {e' : CExt Γ ΓL ΓR}
---    → unbox (unbox t e) e' ⟶ unbox (unbox t (extRAssoc e e')) nil
 
 -- zero or more steps of reduction
 Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _
@@ -120,16 +118,38 @@ cong-app*  : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → app t u ⟶* app t' u'
 cong-app* t⟶*t' u⟶*u' = multi (cong-app1* t⟶*t') (cong-app2* u⟶*u')
 
+data _⟶ₛ*_ : Sub Δ Γ → Sub Δ Γ → Set where
+  ε          : {s : Sub Δ Γ}
+    → s ⟶ₛ* s
+  multiₛ      : {s s' s'' : Sub Δ Γ}
+    → s ⟶ₛ* s' → s' ⟶ₛ* s'' → s ⟶ₛ* s''
+  cong-`,*   : {s s' : Sub Δ Γ} {t t' : Tm Δ a}
+    → s ⟶ₛ* s' → t ⟶* t' → (s `, t) ⟶ₛ* (s' `, t')
+  cong-lock*  : {s s' : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
+    → s ⟶ₛ* s' → lock s e ⟶ₛ* lock s' e
+  fact-lock* : {s : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
+    → lock s e ⟶ₛ* lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ)
+
+zeroₛ : {s s' : Sub Δ Γ} → s ≡ s' → s ⟶ₛ* s'
+zeroₛ refl = ε
+
+open import Data.Unit
+import Context as C
+open import Relation.Binary.HeterogeneousEquality as HE using (_≅_)
+
 substTmPresId : (t : Tm Γ a) → t ⟶* substTm idₛ t
 substTmPresId (var x)     = zero (sym (substVarPresId x))
 substTmPresId (lam t)     = cong-lam* (substTmPresId t)
 substTmPresId (app t u)   = cong-app* (substTmPresId t) (substTmPresId u)
 substTmPresId (box t)     = cong-box* (substTmPresId t)
-substTmPresId (unbox t e) = {!!}
+substTmPresId (unbox t e) = one fact-unbox
 
-substTmPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (t : Tm Γ a)
-  → substTm s' (substTm s t) ⟶* substTm (s ∙ₛ s') t
-substTmPres∙ = ?
+rightIdSub : (s : Sub Γ Γ') → s ⟶ₛ* (s ∙ₛ idₛ)
+rightIdSub []         = ε
+rightIdSub (s `, t)   = cong-`,* (rightIdSub s) (substTmPresId t)
+rightIdSub (lock s e) = fact-lock*
+
+import IS4.Substitution as S
 
 invRed :  {t t' : Tm Γ a}
   → (w : Γ ⊆ Γ')
@@ -154,6 +174,7 @@ invRed w (cong-app1 r)
   = cong-app* (invRed w r) ε
 invRed w (cong-app2 r)
   = cong-app* ε (invRed w r)
+invRed w fact-unbox = {!!}
 
 wkTmPres⟶* :  {t t' : Tm Γ a}
   → (w : Γ ⊆ Γ')

@@ -362,14 +362,44 @@ coh-trimSub-wkSub (lock s e) s' w
       ≡⟨⟩
     (wkSub w (lock s e) ∙ₛ s') ∎
 
+lCtxₛPresTrans : ∀ {ΓLL ΓLR : Ctx} (e : CExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR) (s : Sub Δ Γ)
+  → lCtxₛ e (factorSubₛ e' s) ≡ lCtxₛ (extRAssoc e e') s
+lCtxₛPresTrans e nil        s          = refl
+lCtxₛPresTrans e (ext e')   (s `, _)   = lCtxₛPresTrans e e' s
+lCtxₛPresTrans e (ext🔒- e') (lock s _) = lCtxₛPresTrans e e' s
 
-private
-  dropKeepLemma : (s' : Sub Δ' Δ) (s : Sub Γ Δ')
-           →  dropₛ (s' ∙ₛ s) ≡ dropₛ {a = a} s' ∙ₛ keepₛ s
-  dropKeepLemma s' s = trans (coh-wkSub-∙ₛ s' s fresh)
-    (trans
-      ((cong (s' ∙ₛ_) (sym (trimSubPresId (dropₛ s)))))
-      (coh-trimSub-wkSub s' (keepₛ s) fresh))
+rCtxₛPresTrans : ∀ {ΓLL ΓLR : Ctx} (e : CExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR) (s : Sub Δ Γ)
+  → rCtxₛ e (factorSubₛ e' s) ,, rCtxₛ e' s ≡ rCtxₛ (extRAssoc e e') s
+rCtxₛPresTrans e nil        s                    = refl
+rCtxₛPresTrans e (ext e')   (s `, t)             = rCtxₛPresTrans e e' s
+rCtxₛPresTrans e (ext🔒- e') (lock {ΔR = ΔR} s _) = trans (sym (,,-assoc {ΓR = ΔR})) (cong (_,, ΔR) (rCtxₛPresTrans e e' s))
+
+lCtxₛPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
+  → lCtxₛ e (s ∙ₛ s') ≡ lCtxₛ (factorExtₛ e s) s'
+lCtxₛPres∙ₛ nil       s s'           = refl
+lCtxₛPres∙ₛ (ext e)   (s `, t) s'    = lCtxₛPres∙ₛ e s s'
+lCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s' = trans (lCtxₛPres∙ₛ e _ _) (lCtxₛPresTrans _ e1 _)
+
+rCtxₛPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
+  → rCtxₛ e (s ∙ₛ s') ≡ rCtxₛ (factorExtₛ e s) s'
+rCtxₛPres∙ₛ nil       s s'           = refl
+rCtxₛPres∙ₛ (ext e)   (s `, t) s'    = rCtxₛPres∙ₛ e s s'
+rCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s' = trans (cong (_,, _) (rCtxₛPres∙ₛ e _ _)) (rCtxₛPresTrans _ e1 _)
+
+factorSubPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
+  → subst (λ ΔL → Sub ΔL ΓL) (lCtxₛPres∙ₛ e s s') (factorSubₛ e (s ∙ₛ s'))  ≡ factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s'
+factorSubPres∙ₛ nil       s           s' = refl
+factorSubPres∙ₛ (ext e)   (s `, t)    s' = factorSubPres∙ₛ e s s'
+factorSubPres∙ₛ (ext🔒- e) (lock s e1) s' = todo
+  where
+  postulate
+    todo : subst (λ ΔL → Sub ΔL _) (lCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s') (factorSubₛ (ext🔒- e) (lock s e1 ∙ₛ s'))
+           ≡
+           factorSubₛ (ext🔒- e) (lock s e1) ∙ₛ factorSubₛ (factorExtₛ (ext🔒- e) (lock s e1)) s'
+
+factorExtPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
+  → subst₂ (CExt _) (lCtxₛPres∙ₛ e s s') (rCtxₛPres∙ₛ e s s') (factorExtₛ e (s ∙ₛ s')) ≡ factorExtₛ (factorExtₛ e s) s'
+factorExtPres∙ₛ _ _ _ = ExtIsProp _ _
 
 substVarPresId : (x : Var Γ a) → substVar idₛ x ≡ var x
 substVarPresId ze = refl
@@ -377,18 +407,91 @@ substVarPresId (su x) = trans (nat-substVar x idₛ fresh) (trans
   (cong (wkTm fresh) (substVarPresId x))
   (cong var (wkIncr x)))
 
-leftIdSub : (s : Sub Γ Γ') → idₛ ∙ₛ s ≡ s
-leftIdSub s = {!!}
+-- parallel substitution (substVar) preserves substitution composition
+substVarPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (x : Var Γ a)
+  → substTm s' (substVar s x) ≡ substVar (s ∙ₛ s') x
+substVarPres∙ (s `, x) s' ze      = refl
+substVarPres∙ (s `, x) s' (su x₁) = substVarPres∙ s s' x₁
 
-rightIdSub : (s : Sub Γ Γ') → s ∙ₛ idₛ ≡ s
-rightIdSub s = {!!}
+private
+  dropKeepLemma : (s' : Sub Δ' Δ) (s : Sub Γ Δ')
+    →  dropₛ (s' ∙ₛ s) ≡ dropₛ {a = a} s' ∙ₛ keepₛ s
+  dropKeepLemma s' s = trans (coh-wkSub-∙ₛ s' s fresh)
+    (trans
+      ((cong (s' ∙ₛ_) (sym (trimSubPresId (dropₛ s)))))
+      (coh-trimSub-wkSub s' (keepₛ s) fresh))
+
+substTmPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (t : Tm Γ a)
+  → substTm s' (substTm s t) ≡ substTm (s ∙ₛ s') t
+substTmPres∙ s s' (var v) = substVarPres∙ s s' v
+substTmPres∙ s s' (lam t) = cong lam
+    (trans (substTmPres∙ _ _ t)
+    (cong ((λ s → substTm (s `, var ze) t)) (sym (dropKeepLemma s s'))))
+substTmPres∙ s s' (app t t₁) = cong₂ app (substTmPres∙ s s' t) (substTmPres∙ s s' t₁)
+substTmPres∙ s s' (box t) = cong box (substTmPres∙ _ _ t)
+substTmPres∙ s s' (unbox t e) =
+  trans
+    (cong₂ unbox (substTmPres∙ (factorSubₛ e s) (factorSubₛ (factorExtₛ e s) s') t) refl)
+    todo
+    where
+    postulate
+      todo : unbox (substTm (factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s') t) (factorExtₛ (factorExtₛ e s) s') ≡ substTm (s ∙ₛ s') (unbox t e)
 
 assocSub : {Γ1 Γ2 Γ3 Γ4 : Ctx} → (s3 : Sub Γ3 Γ4) (s2 : Sub Γ2 Γ3) → (s1 : Sub Γ1 Γ2)
   → (s3 ∙ₛ s2) ∙ₛ s1 ≡ s3 ∙ₛ (s2 ∙ₛ s1)
-assocSub s3 s2 s1 = {!!}
+assocSub []           s2 s1
+  = refl
+assocSub (s3 `, t)    s2 s1
+  = cong₂ _`,_ (assocSub s3 s2 s1) (substTmPres∙ s2 s1 t)
+assocSub (lock s3 e3) s2 s1
+  = trans
+    (cong₂ lock (assocSub s3 (factorSubₛ e3 s2) (factorSubₛ (factorExtₛ e3 s2) s1)) refl)
+    todo
+    where
+    postulate
+      todo :
+        lock
+          (s3 ∙ₛ factorSubₛ e3 s2 ∙ₛ factorSubₛ (factorExtₛ e3 s2) s1)
+          (factorExtₛ (factorExtₛ e3 s2) s1)
+        ≡ lock s3 e3 ∙ₛ s2 ∙ₛ s1
+
+leftIdSub : (s : Sub Γ Γ') → (idₛ ∙ₛ s) ≡ s
+leftIdSub []         = refl
+leftIdSub (s `, t)   = cong₂ _`,_ (trans todo (leftIdSub s)) refl
+  where
+  postulate
+    todo : dropₛ idₛ ∙ₛ (s `, t) ≡ idₛ ∙ₛ s
+leftIdSub {Γ = Γ} (lock {ΔL = ΔL} {ΔR = ΔR} s e) = begin
+  lock (idₛ ∙ₛ s) (extRAssoc nil e)
+    ≡⟨ cong₂ lock (leftIdSub s) extLeftUnit ⟩
+  lock s (subst (CExt Γ ΔL) _ e)
+    ≅⟨ HE.icong (CExt Γ ΔL) ,,-leftUnit (lock s) (≡-subst-removable (CExt Γ ΔL) _ e) ⟩
+  lock s e ∎
+  where
+  extLeftUnit : extRAssoc nil e ≡ subst (CExt _ _) (sym ,,-leftUnit) e
+  extLeftUnit = ExtIsProp _ _
+
+
+private
+  -- just a helper to reduce redundancy, nothing too interesting
+  auxLemma : (w : Γ ⊆ Δ) → wkSub (drop {a = a} (w ∙ idWk)) idₛ ≡ dropₛ (embWk w)
 
 wkSubId : (w : Γ ⊆ Δ) → wkSub w idₛ ≡ embWk w
-wkSubId w = {!!}
+
+auxLemma w = (trans
+    (sym (wkSubPres∙ w fresh idₛ))
+    (cong (wkSub fresh) (wkSubId w)))
+
+wkSubId base = refl
+wkSubId (drop w) = trans
+  (cong (λ w' → wkSub (drop w') idₛ) (sym (rightIdWk w)))
+  (auxLemma w)
+wkSubId (keep w)  = cong (_`, var ze) (trans
+  (wkSubPres∙ fresh (keep w) idₛ)
+  (trans
+    (cong₂ wkSub (cong drop (trans (leftIdWk _) (sym (rightIdWk _)))) refl)
+    (auxLemma w)))
+wkSubId (keep🔒 w) = cong₂ lock (wkSubId w) refl
 
 ------------------------
 -- Naturality conditions
@@ -410,7 +513,10 @@ nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
 
 nat-embNe w (var x)     = refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
-nat-embNe w (unbox n x) = {!!}
+nat-embNe w (unbox n x) = todo
+  where
+  postulate
+    todo : wkTm w (embNe (unbox n x)) ≡ embNe (wkNe w (unbox n x))
 
 -- Outcast lemmas
 
@@ -425,7 +531,6 @@ sliceCompLemma : (w : Γ ⊆ Δ) (e : LFExt Γ (ΓL 🔒) ΓR) (t : Tm (ΓL 🔒
 sliceCompLemma w e t = (trans (wkTmPres∙ _ _ _) (sym (trans
   (wkTmPres∙ _ _ _)
   (cong₂ wkTm (slicingLemma w e) refl))))
-
 
 beta-wk-lemma : (w  : Γ ⊆ Δ) (u : Tm Γ a) (t : Tm (Γ `, a) b)
   → substTm (idₛ `, wkTm w u) (wkTm (keep w) t) ≡ wkTm w (substTm (idₛ `, u) t)

@@ -133,10 +133,6 @@ data _⟶ₛ*_ : Sub Δ Γ → Sub Δ Γ → Set where
 zeroₛ : {s s' : Sub Δ Γ} → s ≡ s' → s ⟶ₛ* s'
 zeroₛ refl = ε
 
-open import Data.Unit
-import Context as C
-open import Relation.Binary.HeterogeneousEquality as HE using (_≅_)
-
 substTmPresId : (t : Tm Γ a) → t ⟶* substTm idₛ t
 substTmPresId (var x)     = zero (sym (substVarPresId x))
 substTmPresId (lam t)     = cong-lam* (substTmPresId t)
@@ -148,8 +144,6 @@ rightIdSub : (s : Sub Γ Γ') → s ⟶ₛ* (s ∙ₛ idₛ)
 rightIdSub []         = ε
 rightIdSub (s `, t)   = cong-`,* (rightIdSub s) (substTmPresId t)
 rightIdSub (lock s e) = fact-lock*
-
-import IS4.Substitution as S
 
 invRed :  {t t' : Tm Γ a}
   → (w : Γ ⊆ Γ')

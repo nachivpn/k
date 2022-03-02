@@ -1,4 +1,4 @@
-module IS4.Completeness.Trace where
+module IS4.Completeness.Completeness where
 
 open import Data.Unit
   using (⊤ ; tt)

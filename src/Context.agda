@@ -343,6 +343,10 @@ extRAssoc el nil         = el
 extRAssoc el (ext er)    = ext (extRAssoc el er)
 extRAssoc el (ext🔒 x er) = ext🔒 x (extRAssoc el er)
 
+,,-assoc : (ΓLL ,, ΓLR) ,, ΓR ≡ ΓLL ,, (ΓLR ,, ΓR)
+,,-assoc {ΓLL} {ΓLR} {ΓR} = extIs,, {θ = tt} {ΓR = ΓLR ,, ΓR} (extRAssoc {ΓLR = ΓLR} ,,IsExt ,,IsExt)
+
+
 -------------------------------------
 -- Operations on lock-free extensions
 -------------------------------------

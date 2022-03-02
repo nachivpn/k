@@ -9,9 +9,12 @@ open import Relation.Binary.HeterogeneousEquality as HE
   using (_≅_)
 
 open import IS4.Term
-open import IS4.Reduction
+open import IS4.Conversion
+open import IS4.Reduction using (_⟶_)
 open import IS4.Norm
 open import IS4.HellOfSyntacticLemmas
+
+open _⟶_
 
 quotTm : Tm' Γ a → Tm Γ a
 quotTm x = embNf (reify x)
@@ -22,7 +25,7 @@ quotTm x = embNf (reify x)
 
 Rt : {a : Ty} {Γ : Ctx} → (t : Tm Γ a) → (x : Tm' Γ a) → Set
 Rt {𝕓}          t x =
-  t ⟶* quotTm x
+  t ≈ quotTm x
 Rt {a ⇒ b} {Γ}  t f =
   {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
     → (e : Γ ⊆ Γ') → Rt u x → Rt (app (wkTm e t) u) (f e x)
@@ -43,15 +46,15 @@ data Rs : Sub Γ Δ → Sub' Γ Δ → Set where
 
 -- prepend a reduction trace to the "trace builder" Rt
 Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
-  → t ⟶* u
+  → t ≈ u
   → Rt u x
   → Rt t x
 Rt-prepend {a = 𝕓} r uRx
-  = multi r uRx
+  = ≈-trans r uRx
 Rt-prepend {a = a ⇒ b} r uRx
-  = λ w uRy → Rt-prepend (cong-app* (wkTmPres⟶* w r) (zero refl)) (uRx w uRy)
+  = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) (≡-to-≈ refl)) (uRx w uRy)
 Rt-prepend {a = ◻ a} {t = t} {u} {x = bx} r uRbx
-  = λ w e → Rt-prepend (cong-unbox* (wkTmPres⟶* w r)) (uRbx w e)
+  = λ w e → Rt-prepend (cong-unbox≈ (wkTmPres≈ w r) refl) (uRbx w e)
 
 -- reduction-free version of Rt-prepend
 Rt-cast : {t u : Tm Γ a} {x y : Tm' Γ a}
@@ -59,18 +62,11 @@ Rt-cast : {t u : Tm Γ a} {x y : Tm' Γ a}
   → y ≡ x
   → Rt u x
   → Rt t y
-Rt-cast p refl uRx = Rt-prepend (zero p) uRx
-
-Rt-hcast : {t u : Tm Γ a} {x y : Tm' Γ a}
-  → t ≅ u
-  → y ≅ x
-  → Rt u x
-  → Rt t y
-Rt-hcast HE.refl HE.refl uRx = uRx
+Rt-cast p refl uRx = Rt-prepend (≡-to-≈ p) uRx
 
 -- extract reduction trace from Rt
 Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
-  → Rt t x → t ⟶* quotTm x
+  → Rt t x → t ≈ quotTm x
 -- a neutral element is related to its reflection
 Rt-reflect : (n : Ne Γ a)
   → Rt (embNe n) (reflect n)
@@ -78,16 +74,16 @@ Rt-reflect : (n : Ne Γ a)
 Rt-build {a = 𝕓}     r
   = r
 Rt-build {a = a ⇒ b} tRx
-  = multi (one (exp-fun _)) (cong-lam* (Rt-build (tRx _ (Rt-reflect (var ze)))))
+  = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (Rt-build (tRx _ (Rt-reflect (var ze)))))
 Rt-build {a = ◻ a}  tRx
-  = multi (one (exp-box _)) (cong-box* (Rt-build (Rt-cast (cong₂ unbox (sym (wkTmPresId _)) refl) refl (tRx idWk new))))
+  = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (Rt-build (Rt-cast (cong₂ unbox (sym (wkTmPresId _)) refl) refl (tRx idWk new))))
 
 Rt-reflect {a = 𝕓}     n
-  = zero refl
+  = ≡-to-≈ refl
 Rt-reflect {a = a ⇒ b} n
-  = λ w y → Rt-prepend (cong-app* (zero (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
+  = λ w y → Rt-prepend (cong-app≈ (≡-to-≈ (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
 Rt-reflect {a = ◻ a}   n
-  = λ w e → Rt-prepend (cong-unbox* (zero (nat-embNe _ _))) (Rt-reflect _)
+  = λ w e → Rt-prepend (cong-unbox≈ (≡-to-≈ (nat-embNe _ _)) refl) (Rt-reflect _)
 
 -- Rt is invariant under weakening
 wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}
@@ -95,7 +91,7 @@ wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}
   → Rt t x
   → Rt (wkTm w t) (wkTm' w x)
 wkTmPresRt {a = 𝕓}  {x = x}       w tRx
-  = multi (wkTmPres⟶* _ tRx) (zero (nat-embNf _ (reify x)))
+  = ≈-trans (wkTmPres≈ _ tRx) (≡-to-≈ (nat-embNf _ (reify x)))
 wkTmPresRt {a = a ⇒ b}            w tRx
   = λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') y)
 wkTmPresRt {a = ◻ a} w tRx
@@ -135,20 +131,24 @@ private
     = substVarPresRt x sRs'
 
   beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
-    → app (wkTm w (substTm s (lam t))) u ⟶* substTm (wkSub w s `, u) t
-  beta-lemma w s t u = multi (zero (cong₂ app (cong lam (trans
+    → app (wkTm w (substTm s (lam t))) u ≈ substTm (wkSub w s `, u) t
+  beta-lemma w s t u = ≈-trans (≡-to-≈ (cong₂ app (cong lam (trans
     (sym (nat-substTm t (keepₛ s) (keep w)))
     (cong (λ p → substTm (p `, var ze) t)
       (trans
         (wkSubPres∙ (fresh) (keep w) s)
         (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl))
-    (multi
-      (one (red-fun _ _))
-      (multi
-        (zero (substTmPres∙ _ _ t ))
-        (zero (cong (λ p → substTm (p `, u) t) (trans
-          (sym (coh-trimSub-wkSub s _ _))
-          (trans (coh-trimSub-wkSub s idₛ w) ?))))))
+    (≈-trans
+      (⟶-to-≈ (red-fun _ _))
+      (≈-trans
+        (≡-to-≈ (substTmPres∙ _ _ t))
+        (cong-substTm≈ {t' = t}
+          (cong-`,≈ₛ
+            (≈ₛ-trans
+              (≡-to-≈ₛ (sym (coh-trimSub-wkSub s _ _)))
+              (≈ₛ-trans (≡-to-≈ₛ (coh-trimSub-wkSub s idₛ w)) (≈ₛ-sym (rightIdSub _))))
+            ≈-refl)
+          ≈-refl)))
 
   unboxPresRt : {t : Tm Γ (◻ a)} {x : (Tm'- (◻ a)) Γ}
     → (e : CExt Γ' Γ ΓR)
@@ -165,9 +165,6 @@ Fund : Tm Γ a → (Sub'- Γ →̇ Tm'- a) → Set
 Fund {Γ} t f = ∀ {Δ} {s : Sub Δ Γ} {s' : Sub' Δ Γ}
     → Rs s s'
     → Rt (substTm s t) (f s')
-
-import Context as C
-import IS4.Substitution as S
 
 lCtxₛ'∼lCtxₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ} → Rs s s' → lCtxₛ' e s' ≡ lCtxₛ e s
 lCtxₛ'∼lCtxₛ nil       sRs'          = refl
@@ -205,12 +202,12 @@ fund (app t u)   {s = s} {s'} sRs'
 fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
   = Rt-prepend unbox-box-reduces (fund t (lock (wkSubPresRs w sRs') e))
   where
-  unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ⟶* substTm (lock (wkSub w s) e) t
+  unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ≈ substTm (lock (wkSub w s) e) t
   unbox-box-reduces = begin
     unbox (wkTm w (substTm s (box t))) e
-      ≈⟨⟩
+      ≡⟨⟩
     unbox (box (wkTm (keep🔒 w) (substTm (lock s new) t))) e
-      ∼⟨ one (red-box _ _) ⟩
+      ≈⟨ ⟶-to-≈ (red-box _ _) ⟩
     substTm (lock idₛ e) (wkTm (keep🔒 w) (substTm (lock s new) t))
       ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
     substTm (lock idₛ e) (substTm (wkSub (keep🔒 w) (lock s new)) t)
@@ -218,14 +215,14 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
     substTm ((wkSub (keep🔒 w) (lock s new)) ∙ₛ (lock idₛ e) ) t
       ≡⟨⟩
     substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
-      ≈⟨ cong (λ s → substTm s t) lemma ⟩
+      ≈⟨ cong-substTm≈ lemma (≈-refl {_} {_} {t}) ⟩
     substTm (lock (wkSub w s) e) t ∎
     where
-    open import Relation.Binary.Reasoning.Preorder (Tm-preorder Γ' a)
-    lemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≡ lock (wkSub w s) e
+    open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
+    lemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≈ₛ lock (wkSub w s) e
     lemma = {!!} --doable
 fund (unbox t e) {s = s} {s'} sRs'
-  = Rt-hcast {!!} {!!}
+  = Rt-cast {!!} {!!}
     (fund t
       {s = factorSubₛ e s}
       {s' = subst (λ Δ → Sub' Δ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s')}
@@ -235,5 +232,5 @@ fund (unbox t e) {s = s} {s'} sRs'
       (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')))
 
 -- reduction trace for norm
-trace : (t : Tm Γ a) → t ⟶* embNf (norm t)
+trace : (t : Tm Γ a) → t ≈ embNf (norm t)
 trace t = Rt-build (Rt-prepend (substTmPresId t) (fund t {s = idₛ} {s' = idₛ'} idRs))

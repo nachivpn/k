@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 module IS4.Reduction where
 
 open import IS4.Term
@@ -62,7 +61,6 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
   fact-unbox : {t : Tm ΓL (◻ a)} {e : CExt Γ ΓL ΓR}
     → unbox t e ⟶ unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ)
 
-
 -- zero or more steps of reduction
 Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _
 Tm-preorder Γ a = preorder (_⟶_ {Γ} {a})
@@ -117,61 +115,3 @@ cong-app*  : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → t ⟶* t' → u ⟶* u'
   → app t u ⟶* app t' u'
 cong-app* t⟶*t' u⟶*u' = multi (cong-app1* t⟶*t') (cong-app2* u⟶*u')
-
-data _⟶ₛ*_ : Sub Δ Γ → Sub Δ Γ → Set where
-  ε          : {s : Sub Δ Γ}
-    → s ⟶ₛ* s
-  multiₛ      : {s s' s'' : Sub Δ Γ}
-    → s ⟶ₛ* s' → s' ⟶ₛ* s'' → s ⟶ₛ* s''
-  cong-`,*   : {s s' : Sub Δ Γ} {t t' : Tm Δ a}
-    → s ⟶ₛ* s' → t ⟶* t' → (s `, t) ⟶ₛ* (s' `, t')
-  cong-lock*  : {s s' : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
-    → s ⟶ₛ* s' → lock s e ⟶ₛ* lock s' e
-  fact-lock* : {s : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
-    → lock s e ⟶ₛ* lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ)
-
-zeroₛ : {s s' : Sub Δ Γ} → s ≡ s' → s ⟶ₛ* s'
-zeroₛ refl = ε
-
-substTmPresId : (t : Tm Γ a) → t ⟶* substTm idₛ t
-substTmPresId (var x)     = zero (sym (substVarPresId x))
-substTmPresId (lam t)     = cong-lam* (substTmPresId t)
-substTmPresId (app t u)   = cong-app* (substTmPresId t) (substTmPresId u)
-substTmPresId (box t)     = cong-box* (substTmPresId t)
-substTmPresId (unbox t e) = one fact-unbox
-
-rightIdSub : (s : Sub Γ Γ') → s ⟶ₛ* (s ∙ₛ idₛ)
-rightIdSub []         = ε
-rightIdSub (s `, t)   = cong-`,* (rightIdSub s) (substTmPresId t)
-rightIdSub (lock s e) = fact-lock*
-
-invRed :  {t t' : Tm Γ a}
-  → (w : Γ ⊆ Γ')
-  → t ⟶ t'
-  → wkTm w t ⟶* wkTm w t'
-invRed w (red-fun t u)
-  = multi (one (red-fun _ _)) (zero (beta-wk-lemma w u t))
-invRed w (exp-fun _)
-  = multi (one (exp-fun _)) (zero (cong lam (cong₂ app keepFreshLemma refl)))
-invRed w (red-box t e)
-  = multi (one (red-box _ _)) (zero (trans (trans (sym (coh-trimSub-wkTm t _ _)) {!!}) (nat-substTm t _ w)))
-  -- use `coh-trimSub-wkSub idₛ idₛ (factorWk e w)` and substitution identities
-invRed w (exp-box _)
-  = one (exp-box _)
-invRed w (cong-lam r)
-  = cong-lam* (invRed (keep w) r)
-invRed w (cong-box r)
-  = cong-box* (invRed (keep🔒 w) r)
-invRed w (cong-unbox {e = e} r)
-  = cong-unbox* (invRed (factorWk e w ) r)
-invRed w (cong-app1 r)
-  = cong-app* (invRed w r) ε
-invRed w (cong-app2 r)
-  = cong-app* ε (invRed w r)
-invRed w fact-unbox = {!!}
-
-wkTmPres⟶* :  {t t' : Tm Γ a}
-  → (w : Γ ⊆ Γ')
-  → t ⟶* t'
-  → wkTm w t ⟶* wkTm w t'
-wkTmPres⟶* w = cong-⟶*-to-cong-⟶* (invRed w)

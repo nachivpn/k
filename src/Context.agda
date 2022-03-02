@@ -346,6 +346,10 @@ extRAssoc el (ext🔒 x er) = ext🔒 x (extRAssoc el er)
 ,,-assoc : (ΓLL ,, ΓLR) ,, ΓR ≡ ΓLL ,, (ΓLR ,, ΓR)
 ,,-assoc {ΓLL} {ΓLR} {ΓR} = extIs,, {θ = tt} {ΓR = ΓLR ,, ΓR} (extRAssoc {ΓLR = ΓLR} ,,IsExt ,,IsExt)
 
+,,-leftUnit : {Γ : Ctx} → [] ,, Γ ≡ Γ
+,,-leftUnit {[]} = refl
+,,-leftUnit {Γ `, a} = cong (_`, _) ,,-leftUnit
+,,-leftUnit {Γ 🔒} = cong _🔒 ,,-leftUnit
 
 -------------------------------------
 -- Operations on lock-free extensions

@@ -145,10 +145,10 @@ private
     (multi
       (one (red-fun _ _))
       (multi
-        (substTmPres∙ _ _ t )
+        (zero (substTmPres∙ _ _ t ))
         (zero (cong (λ p → substTm (p `, u) t) (trans
           (sym (coh-trimSub-wkSub s _ _))
-          (trans (coh-trimSub-wkSub s idₛ w) (rightIdSub _)))))))
+          (trans (coh-trimSub-wkSub s idₛ w) ?))))))
 
   unboxPresRt : {t : Tm Γ (◻ a)} {x : (Tm'- (◻ a)) Γ}
     → (e : CExt Γ' Γ ΓR)
@@ -214,7 +214,7 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
     substTm (lock idₛ e) (wkTm (keep🔒 w) (substTm (lock s new) t))
       ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
     substTm (lock idₛ e) (substTm (wkSub (keep🔒 w) (lock s new)) t)
-      ∼⟨ substTmPres∙ _ _ t ⟩
+      ≡⟨ substTmPres∙ _ _ t ⟩
     substTm ((wkSub (keep🔒 w) (lock s new)) ∙ₛ (lock idₛ e) ) t
       ≡⟨⟩
     substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t

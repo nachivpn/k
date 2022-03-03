@@ -1,5 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
-
 module IS4.HellOfSyntacticLemmas where
 
 -- Welcome to the hell of mind-numbing syntactic lemmas.
@@ -390,10 +388,10 @@ factorSubPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
   → subst (λ ΔL → Sub ΔL ΓL) (lCtxₛPres∙ₛ e s s') (factorSubₛ e (s ∙ₛ s'))  ≡ factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s'
 factorSubPres∙ₛ nil       s           s' = refl
 factorSubPres∙ₛ (ext e)   (s `, t)    s' = factorSubPres∙ₛ e s s'
-factorSubPres∙ₛ (ext🔒- e) (lock s e1) s' = todo
+factorSubPres∙ₛ (ext🔒- e) (lock s e1) s' = TODO
   where
   postulate
-    todo : subst (λ ΔL → Sub ΔL _) (lCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s') (factorSubₛ (ext🔒- e) (lock s e1 ∙ₛ s'))
+    TODO : subst (λ ΔL → Sub ΔL _) (lCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s') (factorSubₛ (ext🔒- e) (lock s e1 ∙ₛ s'))
            ≡
            factorSubₛ (ext🔒- e) (lock s e1) ∙ₛ factorSubₛ (factorExtₛ (ext🔒- e) (lock s e1)) s'
 
@@ -432,10 +430,10 @@ substTmPres∙ s s' (box t) = cong box (substTmPres∙ _ _ t)
 substTmPres∙ s s' (unbox t e) =
   trans
     (cong₂ unbox (substTmPres∙ (factorSubₛ e s) (factorSubₛ (factorExtₛ e s) s') t) refl)
-    todo
+    TODO
     where
     postulate
-      todo : unbox (substTm (factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s') t) (factorExtₛ (factorExtₛ e s) s') ≡ substTm (s ∙ₛ s') (unbox t e)
+      TODO : unbox (substTm (factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s') t) (factorExtₛ (factorExtₛ e s) s') ≡ substTm (s ∙ₛ s') (unbox t e)
 
 assocSub : {Γ1 Γ2 Γ3 Γ4 : Ctx} → (s3 : Sub Γ3 Γ4) (s2 : Sub Γ2 Γ3) → (s1 : Sub Γ1 Γ2)
   → (s3 ∙ₛ s2) ∙ₛ s1 ≡ s3 ∙ₛ (s2 ∙ₛ s1)
@@ -446,10 +444,10 @@ assocSub (s3 `, t)    s2 s1
 assocSub (lock s3 e3) s2 s1
   = trans
     (cong₂ lock (assocSub s3 (factorSubₛ e3 s2) (factorSubₛ (factorExtₛ e3 s2) s1)) refl)
-    todo
+    TODO
     where
     postulate
-      todo :
+      TODO :
         lock
           (s3 ∙ₛ factorSubₛ e3 s2 ∙ₛ factorSubₛ (factorExtₛ e3 s2) s1)
           (factorExtₛ (factorExtₛ e3 s2) s1)
@@ -457,20 +455,17 @@ assocSub (lock s3 e3) s2 s1
 
 leftIdSub : (s : Sub Γ Γ') → (idₛ ∙ₛ s) ≡ s
 leftIdSub []         = refl
-leftIdSub (s `, t)   = cong₂ _`,_ (trans todo (leftIdSub s)) refl
+leftIdSub (s `, t)   = cong₂ _`,_ (trans TODO (leftIdSub s)) refl
   where
   postulate
-    todo : dropₛ idₛ ∙ₛ (s `, t) ≡ idₛ ∙ₛ s
+    TODO : dropₛ idₛ ∙ₛ (s `, t) ≡ idₛ ∙ₛ s
+
 leftIdSub {Γ = Γ} (lock {ΔL = ΔL} {ΔR = ΔR} s e) = begin
   lock (idₛ ∙ₛ s) (extRAssoc nil e)
     ≡⟨ cong₂ lock (leftIdSub s) extLeftUnit ⟩
   lock s (subst (CExt Γ ΔL) _ e)
     ≅⟨ HE.icong (CExt Γ ΔL) ,,-leftUnit (lock s) (≡-subst-removable (CExt Γ ΔL) _ e) ⟩
   lock s e ∎
-  where
-  extLeftUnit : extRAssoc nil e ≡ subst (CExt _ _) (sym ,,-leftUnit) e
-  extLeftUnit = ExtIsProp _ _
-
 
 private
   -- just a helper to reduce redundancy, nothing too interesting
@@ -513,10 +508,10 @@ nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
 
 nat-embNe w (var x)     = refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
-nat-embNe w (unbox n x) = todo
+nat-embNe w (unbox n x) = TODO
   where
   postulate
-    todo : wkTm w (embNe (unbox n x)) ≡ embNe (wkNe w (unbox n x))
+    TODO : wkTm w (embNe (unbox n x)) ≡ embNe (wkNe w (unbox n x))
 
 -- Outcast lemmas
 

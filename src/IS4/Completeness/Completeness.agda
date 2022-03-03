@@ -8,6 +8,7 @@ open import Relation.Binary.PropositionalEquality
 open import Relation.Binary.HeterogeneousEquality as HE
   using (_≅_)
 
+open import HEUtil
 open import IS4.Term
 open import IS4.Conversion
 open import IS4.Reduction using (_⟶_)
@@ -142,13 +143,12 @@ private
       (⟶-to-≈ (red-fun _ _))
       (≈-trans
         (≡-to-≈ (substTmPres∙ _ _ t))
-        (cong-substTm≈ {t' = t}
+        (substTmPres≈ t
           (cong-`,≈ₛ
             (≈ₛ-trans
               (≡-to-≈ₛ (sym (coh-trimSub-wkSub s _ _)))
               (≈ₛ-trans (≡-to-≈ₛ (coh-trimSub-wkSub s idₛ w)) (≈ₛ-sym (rightIdSub _))))
-            ≈-refl)
-          ≈-refl)))
+            ≈-refl))))
 
   unboxPresRt : {t : Tm Γ (◻ a)} {x : (Tm'- (◻ a)) Γ}
     → (e : CExt Γ' Γ ΓR)
@@ -202,6 +202,15 @@ fund (app t u)   {s = s} {s'} sRs'
 fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
   = Rt-prepend unbox-box-reduces (fund t (lock (wkSubPresRs w sRs') e))
   where
+  --
+  lockLemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≈ₛ lock (wkSub w s) e
+  lockLemma = ≈ₛ-trans
+    (cong-lock≈ₛ (≈ₛ-sym (rightIdSub _)))
+    (≡-to-≈ₛ
+      (trans
+        (cong₂ lock refl extLeftUnit)
+        (≅-to-≡ (HE.icong (CExt _ _) ,,-leftUnit (lock _) (≡-subst-removable (CExt _ _) _ e)))))
+  --
   unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ≈ substTm (lock (wkSub w s) e) t
   unbox-box-reduces = begin
     unbox (wkTm w (substTm s (box t))) e
@@ -215,21 +224,47 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
     substTm ((wkSub (keep🔒 w) (lock s new)) ∙ₛ (lock idₛ e) ) t
       ≡⟨⟩
     substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
-      ≈⟨ cong-substTm≈ lemma (≈-refl {_} {_} {t}) ⟩
+      ≈⟨ substTmPres≈ t lockLemma ⟩
     substTm (lock (wkSub w s) e) t ∎
     where
     open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
-    lemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≈ₛ lock (wkSub w s) e
-    lemma = {!!} --doable
+
 fund (unbox t e) {s = s} {s'} sRs'
-  = Rt-cast {!!} {!!}
-    (fund t
-      {s = factorSubₛ e s}
-      {s' = subst (λ Δ → Sub' Δ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s')}
-      (factorSubPresRs e sRs')
-      {ΓL' = lCtxₛ e s}
-      idWk
-      (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')))
+  = Rt-cast
+      (cong₂ unbox (sym (wkTmPresId _)) (factorExtₛ'∼factorExtₛ e sRs'))
+      lemma
+      (fund t
+        {s = factorSubₛ e s}
+        {s' = subst (λ Δ → Sub' Δ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s')}
+        (factorSubPresRs e sRs')
+        idWk[ lCtxₛ e s ]
+        (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')))
+    where
+    lemma : eval t _ _ _ ≡ eval t _ _ _
+    lemma = begin
+      eval t
+        (factorSubₛ' e s')
+        idWk[ lCtxₛ' e s' ]
+        (factorExtₛ' e s')
+        ≅⟨ {!!} ⟩ -- use subst-addables
+      eval t
+        (subst (λ Δ₁ → Sub' Δ₁ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
+        (subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sRs') (lCtxₛ'∼lCtxₛ e sRs') idWk[ lCtxₛ' e s' ])
+        (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s'))
+        ≡⟨ cong
+          (λ w → eval t
+            (subst (λ Δ₁ → Sub' Δ₁ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
+            w
+            (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')))
+          duh ⟩
+      eval t
+        (subst (λ Δ₁ → Sub' Δ₁ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
+        idWk[ lCtxₛ e s ]
+        (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')) ∎
+      where
+      open ≡-Reasoning
+      duh : subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sRs') (lCtxₛ'∼lCtxₛ e sRs') idWk[ lCtxₛ' e s' ] ≡ idWk[ lCtxₛ e s ]
+      duh rewrite lCtxₛ'∼lCtxₛ e {s} {s'} sRs' = refl
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ≈ embNf (norm t)

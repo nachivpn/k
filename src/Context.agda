@@ -351,6 +351,9 @@ extRAssoc el (ext🔒 x er) = ext🔒 x (extRAssoc el er)
 ,,-leftUnit {Γ `, a} = cong (_`, _) ,,-leftUnit
 ,,-leftUnit {Γ 🔒} = cong _🔒 ,,-leftUnit
 
+extLeftUnit : extRAssoc nil e ≡ subst (CExt _ _) (sym ,,-leftUnit) e
+extLeftUnit = ExtIsProp _ _
+
 -------------------------------------
 -- Operations on lock-free extensions
 -------------------------------------

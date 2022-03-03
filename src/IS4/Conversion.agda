@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 module IS4.Conversion where
 
 open import IS4.Term
@@ -135,8 +134,18 @@ invRed w (red-fun t u)
 invRed w (exp-fun _)
   = ≈-trans (⟶-to-≈ (exp-fun _)) (≡-to-≈ (cong lam (cong₂ app keepFreshLemma ≡-refl)))
 invRed w (red-box t e)
-  = ≈-trans (⟶-to-≈ (red-box _ _)) (≡-to-≈ (≡-trans (≡-trans (≡-sym (coh-trimSub-wkTm t _ _)) {!!}) (nat-substTm t _ w)))
-  -- use `coh-trimSub-wkSub idₛ idₛ (factorWk e w)` and substitution identities
+  = ≈-trans
+    (⟶-to-≈ (red-box _ _))
+    (≈-trans
+      (≈-trans
+        (≡-to-≈ (≡-sym (coh-trimSub-wkTm t _ _)))
+        (≡-to-≈
+          (cong
+            (λ s → substTm (lock s (factorExt e w)) t)
+            (≡-trans
+              (trimSubId (factorWk e w))
+              (≡-sym (wkSubId _))))))
+      (≡-to-≈ (nat-substTm t _ _)))
 invRed w (exp-box _)
   = ⟶-to-≈ (exp-box _)
 invRed w (cong-lam r)
@@ -149,27 +158,40 @@ invRed w (cong-app1 r)
   = cong-app≈ (invRed w r) ε
 invRed w (cong-app2 r)
   = cong-app≈ ε (invRed w r)
-invRed w fact-unbox = {!!}
+invRed w fact-unbox = TODO
+  where
+  postulate TODO : wkTm w (unbox t e) ≈ wkTm w (unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ))
 
-wkTmPres≈ :  {t t' : Tm Γ a}
-  → (w : Γ ⊆ Γ')
-  → t ≈ t'
-  → wkTm w t ≈ wkTm w t'
+wkTmPres≈  : {t t' : Tm Γ a} → (w : Γ ⊆ Γ') → t ≈ t' → wkTm w t ≈ wkTm w t'
 wkTmPres≈ w ε            = ε
 wkTmPres≈ w (inj₁ x ◅ r) = ≈-trans (invRed w x) (wkTmPres≈ w r)
 wkTmPres≈ w (inj₂ y ◅ r) = ≈-trans (≈-sym (invRed w y)) (wkTmPres≈ w r)
 
-postulate
+wkSubPres≈  : {s s' : Sub Δ Γ} → (w : Δ ⊆ Δ') → s ≈ₛ s' → wkSub w s ≈ₛ wkSub w s'
+wkSubPres≈ w ≈ₛ-refl         = ≈ₛ-refl
+wkSubPres≈ w (≈ₛ-trans r r') = ≈ₛ-trans (wkSubPres≈ w r) (wkSubPres≈ w r')
+wkSubPres≈ w (≈ₛ-sym r)      = ≈ₛ-sym (wkSubPres≈ w r)
+wkSubPres≈ w (cong-`,≈ₛ r r') = cong-`,≈ₛ (wkSubPres≈ w r) (wkTmPres≈ w r')
+wkSubPres≈ w (cong-lock≈ₛ r) = cong-lock≈ₛ (wkSubPres≈ _ r)
+wkSubPres≈ w (fact-lock≈ₛ {s = s} {e = e}) = TODO
+  where
+  postulate TODO : wkSub w (lock s e) ≈ₛ wkSub w (lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ))
 
-  wkSubPres≈ :  {s s' : Sub Δ Γ}
-    → (w : Δ ⊆ Δ')
-    → s ≈ₛ s'
-    → wkSub w s ≈ₛ wkSub w s'
+substVarPres≈ : {s s' : Sub Δ Γ} (v : Var Γ a) → s ≈ₛ s' → substVar s v ≈ substVar s' v
+substVarPres≈ v      ≈ₛ-refl          = ≈-refl
+substVarPres≈ v      (≈ₛ-trans r r')  = ≈-trans (substVarPres≈ v r) (substVarPres≈ v r')
+substVarPres≈ v      (≈ₛ-sym r)       = ≈-sym (substVarPres≈ v r)
+substVarPres≈ ze     (cong-`,≈ₛ r r') = r'
+substVarPres≈ (su v) (cong-`,≈ₛ r x)  = substVarPres≈ v r
 
-  cong-substTm≈ : {s s' : Sub Δ Γ} {t t' : Tm Γ a}
-    → s ≈ₛ s'
-    → t ≈ t'
-    → substTm s t ≈ substTm s' t'
+substTmPres≈ : {s s' : Sub Δ Γ} (t : Tm Γ a) → s ≈ₛ s' → substTm s t ≈ substTm s' t
+substTmPres≈ (var v)     r = substVarPres≈ v r
+substTmPres≈ (lam t)     r = cong-lam≈ (substTmPres≈ t (cong-`,≈ₛ (wkSubPres≈ fresh r) ≈-refl))
+substTmPres≈ (app t u)   r = cong-app≈ (substTmPres≈ t r) (substTmPres≈ u r)
+substTmPres≈ (box t)     r = cong-box≈ (substTmPres≈ t (cong-lock≈ₛ r))
+substTmPres≈ {s = s} {s'} (unbox t e) r = TODO
+  where
+  postulate TODO : unbox (substTm (factorSubₛ e s) t) (factorExtₛ e s) ≈ unbox (substTm (factorSubₛ e s') t) (factorExtₛ e s')
 
 --------------------
 -- Derived equations

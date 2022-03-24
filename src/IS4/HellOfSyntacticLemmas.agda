@@ -455,11 +455,14 @@ assocSub (lock s3 e3) s2 s1
 
 leftIdSub : (s : Sub Γ Γ') → (idₛ ∙ₛ s) ≡ s
 leftIdSub []         = refl
-leftIdSub (s `, t)   = cong₂ _`,_ (trans TODO (leftIdSub s)) refl
-  where
-  postulate
-    TODO : dropₛ idₛ ∙ₛ (s `, t) ≡ idₛ ∙ₛ s
-
+leftIdSub (s `, t)   = begin
+  idₛ ∙ₛ (s `, t)
+    ≡⟨⟩
+  (wkSub fresh idₛ ∙ₛ (s `, t)) `, t
+    ≡⟨ cong (_`, _) (sym (coh-trimSub-wkSub idₛ (s `, t) fresh)) ⟩
+  idₛ ∙ₛ trimSub fresh (s `, t) `, t
+    ≡⟨ cong (_`, _) (trans (leftIdSub _) (trimSubPresId _)) ⟩
+  (s `, t) ∎
 leftIdSub {Γ = Γ} (lock {ΔL = ΔL} {ΔR = ΔR} s e) = begin
   lock (idₛ ∙ₛ s) (extRAssoc nil e)
     ≡⟨ cong₂ lock (leftIdSub s) extLeftUnit ⟩
@@ -508,10 +511,7 @@ nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
 
 nat-embNe w (var x)     = refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
-nat-embNe w (unbox n x) = TODO
-  where
-  postulate
-    TODO : wkTm w (embNe (unbox n x)) ≡ embNe (wkNe w (unbox n x))
+nat-embNe w (unbox n e) = cong₂ unbox (nat-embNe (factorWk e w) n) refl
 
 -- Outcast lemmas
 

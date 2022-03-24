@@ -463,13 +463,34 @@ substTmPres∙ s s' (lam t) = cong lam
     (cong ((λ s → substTm (s `, var ze) t)) (sym (dropKeepLemma s s'))))
 substTmPres∙ s s' (app t t₁) = cong₂ app (substTmPres∙ s s' t) (substTmPres∙ s s' t₁)
 substTmPres∙ s s' (box t) = cong box (substTmPres∙ _ _ t)
-substTmPres∙ s s' (unbox t e) =
-  trans
-    (cong₂ unbox (substTmPres∙ (factorSubₛ e s) (factorSubₛ (factorExtₛ e s) s') t) refl)
-    TODO
-    where
-    postulate
-      TODO : unbox (substTm (factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s') t) (factorExtₛ (factorExtₛ e s) s') ≡ substTm (s ∙ₛ s') (unbox t e)
+substTmPres∙ {Δ = Δ} {a = a} s s' (unbox t e) = begin
+  substTm s' (substTm s (unbox t e))
+    ≡⟨⟩
+  unbox
+    (substTm (factorSubₛ (factorExtₛ e s) s') (substTm (factorSubₛ e s) t))
+    (factorExtₛ (factorExtₛ e s) s')
+    -- apply IH
+    ≡⟨ cong₂ unbox (substTmPres∙ _ _ t) refl ⟩
+  unbox
+    (substTm (factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s') t)
+    (factorExtₛ (factorExtₛ e s) s')
+    -- apply factoring equalities
+    ≡⟨ cong₂ unbox (cong (λ x → substTm x t) (sym (factorSubPres∙ₛ e _ _))) (sym (factorExtPres∙ₛ e _ _)) ⟩
+  unbox
+    (substTm (subst (λ ΔL → Sub ΔL _) (lCtxₛPres∙ₛ e s s') (factorSubₛ e (s ∙ₛ s'))) t)
+    (subst₂ (CExt _) (lCtxₛPres∙ₛ e s s') (rCtxₛPres∙ₛ e s s') (factorExtₛ e (s ∙ₛ s')))
+    -- remove substs
+    ≅⟨ xcong
+      (λ ΓL → Tm ΓL (◻ a)) (CExt Δ)
+      (sym (lCtxₛPres∙ₛ e s s')) (sym (rCtxₛPres∙ₛ e s s'))
+      {t2 = substTm (factorSubₛ e (s ∙ₛ s')) t}
+      {e2 = factorExtₛ e (s ∙ₛ s')}
+      unbox
+      (HE.icong (λ ΔL → Sub ΔL _) (sym (lCtxₛPres∙ₛ e s s')) (λ x → substTm x t) (≡-subst-removable _ _ _))
+      (≡-subst₂-removable _ _ _ _) ⟩
+  unbox (substTm (factorSubₛ e (s ∙ₛ s')) t) (factorExtₛ e (s ∙ₛ s'))
+    ≡⟨⟩
+  substTm (s ∙ₛ s') (unbox t e) ∎
 
 assocSub : {Γ1 Γ2 Γ3 Γ4 : Ctx} → (s3 : Sub Γ3 Γ4) (s2 : Sub Γ2 Γ3) → (s1 : Sub Γ1 Γ2)
   → (s3 ∙ₛ s2) ∙ₛ s1 ≡ s3 ∙ₛ (s2 ∙ₛ s1)

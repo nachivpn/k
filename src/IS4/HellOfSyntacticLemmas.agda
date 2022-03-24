@@ -35,6 +35,14 @@ module _
           unb t1 e1 ≅ unb t2 e2
   xcong refl refl _ HE.refl HE.refl = HE.refl
 
+subst-application′ : ∀ {a b₁ b₂} {A : Set a}
+                    (B₁ : A → Set b₁) {B₂ : A → Set b₂}
+                    {x₁ x₂ : A} {y : B₁ x₁}
+                    (g : {x : A} → B₁ x → B₂ x)
+                    (eq : x₁ ≡ x₂) →
+                    subst B₂ eq (g y) ≡ g (subst B₁ eq y)
+subst-application′ _ _ refl = refl
+
 wkTmPresId : (t : Tm Γ a) → wkTm idWk t ≡ t
 wkTmPresId (var x)     = cong var (wkVarPresId x)
 wkTmPresId (lam t)     = cong lam (wkTmPresId t)
@@ -384,16 +392,44 @@ rCtxₛPres∙ₛ nil       s s'           = refl
 rCtxₛPres∙ₛ (ext e)   (s `, t) s'    = rCtxₛPres∙ₛ e s s'
 rCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s' = trans (cong (_,, _) (rCtxₛPres∙ₛ e _ _)) (rCtxₛPresTrans _ e1 _)
 
+factorSubPresTrans : ∀ {ΓLL ΓLR : Ctx} (e : CExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR) (s : Sub Δ Γ)
+  → subst (λ ΔL → Sub ΔL ΓLL) (lCtxₛPresTrans e e' s) (factorSubₛ e (factorSubₛ e' s)) ≡ factorSubₛ (extRAssoc e e') s
+factorSubPresTrans e nil        s = refl
+factorSubPresTrans e (ext e')   (s `, _) = factorSubPresTrans e e' s
+factorSubPresTrans e (ext🔒- e') (lock s _) = factorSubPresTrans e e' s
+
 factorSubPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
   → subst (λ ΔL → Sub ΔL ΓL) (lCtxₛPres∙ₛ e s s') (factorSubₛ e (s ∙ₛ s'))  ≡ factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s'
 factorSubPres∙ₛ nil       s           s' = refl
 factorSubPres∙ₛ (ext e)   (s `, t)    s' = factorSubPres∙ₛ e s s'
-factorSubPres∙ₛ (ext🔒- e) (lock s e1) s' = TODO
-  where
-  postulate
-    TODO : subst (λ ΔL → Sub ΔL _) (lCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s') (factorSubₛ (ext🔒- e) (lock s e1 ∙ₛ s'))
-           ≡
-           factorSubₛ (ext🔒- e) (lock s e1) ∙ₛ factorSubₛ (factorExtₛ (ext🔒- e) (lock s e1)) s'
+factorSubPres∙ₛ (ext🔒- e) (lock s e1) s' = begin
+  subst (λ ΔL → Sub ΔL _)
+    (lCtxₛPres∙ₛ (ext🔒- e) (lock s e1) s')
+    (factorSubₛ (ext🔒- e) (lock s e1 ∙ₛ s'))
+    ≡⟨⟩
+  subst (λ ΔL → Sub ΔL _)
+    (trans (lCtxₛPres∙ₛ e s (factorSubₛ e1 s')) (lCtxₛPresTrans (factorExtₛ e s) e1 s'))
+    (factorSubₛ e (s ∙ₛ factorSubₛ e1 s'))
+    -- split `subst _ (trans p q) ...` to `subst _ q (subst _ p ...)`
+    ≡⟨ sym (subst-subst (lCtxₛPres∙ₛ e s (factorSubₛ e1 s'))) ⟩
+  subst (λ ΔL → Sub ΔL _)
+    (lCtxₛPresTrans (factorExtₛ e s) e1 s')
+    (subst (λ ΔL → Sub ΔL _)
+      (lCtxₛPres∙ₛ e s (factorSubₛ e1 s'))
+      (factorSubₛ e (s ∙ₛ factorSubₛ e1 s')))
+    -- rewrite (remove) inner subst with IH
+    ≡⟨ cong (subst (λ ΔL → Sub ΔL _) _) (factorSubPres∙ₛ e s (factorSubₛ e1 s')) ⟩
+  subst (λ ΔL → Sub ΔL _)
+    (lCtxₛPresTrans (factorExtₛ e s) e1 s')
+    (factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) (factorSubₛ e1 s'))
+    -- push subst inside application of (_ ∙ₛ_)
+    ≡⟨ subst-application′  (λ ΔL → Sub ΔL _) (factorSubₛ e s ∙ₛ_) (lCtxₛPresTrans (factorExtₛ e s) e1 s') ⟩
+  factorSubₛ e s ∙ₛ subst (λ ΔL → Sub ΔL _) (lCtxₛPresTrans (factorExtₛ e s) e1 s') (factorSubₛ (factorExtₛ e s) (factorSubₛ e1 s'))
+    -- apply factorSubPresTrans
+    ≡⟨ cong (_ ∙ₛ_) (factorSubPresTrans (factorExtₛ e s) e1 s') ⟩
+  factorSubₛ e s ∙ₛ factorSubₛ (extRAssoc (factorExtₛ e s) e1) s'
+    ≡⟨⟩
+  factorSubₛ (ext🔒- e) (lock s e1) ∙ₛ factorSubₛ (factorExtₛ (ext🔒- e) (lock s e1)) s' ∎
 
 factorExtPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
   → subst₂ (CExt _) (lCtxₛPres∙ₛ e s s') (rCtxₛPres∙ₛ e s s') (factorExtₛ e (s ∙ₛ s')) ≡ factorExtₛ (factorExtₛ e s) s'

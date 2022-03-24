@@ -494,21 +494,36 @@ substTmPres∙ {Δ = Δ} {a = a} s s' (unbox t e) = begin
 
 assocSub : {Γ1 Γ2 Γ3 Γ4 : Ctx} → (s3 : Sub Γ3 Γ4) (s2 : Sub Γ2 Γ3) → (s1 : Sub Γ1 Γ2)
   → (s3 ∙ₛ s2) ∙ₛ s1 ≡ s3 ∙ₛ (s2 ∙ₛ s1)
-assocSub []           s2 s1
-  = refl
-assocSub (s3 `, t)    s2 s1
-  = cong₂ _`,_ (assocSub s3 s2 s1) (substTmPres∙ s2 s1 t)
-assocSub (lock s3 e3) s2 s1
-  = trans
-    (cong₂ lock (assocSub s3 (factorSubₛ e3 s2) (factorSubₛ (factorExtₛ e3 s2) s1)) refl)
-    TODO
-    where
-    postulate
-      TODO :
-        lock
-          (s3 ∙ₛ factorSubₛ e3 s2 ∙ₛ factorSubₛ (factorExtₛ e3 s2) s1)
-          (factorExtₛ (factorExtₛ e3 s2) s1)
-        ≡ lock s3 e3 ∙ₛ s2 ∙ₛ s1
+assocSub []           s2 s1 = refl
+assocSub (s3 `, t)    s2 s1 = cong₂ _`,_ (assocSub s3 s2 s1) (substTmPres∙ s2 s1 t)
+assocSub {Γ1 = Γ1} (lock s3 e3) s2 s1 = begin
+  (lock s3 e3 ∙ₛ s2) ∙ₛ s1
+    ≡⟨⟩
+  lock
+    ((s3 ∙ₛ factorSubₛ e3 s2) ∙ₛ factorSubₛ (factorExtₛ e3 s2) s1)
+    (factorExtₛ (factorExtₛ e3 s2) s1)
+    -- apply IH
+    ≡⟨ cong₂ lock (assocSub _ _ _) refl ⟩
+  lock
+    (s3 ∙ₛ (factorSubₛ e3 s2 ∙ₛ factorSubₛ (factorExtₛ e3 s2) s1))
+    (factorExtₛ (factorExtₛ e3 s2) s1)
+    -- apply factoring equalities
+    ≡⟨ cong₂ lock (cong (s3 ∙ₛ_) (sym (factorSubPres∙ₛ e3 _ _ ))) (sym (factorExtPres∙ₛ e3 _ _)) ⟩
+  lock
+    (s3 ∙ₛ subst (λ ΔL → Sub ΔL _) (lCtxₛPres∙ₛ e3 s2 s1) (factorSubₛ e3 (s2 ∙ₛ s1)))
+    (subst₂ (CExt _) (lCtxₛPres∙ₛ e3 s2 s1) (rCtxₛPres∙ₛ e3 s2 s1) (factorExtₛ e3 (s2 ∙ₛ s1)))
+    -- remove substs
+    ≅⟨ xcong (λ ΔL → Sub ΔL _)
+      (CExt Γ1)
+      (sym (lCtxₛPres∙ₛ e3 s2 s1)) (sym (rCtxₛPres∙ₛ e3 s2 s1))
+      {t2 = s3 ∙ₛ factorSubₛ e3 (s2 ∙ₛ s1)}
+      {e2 = factorExtₛ e3 (s2 ∙ₛ s1)}
+      lock
+      (HE.icong (λ ΔL → Sub ΔL _) (sym (lCtxₛPres∙ₛ e3 s2 s1)) (s3 ∙ₛ_) (≡-subst-removable _ _ _))
+      (≡-subst₂-removable _ _ _ _) ⟩
+  lock (s3 ∙ₛ factorSubₛ e3 (s2 ∙ₛ s1)) (factorExtₛ e3 (s2 ∙ₛ s1))
+    ≡⟨⟩
+  lock s3 e3 ∙ₛ (s2 ∙ₛ s1) ∎
 
 leftIdSub : (s : Sub Γ Γ') → (idₛ ∙ₛ s) ≡ s
 leftIdSub []         = refl

@@ -26,6 +26,9 @@ new = ext🔒- nil
 
 new[_] = λ Γ → new {Γ}
 
+freshExt : Ext θ (Γ `, a) Γ ([] `, a)
+freshExt = ext nil
+
 ----------------
 -- Substitutions
 ----------------
@@ -103,9 +106,9 @@ private
 
 -- "Left" context of factoring with a substitution (see factorExtₛ)
 lCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
-lCtxₛ {Γ = Γ} {Δ = Δ} nil    s          = Δ
-lCtxₛ {Γ = Γ `, a} (ext e)  (s `, t)    = lCtxₛ {Γ = Γ} e s
-lCtxₛ (ext🔒- e)             (lock s e') = lCtxₛ e s
+lCtxₛ {Δ = Δ} nil       s           = Δ
+lCtxₛ         (ext e)   (s `, t)    = lCtxₛ e s
+lCtxₛ         (ext🔒- e) (lock s e') = lCtxₛ e s
 
 -- "Right" context of factoring with a substitution (see factorExtₛ)
 rCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
@@ -222,6 +225,35 @@ factorSubₛ-trimSub-comm (ext🔒- e) (lock s _) (keep🔒 w)
 factorExtₛ-trimSub-comm : (e : CExt Γ ΓL ΓR) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
   → subst₂ (CExt Δ') (lCtxₛ-factorExt-trimSub-assoc e s w) (rCtxₛ-factorExt-trimSub-assoc e s w) (factorExtₛ e (trimSub w s)) ≡ factorExtₛ (factorExt e w) s
 factorExtₛ-trimSub-comm _ _ _ = ExtIsProp _ _
+
+---------------------------------------------
+-- Factorisation of the identity substitution
+---------------------------------------------
+
+←🔒₁rCtx : (e : CExt Γ ΓL ΓR) → Ctx
+←🔒₁rCtx nil             = []
+←🔒₁rCtx {ΓR = ΓR} (ext {a = a} e) = ←🔒₁rCtx e ,, rCtx′ (factorExtₛ e idₛ) (ext {a = a} nil)
+←🔒₁rCtx (ext🔒- e)       = ←🔒₁rCtx e
+
+private
+
+  ex : {a b c : Ty} → CExt (ΓL `, a `, b 🔒 `, c 🔒) ΓL ([] `, a `, b 🔒 `, c 🔒)
+  ex {Γ} {a} {b} {c} = ext🔒- (ext {a = c} (ext🔒- (ext {a = b} (ext {Γ = Γ} {a = a} nil))))
+
+  _ : ←🔒₁rCtx (ex {ΓL} {c = c}) ≡ [] `, a `, b
+  _ = refl
+
+-- Given `e` that ΓL extends Γ, ΓL is a lock-free extension of `lCtxₛ e idₛ`.
+-- This means that ΓL ⊆ (lCtxₛ e idₛ), and thus applying `factorSubₛ e idₛ` weakens
+-- a term with variables in `←🔒₁rCtx e`
+factorSubₛIdWk : (e : CExt Γ ΓL ΓR) → LFExt (lCtxₛ e idₛ) ΓL (←🔒₁rCtx e)
+factorSubₛIdWk nil             = nil
+factorSubₛIdWk {ΓR = ΓR `, a} (ext {a = .a} e) = subst
+  (λ Γ → LFExt Γ _ (←🔒₁rCtx (ext e))) (sym ((lCtxₛ-lCtx-comm e fresh idₛ)))
+  (extRAssoc (factorSubₛIdWk e) (factorDropsWk (factorExtₛ e idₛ) freshExt))
+factorSubₛIdWk (ext🔒- e)       = factorSubₛIdWk e
+
+-- Obs: Deliberately named _Wk instead of _LFExt
 
 --------------------
 -- Substitution laws

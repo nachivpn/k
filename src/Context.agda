@@ -29,6 +29,9 @@ data Ctx : Set where
 [🔒] : Ctx
 [🔒] = [] 🔒
 
+[_] : Ty → Ctx
+[_] a = [] `, a
+
 variable
   Γ Γ' Γ'' ΓL ΓR : Ctx
   Δ Δ' Δ'' ΔL ΔR : Ctx
@@ -396,6 +399,11 @@ sliceRight e w = LFExtTo≤ (wkLFExt e w)
 🔒→isPost🔒 nil     = refl
 🔒→isPost🔒 (ext e) = cong (_`, _) (🔒→isPost🔒 e)
 
+LFExtTo≤PresTrans : (e : LFExt ΓL ΓLL ΓLR) (e' : LFExt Γ ΓL ΓR)
+  → LFExtTo≤ (extRAssoc e e') ≡ LFExtTo≤ e ∙ LFExtTo≤ e'
+LFExtTo≤PresTrans e nil      = sym (rightIdWk (LFExtTo≤ e))
+LFExtTo≤PresTrans e (ext e') = cong drop (LFExtTo≤PresTrans e e')
+
 ----------------------------------------
 -- Slicing laws for lock-free extensions
 ----------------------------------------
@@ -615,3 +623,30 @@ factorWkPresTrans e  (ext🔒- e')   (keep🔒 w) = factorWkPresTrans e e' w
 
 factorExtPresTrans : ∀ (e : CExt Δ Γ ΓR) (e' : CExt Θ Δ ΔR) (w : Θ ⊆ Θ') → subst₂ (CExt Θ') (lCtxPresTrans e e' w) (rCtxPresTrans e e' w) (factorExt (extRAssoc e e') w) ≡ extRAssoc (factorExt e (factorWk e' w)) (factorExt e' w)
 factorExtPresTrans _e _e' _w = ExtIsProp _ _
+
+
+-- Special case of factorWk
+
+rCtx′ : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → Ctx
+rCtx′ {ΓR' = []}       e         nil      = []
+rCtx′ {ΓR' = ΓR' `, a} nil       (ext e') = ΓR' `, a
+rCtx′ {ΓR' = ΓR' `, _} (ext e)   (ext e') = rCtx′ {ΓR' = ΓR'} (ext e) e'
+rCtx′ {ΓR' = ΓR' `, _} (ext🔒- e) (ext e') = rCtx′ {ΓR' = ΓR'} (ext🔒- e) e'
+
+-- Special case of factorWk where the second argument consists of only drops (simulated using LFExt)
+factorDropsWk : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → LFExt (lCtx e (LFExtTo≤ e')) ΓL (rCtx′ e e')
+factorDropsWk {ΓR' = []}       e         nil      = subst (λ ΓL → LFExt (lCtx e idWk) ΓL _) (lCtxPresId e) nil
+factorDropsWk {ΓR' = ΓR'}      nil       (ext e') = (ext e')
+factorDropsWk {ΓR' = ΓR' `, _} (ext e)   (ext e') = factorDropsWk {ΓR' = ΓR'} (ext e) e'
+factorDropsWk {ΓR' = ΓR' `, _} (ext🔒- e) (ext e') = factorDropsWk {ΓR' = ΓR'} (ext🔒- e) e'
+
+-- factorDropsWk is indeed a special case of factorWk
+factorDropsWkIsfactorWk : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → LFExtTo≤ (factorDropsWk e e') ≡ factorWk e (LFExtTo≤ e')
+factorDropsWkIsfactorWk nil       nil      = refl
+factorDropsWkIsfactorWk nil       (ext e') = refl
+factorDropsWkIsfactorWk (ext e)   nil      = factorDropsWkIsfactorWk e nil
+factorDropsWkIsfactorWk (ext e)   (ext e') = factorDropsWkIsfactorWk (ext e) e'
+factorDropsWkIsfactorWk (ext🔒- e) nil      = factorDropsWkIsfactorWk e nil
+factorDropsWkIsfactorWk (ext🔒- e) (ext e') = factorDropsWkIsfactorWk (ext🔒- e) e'
+
+-- Note: factorDropsExt is not need as it has the same type as factorDrops and ExtIsProp

@@ -26,8 +26,10 @@ import IS4.Substitution
 import IS4.Conversion
 import IS4.HellOfSyntacticLemmas
 import IS4.Norm
---import IS4.Reduction
+import IS4.Reduction
 import IS4.Term
 
 import IS4.Applications.IS4Plus
 import IS4.Applications.Purity
+
+--import IS4.Completeness.Completeness

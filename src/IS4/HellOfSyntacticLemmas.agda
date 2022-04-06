@@ -631,7 +631,7 @@ factorSubₛIdWkIsFactorSubₛId (ext {a = a} e) = begin
         (factorSubₛIdWkIsFactorSubₛId e) ⟩
   subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-lCtx-comm e fresh idₛ))
     (wkSub (factorWk (factorExtₛ e idₛ) fresh) (embWk (LFExtTo≤ (factorSubₛIdWk e))))
-    -- apply `auxLemma` which crunches substitution with substitution and weakening equalities
+    -- apply `substCrunch` which crunches substitution with substitution and weakening equalities
     ≡⟨ cong
         (λ z → subst (λ ΔL → Sub ΔL _)
         (sym (lCtxₛ-lCtx-comm e fresh idₛ)) z) substCrunch ⟩

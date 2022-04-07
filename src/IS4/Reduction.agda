@@ -58,8 +58,8 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → t ⟶ t'
     → unbox t e ⟶ unbox t' e
 
-  fact-unbox : {t : Tm ΓL (◻ a)} {e : CExt Γ ΓL ΓR}
-    → unbox t e ⟶ unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ)
+  shift-unbox : {ΓLL ΓLR : Ctx} (t : Tm ΓLL (◻ a)) (e : LFExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR)
+   → unbox t (extRAssoc (upLFExt e) e') ⟶ unbox (wkTm (LFExtTo≤ e) t) e'
 
 -- zero or more steps of reduction
 Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _

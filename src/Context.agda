@@ -316,6 +316,9 @@ private
 extRUniq : Ext θ Γ ΓL ΓR → Ext θ Γ ΓL ΓR' → ΓR ≡ ΓR'
 extRUniq e e' = ,,-injective-right (trans (sym (extIs,, e)) (extIs,, e'))
 
+ExtIsProp′ : (e : Ext θ Γ ΓL ΓR) → (e' : Ext θ Γ ΓL ΓR') → subst (Ext θ Γ ΓL) (extRUniq e e') e ≡ e'
+ExtIsProp′ _ _ = ExtIsProp _ _
+
 -- left identity of extension
 extLId : CExt Γ [] Γ
 extLId {Γ = []}     = nil

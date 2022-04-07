@@ -1,5 +1,6 @@
 module IS4.Conversion where
 
+open import HEUtil
 open import IS4.Term
 open import IS4.Reduction
   as Reduction
@@ -23,8 +24,12 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   using (Star)
 
 open import Relation.Binary.PropositionalEquality
-  using    (_≡_ ; cong ; cong₂)
+  using    (_≡_ ; cong ; cong₂ ; subst)
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
+
+open import Relation.Binary.HeterogeneousEquality as HE
+  using (_≅_)
+  renaming (refl to ≅-refl ; sym to ≅-sym ; trans to ≅-trans)
 
 open Sum public
   using (inj₁ ; inj₂)
@@ -107,23 +112,15 @@ data _≈ₛ_ : Sub Δ Γ → Sub Δ Γ → Set where
     → s ≈ₛ s' → t ≈ t' → (s `, t) ≈ₛ (s' `, t')
   cong-lock≈ₛ  : {s s' : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
     → s ≈ₛ s' → lock s e ≈ₛ lock s' e
-  fact-lock≈ₛ : {s : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
-    → lock s e ≈ₛ lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ)
+  shift-lock≈ₛ : {ΔLL ΔLR : Ctx} {s : Sub ΔLL Γ} {e : LFExt ΔL ΔLL ΔLR} {e' : CExt Δ ΔL ΔR}
+    → lock s (extRAssoc (upLFExt e) e') ≈ₛ lock (wkSub (LFExtTo≤ e) s) e'
 
 ≡-to-≈ₛ : {s s' : Sub Δ Γ} → s ≡ s' → s ≈ₛ s'
 ≡-to-≈ₛ ≡-refl = ≈ₛ-refl
 
-substTmPresId : (t : Tm Γ a) → t ≈ substTm idₛ t
-substTmPresId (var x)     = ≡-to-≈ (≡-sym (substVarPresId x))
-substTmPresId (lam t)     = cong-lam≈ (substTmPresId t)
-substTmPresId (app t u)   = cong-app≈ (substTmPresId t) (substTmPresId u)
-substTmPresId (box t)     = cong-box≈ (substTmPresId t)
-substTmPresId (unbox t e) = ⟶-to-≈ fact-unbox
-
-rightIdSub : (s : Sub Γ Γ') → s ≈ₛ (s ∙ₛ idₛ)
-rightIdSub []         = ≈ₛ-refl
-rightIdSub (s `, t)   = cong-`,≈ₛ (rightIdSub s) (substTmPresId t)
-rightIdSub (lock s e) = fact-lock≈ₛ
+---------
+-- Lemmas
+---------
 
 invRed :  {t t' : Tm Γ a}
   → (w : Γ ⊆ Γ')
@@ -158,9 +155,8 @@ invRed w (cong-app1 r)
   = cong-app≈ (invRed w r) ε
 invRed w (cong-app2 r)
   = cong-app≈ ε (invRed w r)
-invRed w fact-unbox = TODO
-  where
-  postulate TODO : wkTm w (unbox t e) ≈ wkTm w (unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ))
+invRed w (shift-unbox t e e')
+  = {!!}
 
 wkTmPres≈  : {t t' : Tm Γ a} → (w : Γ ⊆ Γ') → t ≈ t' → wkTm w t ≈ wkTm w t'
 wkTmPres≈ w ε            = ε
@@ -173,9 +169,60 @@ wkSubPres≈ w (≈ₛ-trans r r') = ≈ₛ-trans (wkSubPres≈ w r) (wkSubPres�
 wkSubPres≈ w (≈ₛ-sym r)      = ≈ₛ-sym (wkSubPres≈ w r)
 wkSubPres≈ w (cong-`,≈ₛ r r') = cong-`,≈ₛ (wkSubPres≈ w r) (wkTmPres≈ w r')
 wkSubPres≈ w (cong-lock≈ₛ r) = cong-lock≈ₛ (wkSubPres≈ _ r)
-wkSubPres≈ w (fact-lock≈ₛ {s = s} {e = e}) = TODO
+wkSubPres≈ w (shift-lock≈ₛ {s = s} {e = e}) = {!!}
+
+substTmPresId : (t : Tm Γ a) → t ≈ substTm idₛ t
+substTmPresId (var x)     = ≡-to-≈ (≡-sym (substVarPresId x))
+substTmPresId (lam t)     = cong-lam≈ (substTmPresId t)
+substTmPresId (app t u)   = cong-app≈ (substTmPresId t) (substTmPresId u)
+substTmPresId (box t)     = cong-box≈ (substTmPresId t)
+substTmPresId (unbox t e) = fact-unbox≈ t e
   where
-  postulate TODO : wkSub w (lock s e) ≈ₛ wkSub w (lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ))
+  --
+  fact-ext≅ : (e : CExt Γ ΓL ΓR)
+    → e ≅ extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ)
+  fact-ext≅ e = ≅-trans
+    (≡-subst-addable _ _ _)
+    (≡-to-≅ (ExtIsProp′ e (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))))
+  --
+  coh-wkTm-substTm : (t : Tm Γ a) (w : Γ ⊆ Γ') → wkTm w t ≈ substTm (embWk w) t
+  coh-wkTm-substTm {a = a} {Γ' = Γ'} t w = begin
+    wkTm w t
+      -- apply IH
+      ≈⟨ wkTmPres≈ w (substTmPresId t) ⟩
+    wkTm w (substTm idₛ t)
+      -- apply naturality of substTm
+      ≡⟨ ≡-sym (nat-substTm t idₛ w) ⟩
+    substTm (wkSub w idₛ) t
+      -- weakening id subst is same as embedding the weakening into a subst
+      ≡⟨ cong₂ substTm {u = t} (wkSubId w) ≡-refl ⟩
+    substTm (embWk w) t ∎
+    where
+    open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
+  --
+  fact-unbox≈ : (t : Tm ΓL (◻ a)) (e : CExt Γ ΓL ΓR)
+    → unbox t e ≈ unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ)
+  fact-unbox≈ {a = a} {Γ = Γ} t e = begin
+    unbox t e
+      -- expand extension e
+      ≡⟨ ≅-to-≡ (xcong _ (CExt _) ≡-refl (extRUniq e (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))) unbox ≅-refl (fact-ext≅ e)) ⟩
+    unbox t (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))
+      -- apply shift-unbox
+      ≈⟨ ⟶-to-≈ (shift-unbox _ _ _) ⟩
+    unbox (wkTm (LFExtTo≤ (factorSubₛIdWk e)) t) (factorExtₛ e idₛ)
+      -- rewrite wkTm to substTm
+      ≈⟨ cong-unbox1≈ (coh-wkTm-substTm t _) ⟩
+    unbox (substTm (embWk (LFExtTo≤ (factorSubₛIdWk e))) t) (factorExtₛ e idₛ)
+      -- show that the subst is the factorisation of the id subst
+      ≡⟨ cong₂ unbox (cong₂ substTm {u = t} (≡-sym (factorSubₛIdWkIsFactorSubₛId e)) ≡-refl) ≡-refl ⟩
+    unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ) ∎
+    where
+    open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ a)
+
+rightIdSub : (s : Sub Γ Γ') → s ≈ₛ (s ∙ₛ idₛ)
+rightIdSub []         = ≈ₛ-refl
+rightIdSub (s `, t)   = cong-`,≈ₛ (rightIdSub s) (substTmPresId t)
+rightIdSub (lock s e) = {!!}
 
 substVarPres≈ : {s s' : Sub Δ Γ} (v : Var Γ a) → s ≈ₛ s' → substVar s v ≈ substVar s' v
 substVarPres≈ v      ≈ₛ-refl          = ≈-refl
@@ -189,9 +236,7 @@ substTmPres≈ (var v)     r = substVarPres≈ v r
 substTmPres≈ (lam t)     r = cong-lam≈ (substTmPres≈ t (cong-`,≈ₛ (wkSubPres≈ fresh r) ≈-refl))
 substTmPres≈ (app t u)   r = cong-app≈ (substTmPres≈ t r) (substTmPres≈ u r)
 substTmPres≈ (box t)     r = cong-box≈ (substTmPres≈ t (cong-lock≈ₛ r))
-substTmPres≈ {s = s} {s'} (unbox t e) r = TODO
-  where
-  postulate TODO : unbox (substTm (factorSubₛ e s) t) (factorExtₛ e s) ≈ unbox (substTm (factorSubₛ e s') t) (factorExtₛ e s')
+substTmPres≈ {s = s} {s'} (unbox t e) r = {!!}
 
 --------------------
 -- Derived equations

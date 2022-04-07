@@ -232,7 +232,7 @@ factorExtₛ-trimSub-comm _ _ _ = ExtIsProp _ _
 
 ←🔒₁rCtx : (e : CExt Γ ΓL ΓR) → Ctx
 ←🔒₁rCtx nil             = []
-←🔒₁rCtx {ΓR = ΓR} (ext {a = a} e) = ←🔒₁rCtx e ,, rCtx′ (factorExtₛ e idₛ) (ext {a = a} nil)
+←🔒₁rCtx (ext {a = a} e) = ←🔒₁rCtx e ,, rCtx′ (factorExtₛ e idₛ) (freshExt {a = a})
 ←🔒₁rCtx (ext🔒- e)       = ←🔒₁rCtx e
 
 private

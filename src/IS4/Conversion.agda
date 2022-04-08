@@ -24,7 +24,7 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
   using (Star)
 
 open import Relation.Binary.PropositionalEquality
-  using    (_≡_ ; cong ; cong₂ ; subst)
+  using    (_≡_ ; cong ; cong₂ ; subst ; subst₂)
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
 open import Relation.Binary.HeterogeneousEquality as HE
@@ -118,6 +118,15 @@ data _≈ₛ_ : Sub Δ Γ → Sub Δ Γ → Set where
 ≡-to-≈ₛ : {s s' : Sub Δ Γ} → s ≡ s' → s ≈ₛ s'
 ≡-to-≈ₛ ≡-refl = ≈ₛ-refl
 
+Sub-setoid : (Γ Δ : Ctx) → Setoid _ _
+Sub-setoid Γ Δ = record {
+  Carrier         = Sub Γ Δ
+  ; _≈_           = _≈ₛ_
+  ; isEquivalence = record {
+    refl    = ≈ₛ-refl
+    ; sym   = ≈ₛ-sym
+    ; trans = ≈ₛ-trans } }
+
 ---------
 -- Lemmas
 ---------
@@ -155,8 +164,76 @@ invRed w (cong-app1 r)
   = cong-app≈ (invRed w r) ε
 invRed w (cong-app2 r)
   = cong-app≈ ε (invRed w r)
-invRed w (shift-unbox t e e')
-  = {!!}
+invRed {a = a} {Γ' = Γ'} w (shift-unbox t e e')
+  = begin
+    wkTm w (unbox t (extRAssoc (upLFExt e) e'))
+      ≡⟨⟩
+    unbox
+      (wkTm (factorWk (extRAssoc (upLFExt e) e') w) t)
+      (factorExt (extRAssoc (upLFExt e) e') w)
+      -- add substs
+      ≡⟨ ≅-to-≡ (xcong (λ ΓL → Tm ΓL _)
+        (CExt _)
+        (lCtxPresTrans (upLFExt e) e' w) (rCtxPresTrans (upLFExt e) e' w)
+        unbox
+        (≡-subst-addable _ _ _) (≡-subst₂-addable _ _ _ _)) ⟩
+    unbox
+      (subst (λ ΓL → Tm ΓL _) (lCtxPresTrans (upLFExt e) e' w) (wkTm (factorWk (extRAssoc (upLFExt e) e') w) t))
+      (subst₂ (CExt _) (lCtxPresTrans (upLFExt e) e' w) (rCtxPresTrans (upLFExt e) e' w) (factorExt (extRAssoc (upLFExt e) e') w))
+      -- push subst on subterm inside
+      ≡⟨ cong₂ unbox (subst-application′ (_ ⊆_) (λ w → wkTm w t) (lCtxPresTrans (upLFExt e) e' w)) ≡-refl ⟩
+   unbox
+      (wkTm (subst (_ ⊆_) (lCtxPresTrans (upLFExt e) e' w) (factorWk (extRAssoc (upLFExt e) e') w)) t)
+      (subst₂ (CExt _) (lCtxPresTrans (upLFExt e) e' w) (rCtxPresTrans (upLFExt e) e' w) (factorExt (extRAssoc (upLFExt e) e') w))
+      -- factorisation preserves transitivity
+      ≡⟨ cong₂ unbox (cong₂ wkTm (factorWkPresTrans (upLFExt e) e' w) ≡-refl) (factorExtPresTrans (upLFExt e) _ _) ⟩
+    unbox
+      (wkTm (factorWk (upLFExt e) (factorWk e' w)) t)
+      (extRAssoc (factorExt (upLFExt e) (factorWk e' w)) (factorExt e' w))
+      -- apply equalities for absorption of upLFExt
+      ≡⟨ cong₂ unbox (cong₂ wkTm (≡-sym (factorWkAbsorbsUpLFExt e (factorWk e' w))) ≡-refl) (cong₂ extRAssoc (≡-sym (factorExtAbsorbsUpLFExt e (factorWk e' w))) ≡-refl) ⟩
+    unbox
+      (wkTm (subst (_ ⊆_) (lCtxAbsorbsUpLFExt e (factorWk e' w)) (factorWk e (factorWk e' w))) t)
+      (extRAssoc (subst₂ (CExt _) (lCtxAbsorbsUpLFExt e (factorWk e' w)) (rCtxAbsorbsUpLFExt e (factorWk e' w)) (upLFExt (factorExt e (factorWk e' w)))) (factorExt e' w))
+      -- pull out substs
+      ≡⟨ cong₂ unbox (≡-sym (subst-application′ (_ ⊆_) (λ x → wkTm x t) (lCtxAbsorbsUpLFExt e (factorWk e' w)))) (ExtIsProp _ _) ⟩
+    unbox
+      (subst (λ ΓL → Tm ΓL _) (lCtxAbsorbsUpLFExt e (factorWk e' w)) (wkTm (factorWk e (factorWk e' w)) t))
+      (subst₂ (λ ΓL ΓR → CExt _ ΓL (ΓR ,, _)) (lCtxAbsorbsUpLFExt e (factorWk e' w)) (rCtxAbsorbsUpLFExt e (factorWk e' w)) (extRAssoc (upLFExt (factorExt e (factorWk e' w))) (factorExt e' w)))
+      -- remove substs
+      ≡⟨ ≅-to-≡ (xcong (λ ΓL → Tm ΓL _) (λ ΓL ΓR → CExt _ ΓL (ΓR ,, _))
+        (≡-sym (lCtxAbsorbsUpLFExt e (factorWk e' w)))
+        (≡-sym (rCtxAbsorbsUpLFExt e (factorWk e' w)))
+        unbox
+        (≡-subst-removable _ _ _)
+        (≡-subst₂-removable _ _ _ _)) ⟩
+    unbox
+      (wkTm (factorWk e (factorWk e' w)) t)
+      (extRAssoc (upLFExt (factorExt e (factorWk e' w))) (factorExt e' w))
+      -- apply shift-unbox
+      ≈⟨ ⟶-to-≈ (shift-unbox _ _ _) ⟩
+    unbox
+      (wkTm (LFExtTo≤ (factorExt e (factorWk e' w))) (wkTm (factorWk e (factorWk e' w)) t))
+      (factorExt e' w)
+      -- wkTm preserves composition
+      ≡⟨ cong₂ unbox (wkTmPres∙ _ _ _) ≡-refl ⟩
+    unbox
+      (wkTm (factorWk e (factorWk e' w) ∙ LFExtTo≤ (factorExt e (factorWk e' w))) t)
+      (factorExt e' w)
+      -- apply factorisationLemma
+      ≡⟨ cong₂ unbox (cong₂ wkTm (≡-sym (factorisationLemma e _)) ≡-refl) ≡-refl ⟩
+    unbox
+      (wkTm (LFExtTo≤ e ∙ factorWk e' w) t)
+      (factorExt e' w)
+      -- wkTm preserves composition
+      ≡⟨ cong₂ unbox (≡-sym (wkTmPres∙ _ _ _)) ≡-refl ⟩
+    unbox
+      (wkTm (factorWk e' w) (wkTm (LFExtTo≤ e) t))
+      (factorExt e' w)
+      ≡⟨⟩
+    wkTm w (unbox (wkTm (LFExtTo≤ e) t) e') ∎
+  where
+  open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
 
 wkTmPres≈  : {t t' : Tm Γ a} → (w : Γ ⊆ Γ') → t ≈ t' → wkTm w t ≈ wkTm w t'
 wkTmPres≈ w ε            = ε
@@ -236,7 +313,7 @@ substTmPres≈ (var v)     r = substVarPres≈ v r
 substTmPres≈ (lam t)     r = cong-lam≈ (substTmPres≈ t (cong-`,≈ₛ (wkSubPres≈ fresh r) ≈-refl))
 substTmPres≈ (app t u)   r = cong-app≈ (substTmPres≈ t r) (substTmPres≈ u r)
 substTmPres≈ (box t)     r = cong-box≈ (substTmPres≈ t (cong-lock≈ₛ r))
-substTmPres≈ {s = s} {s'} (unbox t e) r = {!!}
+substTmPres≈ (unbox t e) r = {!!}
 
 --------------------
 -- Derived equations

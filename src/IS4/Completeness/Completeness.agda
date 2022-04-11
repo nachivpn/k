@@ -229,10 +229,10 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
     where
     open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
 
-fund (unbox t e) {s = s} {s'} sRs'
+fund (unbox {ΓL = ΓL} t e) {s = s} {s'} sRs'
   = Rt-cast
       (cong₂ unbox (sym (wkTmPresId _)) (factorExtₛ'∼factorExtₛ e sRs'))
-      lemma
+      sameEval
       (fund t
         {s = factorSubₛ e s}
         {s' = subst (λ Δ → Sub' Δ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s')}
@@ -240,31 +240,53 @@ fund (unbox t e) {s = s} {s'} sRs'
         idWk[ lCtxₛ e s ]
         (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')))
     where
-    lemma : eval t _ _ _ ≡ eval t _ _ _
-    lemma = begin
+    --
+    sameEval : eval t _ _ _ ≡ eval t _ _ _
+    sameEval = begin
       eval t
         (factorSubₛ' e s')
         idWk[ lCtxₛ' e s' ]
         (factorExtₛ' e s')
-        ≅⟨ {!!} ⟩ -- use subst-addables
+        -- add substs
+        ≅⟨ evalt-cong≅ (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs')
+          (≡-subst-addable _ _ _)
+          (≡-subst₂-addable _ _ _ _)
+          (≡-subst₂-addable _ _ _ _) ⟩
       eval t
         (subst (λ Δ₁ → Sub' Δ₁ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
         (subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sRs') (lCtxₛ'∼lCtxₛ e sRs') idWk[ lCtxₛ' e s' ])
         (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s'))
-        ≡⟨ cong
-          (λ w → eval t
-            (subst (λ Δ₁ → Sub' Δ₁ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
-            w
-            (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')))
-          duh ⟩
+        -- remove subst₂ from idWk
+        ≡⟨ evalt-cong≡ refl remSubstFromIdWk refl ⟩
       eval t
         (subst (λ Δ₁ → Sub' Δ₁ _) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
         idWk[ lCtxₛ e s ]
         (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')) ∎
       where
       open ≡-Reasoning
-      duh : subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sRs') (lCtxₛ'∼lCtxₛ e sRs') idWk[ lCtxₛ' e s' ] ≡ idWk[ lCtxₛ e s ]
-      duh rewrite lCtxₛ'∼lCtxₛ e {s} {s'} sRs' = refl
+      --
+      remSubstFromIdWk : subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sRs') (lCtxₛ'∼lCtxₛ e sRs') idWk[ lCtxₛ' e s' ] ≡ idWk[ lCtxₛ e s ]
+      remSubstFromIdWk rewrite lCtxₛ'∼lCtxₛ e {s} {s'} sRs' = refl
+      -- ≅-congruence for `eval t`
+      evalt-cong≅ :  {ΔL1 ΔL2 ΔR1 ΔR2 : Ctx} →
+        ΔL1 ≡ ΔL2 → ΔR1 ≡ ΔR2 →
+        {s1 : Sub' ΔL1 ΓL} {s2 : Sub' ΔL2 ΓL}
+        {w1 : ΔL1 ⊆ ΔL1} {w2 : ΔL2 ⊆ ΔL2}
+        {e1 : CExt Δ ΔL1 ΔR1} {e2 : CExt Δ ΔL2 ΔR2} →
+        s1 ≅ s2 →
+        w1 ≅ w2 →
+        e1 ≅ e2 →
+        eval t s1 w1 e1 ≅ eval t s2 w2 e2
+      evalt-cong≅ refl refl HE.refl HE.refl HE.refl = HE.refl
+      -- ≡-congruence for `eval t`
+      evalt-cong≡ :  {ΔL ΔR : Ctx} →
+        {s1 s2 : Sub' ΔL ΓL} {w1 w2 : ΔL ⊆ ΔL}
+        {e1 e2 : CExt Δ ΔL ΔR} →
+        s1 ≡ s2 →
+        w1 ≡ w2 →
+        e1 ≡ e2 →
+        eval t s1 w1 e1 ≡ eval t s2 w2 e2
+      evalt-cong≡ refl refl refl = refl
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ≈ embNf (norm t)

@@ -35,6 +35,24 @@ module _
           unb t1 e1 ≅ unb t2 e2
   xcong refl refl _ HE.refl HE.refl = HE.refl
 
+cong-unbox≅ : {ΓL1 ΓL2 ΓR1 ΓR2 : Ctx} →
+           ΓL1 ≡ ΓL2 → ΓR1 ≡ ΓR2 →
+          {t1 : Tm ΓL1 (◻ a)} {t2 : Tm ΓL2 (◻ a)} {e1 : CExt Γ ΓL1 ΓR1} {e2 : CExt Γ ΓL2 ΓR2} →
+          t1 ≅ t2 →
+          e1 ≅ e2 →
+          unbox t1 e1 ≅ unbox t2 e2
+cong-unbox≅ {Γ = Γ} ΓL1≡ΓL2 ΓR1≡ΓR2 t1≅t2 e1≅e2
+  = xcong (λ ΓL → Tm ΓL _) (CExt Γ) {R = λ _ _ → Tm Γ _} ΓL1≡ΓL2 ΓR1≡ΓR2 unbox t1≅t2 e1≅e2
+
+cong-lock≅ : {ΓL1 ΓL2 ΓR1 ΓR2 : Ctx} →
+           ΓL1 ≡ ΓL2 → ΓR1 ≡ ΓR2 →
+          {s1 : Sub ΓL1 Δ} {s2 : Sub ΓL2 Δ} {e1 : CExt Γ ΓL1 ΓR1} {e2 : CExt Γ ΓL2 ΓR2} →
+          s1 ≅ s2 →
+          e1 ≅ e2 →
+          lock s1 e1 ≅ lock s2 e2
+cong-lock≅ {Γ = Γ} ΓL1≡ΓL2 ΓR1≡ΓR2 s1≅s2 e1≅e2
+  = xcong (λ ΓL → Sub ΓL _) (CExt Γ) {R = λ _ _ → Sub Γ _} ΓL1≡ΓL2 ΓR1≡ΓR2 lock s1≅s2 e1≅e2
+
 subst-application′ : ∀ {a b₁ b₂} {A : Set a}
                     (B₁ : A → Set b₁) {B₂ : A → Set b₂}
                     {x₁ x₂ : A} {y : B₁ x₁}

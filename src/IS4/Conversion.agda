@@ -302,6 +302,12 @@ wkSubPres≈ {Δ} {Γ} {Δ'} w (shift-lock≈ₛ {s = s} {e = e} {e' = e'}) = be
   where
   open import Relation.Binary.Reasoning.Setoid (Sub-setoid Δ' Γ)
 
+fact-ext≅ : (e : CExt Γ ΓL ΓR)
+  → e ≅ extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ)
+fact-ext≅ e = ≅-trans
+  (≡-subst-addable _ _ _)
+  (≡-to-≅ (ExtIsProp′ e (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))))
+
 substTmPresId : (t : Tm Γ a) → t ≈ substTm idₛ t
 substTmPresId (var x)     = ≡-to-≈ (≡-sym (substVarPresId x))
 substTmPresId (lam t)     = cong-lam≈ (substTmPresId t)
@@ -309,12 +315,6 @@ substTmPresId (app t u)   = cong-app≈ (substTmPresId t) (substTmPresId u)
 substTmPresId (box t)     = cong-box≈ (substTmPresId t)
 substTmPresId (unbox t e) = fact-unbox≈ t e
   where
-  --
-  fact-ext≅ : (e : CExt Γ ΓL ΓR)
-    → e ≅ extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ)
-  fact-ext≅ e = ≅-trans
-    (≡-subst-addable _ _ _)
-    (≡-to-≅ (ExtIsProp′ e (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))))
   --
   coh-wkTm-substTm : (t : Tm Γ a) (w : Γ ⊆ Γ') → wkTm w t ≈ substTm (embWk w) t
   coh-wkTm-substTm {a = a} {Γ' = Γ'} t w = begin
@@ -353,14 +353,33 @@ substTmPresId (unbox t e) = fact-unbox≈ t e
 rightIdSub : (s : Sub Γ Γ') → s ≈ₛ (s ∙ₛ idₛ)
 rightIdSub []         = ≈ₛ-refl
 rightIdSub (s `, t)   = cong-`,≈ₛ (rightIdSub s) (substTmPresId t)
-rightIdSub {Γ} {Γ'} (lock s e) = begin
-  lock s e
-    ≡⟨ {!!} ⟩
-  lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ)
-    ≡⟨⟩
-  lock s e ∙ₛ idₛ ∎
+rightIdSub (lock s e) = fact-lock≈ s e
   where
-  open import Relation.Binary.Reasoning.Setoid (Sub-setoid Γ Γ')
+  --
+  fact-lock≈ : (s : Sub ΓL Δ) (e : CExt Γ ΓL ΓR)
+    → lock s e ≈ₛ lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ)
+  fact-lock≈ {Δ = Δ} {Γ = Γ} s e = begin
+    lock s e
+      -- expand extension e
+      ≡⟨ HE.≅-to-≡ (cong-lock≅ ≡-refl (extRUniq e (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))) ≅-refl (fact-ext≅ e)) ⟩
+    lock s (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))
+      -- apply shift-lock≈ₛ
+      ≈⟨ shift-lock≈ₛ ⟩
+    lock (wkSub (LFExtTo≤ (factorSubₛIdWk e)) s) (factorExtₛ e idₛ)
+      -- apply IH
+      ≈⟨ cong-lock≈ₛ (wkSubPres≈ _ (rightIdSub s)) ⟩
+    lock (wkSub (LFExtTo≤ (factorSubₛIdWk e)) (s ∙ₛ idₛ)) (factorExtₛ e idₛ)
+      -- rewrite using coherence between weakening and composing substs (associativity, really)
+      ≡⟨ cong₂ lock (coh-wkSub-∙ₛ s idₛ (LFExtTo≤ (factorSubₛIdWk e))) ≡-refl ⟩
+    lock (s ∙ₛ wkSub (LFExtTo≤ (factorSubₛIdWk e)) idₛ) (factorExtₛ e idₛ)
+      --  weakening of id subst is itself a weakening
+      ≡⟨ cong₂ lock (cong (s ∙ₛ_) (wkSubId _)) ≡-refl ⟩
+    lock (s ∙ₛ (embWk (LFExtTo≤ (factorSubₛIdWk e)))) (factorExtₛ e idₛ)
+      -- show that the weakening subst is the factorisation of the id subst
+      ≡⟨ cong₂ lock (cong (s ∙ₛ_) (≡-sym (factorSubₛIdWkIsFactorSubₛId e))) ≡-refl ⟩
+    lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ) ∎
+    where
+    open import Relation.Binary.Reasoning.Setoid (Sub-setoid Γ (Δ 🔒))
 
 substVarPres≈ : {s s' : Sub Δ Γ} (v : Var Γ a) → s ≈ₛ s' → substVar s v ≈ substVar s' v
 substVarPres≈ v      ≈ₛ-refl          = ≈-refl

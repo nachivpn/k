@@ -39,6 +39,8 @@ module _ {a} {A : Set a} where
   ≡-trans˘ : ∀ {x y z : A} → y ≡ x → y ≡ z → x ≡ z
   ≡-trans˘ y≡x y≡z = ≡-trans (≡-sym y≡x) y≡z
 
+import Relation.Binary.Reasoning.Setoid
+  as SetoidReasoning
 module RelReasoning {a} {A : Set a} {r} (R : A → A → Set r) where
   ≡-step-≡ : ∀ {x'} {x} {y} {y'} → x' ≡ x → R x y → y ≡ y' → R x' y'
   ≡-step-≡ ≡-refl r ≡-refl = r
@@ -376,7 +378,7 @@ substTmPresId (unbox t e) = fact-unbox≈ t e
       ≡⟨ cong₂ substTm {u = t} (wkSubId w) ≡-refl ⟩
     substTm (embWk w) t ∎
     where
-    open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
+    open SetoidReasoning (Tm-setoid Γ' a)
   --
   fact-unbox≈ : (t : Tm ΓL (◻ a)) (e : CExt Γ ΓL ΓR)
     → unbox t e ≈ unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ)
@@ -395,7 +397,7 @@ substTmPresId (unbox t e) = fact-unbox≈ t e
       ≡⟨ cong₂ unbox (cong₂ substTm {u = t} (≡-sym (factorSubₛIdWkIsFactorSubₛId e)) ≡-refl) ≡-refl ⟩
     unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ) ∎
     where
-    open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ a)
+    open SetoidReasoning (Tm-setoid Γ a)
 
 rightIdSub : (s : Sub Γ Γ') → s ≈ₛ (s ∙ₛ idₛ)
 rightIdSub []         = ≈ₛ-refl
@@ -426,7 +428,7 @@ rightIdSub (lock s e) = fact-lock≈ s e
       ≡⟨ cong₂ lock (cong (s ∙ₛ_) (≡-sym (factorSubₛIdWkIsFactorSubₛId e))) ≡-refl ⟩
     lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ) ∎
     where
-    open import Relation.Binary.Reasoning.Setoid (Sub-setoid Γ (Δ 🔒))
+    open SetoidReasoning (Sub-setoid Γ (Δ 🔒))
 
 substVarPres⟶ : (v : Var Γ a) → σ ⟶ₛ σ' → substVar σ v ≈ substVar σ' v
 substVarPres⟶ ze     (cong-`,⟶ₛ1 s⟶s') = ≈-refl

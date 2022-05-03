@@ -6,6 +6,15 @@ open import IS4.Reduction
   as Reduction
 open import IS4.HellOfSyntacticLemmas
 
+open import Data.Product
+  using (Σ ; _,_)
+module _ {a} {b} {A : Set a} {B : A → Set b} {p₁ p₂ : Σ A B} where
+  open import Function
+  open import Data.Product.Properties
+  open Inverse (Σ-≡,≡↔≡ {p₁ = p₁} {p₂ = p₂}) public
+    using    ()
+    renaming (f to Σ-≡,≡→≡)
+
 import Data.Sum as Sum
 
 open import Relation.Nullary
@@ -28,7 +37,7 @@ open import Relation.Binary.PropositionalEquality
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
 open import Relation.Binary.HeterogeneousEquality as HE
-  using (_≅_)
+  using    (_≅_)
   renaming (refl to ≅-refl ; sym to ≅-sym ; trans to ≅-trans)
 
 open Sum public
@@ -95,11 +104,15 @@ cong-box≈ = cong-⟶-to-cong-≈ Reduction.cong-box
 cong-unbox1≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e
 cong-unbox1≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
 
-cong-unbox2≈ : ∀ (e≡e' : e ≡ e') → unbox t e ≈ unbox t e'
-cong-unbox2≈ e≡e' = ≈-reflexive (cong₂ unbox ≡-refl e≡e')
+cong-unbox2≈ : ∀ {t : Tm Γ (◻ a)} {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ ΓR'} → unbox t e ≈ unbox t e'
+cong-unbox2≈ {t = t} {e} {e'} = subst (λ (_ , e') → unbox t e ≈ unbox t e') (Σ-≡,≡→≡ (extRUniq e e' , ExtIsProp′ e e')) ≈-refl
 
-cong-unbox≈ : ∀ (t≈t' : t ≈ t') (e≡e' : e ≡ e') → unbox t e ≈ unbox t' e'
-cong-unbox≈ t≈t' e≡e' = ≈-trans (cong-unbox1≈ t≈t') (cong-unbox2≈ e≡e')
+cong-unbox≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e'
+cong-unbox≈ t≈t' = ≈-trans (cong-unbox1≈ t≈t') cong-unbox2≈
+
+shift-unbox≈ : ∀ (t : Tm Γ (◻ a)) (w : LFExt Γ' Γ ΓR) → unbox t e ≈ unbox (wkTm (LFExtTo⊆ w) t) e'
+shift-unbox≈ t w = ≈-trans cong-unbox2≈ (⟶-to-≈ (Reduction.shift-unbox t w _))
+
 
 data _≈ₛ_ : Sub Δ Γ → Sub Δ Γ → Set where
   ≈ₛ-refl    : {s : Sub Δ Γ}
@@ -159,7 +172,7 @@ invRed w (cong-lam r)
 invRed w (cong-box r)
   = cong-box≈ (invRed (keep🔒 w) r)
 invRed w (cong-unbox {e = e} r)
-  = cong-unbox≈ (invRed (factorWk e w ) r) ≡-refl
+  = cong-unbox≈ (invRed (factorWk e w ) r)
 invRed w (cong-app1 r)
   = cong-app≈ (invRed w r) ε
 invRed w (cong-app2 r)

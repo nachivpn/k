@@ -55,7 +55,7 @@ Rt-prepend {a = 𝕓} r uRx
 Rt-prepend {a = a ⇒ b} r uRx
   = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) ≈-refl) (uRx w uRy)
 Rt-prepend {a = ◻ a} {t = t} {u} {x = bx} r uRbx
-  = λ w e → Rt-prepend (cong-unbox≈ (wkTmPres≈ w r) refl) (uRbx w e)
+  = λ w e → Rt-prepend (cong-unbox≈ (wkTmPres≈ w r)) (uRbx w e)
 
 -- reduction-free version of Rt-prepend
 Rt-cast : {t u : Tm Γ a} {x y : Tm' Γ a}
@@ -84,7 +84,7 @@ Rt-reflect {a = 𝕓}     n
 Rt-reflect {a = a ⇒ b} n
   = λ w y → Rt-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
 Rt-reflect {a = ◻ a}   n
-  = λ w e → Rt-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _)) refl) (Rt-reflect _)
+  = λ w e → Rt-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _))) (Rt-reflect _)
 
 -- Rt is invariant under weakening
 wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}

@@ -33,10 +33,10 @@ data Ctx : Set where
 [_] a = [] `, a
 
 variable
-  Γ Γ' Γ'' ΓL ΓR : Ctx
-  Δ Δ' Δ'' ΔL ΔR : Ctx
-  Θ Θ' Θ'' ΘL ΘR : Ctx
-  Ξ Ξ' Ξ'' ΞL ΞR : Ctx
+  Γ Γ' Γ'' ΓL ΓR ΓR' : Ctx
+  Δ Δ' Δ'' ΔL ΔR ΔR' : Ctx
+  Θ Θ' Θ'' ΘL ΘR ΘR' : Ctx
+  Ξ Ξ' Ξ'' ΞL ΞR ΞR' : Ctx
 
 -- append contexts (++)
 _,,_ : Ctx → Ctx → Ctx
@@ -112,7 +112,7 @@ fresh : Γ ⊆ (Γ `, a)
 fresh = drop idWk
 
 variable
-  ΓL' ΓR' ΓL'' ΓR'' : Ctx
+  ΓL' ΓL'' ΓR'' : Ctx
 
 data Flag : Set where tt ff : Flag
 

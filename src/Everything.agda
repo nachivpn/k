@@ -32,4 +32,4 @@ import IS4.Term
 import IS4.Applications.IS4Plus
 import IS4.Applications.Purity
 
---import IS4.Completeness.Completeness
+import IS4.Completeness.Completeness

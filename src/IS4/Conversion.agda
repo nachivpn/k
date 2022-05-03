@@ -38,6 +38,18 @@ open import Relation.Binary.PropositionalEquality
 module _ {a} {A : Set a} where
   ≡-trans˘ : ∀ {x y z : A} → y ≡ x → y ≡ z → x ≡ z
   ≡-trans˘ y≡x y≡z = ≡-trans (≡-sym y≡x) y≡z
+module _ {a} {b} {c} where
+  dcong₂ : ∀ {A : Set a} {B : A → Set b} {C : Set c}
+           (f : (x : A) → B x → C) {x₁ x₂ y₁ y₂}
+         → (p : x₁ ≡ x₂) → subst B p y₁ ≡ y₂
+         → f x₁ y₁ ≡ f x₂ y₂
+  dcong₂ _f ≡-refl ≡-refl = ≡-refl
+module _ {a} {b} {c} {d} where
+  dcong₃ : ∀ {A : Set a} {B : A → Set b} {C : A → Set c} {D : Set d}
+           (f : (x : A) → B x → C x → D) {x₁ x₂ y₁ y₂ z₁ z₂}
+         → (p : x₁ ≡ x₂) → subst B p y₁ ≡ y₂ → subst C p z₁ ≡ z₂
+         → f x₁ y₁ z₁ ≡ f x₂ y₂ z₂
+  dcong₃ _f ≡-refl ≡-refl ≡-refl = ≡-refl
 
 import Relation.Binary.Reasoning.Setoid
   as SetoidReasoning
@@ -124,6 +136,9 @@ cong-unbox2≈ {t = t} {e} {e'} = subst (λ (_ , e') → unbox t e ≈ unbox t e
 
 cong-unbox≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e'
 cong-unbox≈ t≈t' = ≈-trans (cong-unbox1≈ t≈t') cong-unbox2≈
+
+dcong-unbox≈ : ∀ (Γ≡Γ' : Γ ≡ Γ') (t≈t' : subst (λ Γ → Tm Γ (◻ a)) Γ≡Γ' t ≈ t') → unbox t e ≈ unbox t' e'
+dcong-unbox≈ ≡-refl = cong-unbox≈
 
 shift-unbox≈ : ∀ (t : Tm Γ (◻ a)) (w : LFExt Γ' Γ ΓR) → unbox t e ≈ unbox (wkTm (LFExtTo⊆ w) t) e'
 shift-unbox≈ t w = ≈-trans cong-unbox2≈ (⟶-to-≈ (Reduction.shift-unbox t w _))
@@ -447,7 +462,31 @@ substTmPres⟶ (var v)     r = substVarPres⟶ v r
 substTmPres⟶ (lam t)     r = cong-lam≈ (substTmPres⟶ t (cong-`,⟶ₛ1 (wkSubPres⟶ fresh r)))
 substTmPres⟶ (app t u)   r = cong-app≈ (substTmPres⟶ t r) (substTmPres⟶ u r)
 substTmPres⟶ (box t)     r = cong-box≈ (substTmPres⟶ t (cong-lock⟶ₛ r))
-substTmPres⟶ (unbox t e) r = {!!}
+substTmPres⟶ (unbox t e) r = h e r t
+  where
+    h : ∀ (e    : CExt Γ ΓL ΓR)
+          (σ⟶σ' : σ ⟶ₛ σ')
+          (t    : Tm ΓL (◻ a))
+          {e'   : CExt Θ _ ΔR}
+          {e''  : CExt Θ _ ΔR'}
+        → unbox (substTm (factorSubₛ e σ)  t) e'
+        ≈ unbox (substTm (factorSubₛ e σ') t) e''
+    h nil        σ⟶ₛσ'                    t = cong-unbox≈ (substTmPres⟶ t σ⟶ₛσ')
+    h (ext e)    (cong-`,⟶ₛ1 σ⟶σ')        t = h e σ⟶σ' t
+    h (ext e)    (cong-`,⟶ₛ2 t≈t')        t = cong-unbox2≈
+    h (ext🔒- e) (cong-lock⟶ₛ σ⟶σ')       t = h e σ⟶σ' t
+    h (ext🔒- e) (shift-lock⟶ₛ {s = σ} w) t {e'} {e''} = let open SetoidReasoning (Tm-setoid _ _) in
+        begin
+          unbox (substTm (factorSubₛ e σ) t) e'
+        ≈⟨ shift-unbox≈ (substTm (factorSubₛ e σ) t) (factorDropsWk (factorExtₛ e σ) w) ⟩
+          unbox (wkTm (LFExtTo⊆ (factorDropsWk (factorExtₛ e σ) w)) (substTm (factorSubₛ e σ) t)) (subst (λ Δ → CExt _ Δ _) (lCtxₛ-wkSub-comm e (LFExtTo⊆ w) σ) e'')
+        ≡⟨ cong (λ w' → unbox (wkTm w' _) (subst (λ Δ → CExt _ Δ _) (lCtxₛ-wkSub-comm e (LFExtTo⊆ w) σ) e'')) (factorDropsWkIsfactorWk (factorExtₛ e σ) w) ⟩
+          unbox (wkTm (factorWk (factorExtₛ e σ) (LFExtTo⊆ w)) (substTm (factorSubₛ e σ) t)) (subst (λ Δ → CExt _ Δ _) (lCtxₛ-wkSub-comm e (LFExtTo⊆ w) σ) e'')
+        ≡˘⟨ cong₂ unbox (nat-substTm t (factorSubₛ e σ) (factorWk (factorExtₛ e σ) (LFExtTo⊆ w))) ≡-refl ⟩
+          unbox (substTm (wkSub (factorWk (factorExtₛ e σ) (LFExtTo⊆ w)) (factorSubₛ e σ)) t) (subst (λ Δ → CExt _ Δ _) (lCtxₛ-wkSub-comm e (LFExtTo⊆ w) σ) e'')
+        ≡˘⟨ dcong₃ (λ _Δ s e → unbox (substTm s t) e) (lCtxₛ-wkSub-comm e (LFExtTo⊆ w) σ) (factorSubₛ-wkSub-comm e σ (LFExtTo⊆ w)) ≡-refl ⟩
+          unbox (substTm (factorSubₛ e (wkSub (LFExtTo⊆ w) σ)) t) e''
+        ∎
 
 -- XXX: fold
 substTmPres≈ : (t : Tm Γ a) → (σ≈σ' : σ ≈ₛ σ') → substTm σ t ≈ substTm σ' t

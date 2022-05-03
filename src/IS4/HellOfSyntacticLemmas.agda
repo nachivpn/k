@@ -259,13 +259,13 @@ nat-substTm {Γ = Γ} {Δ' = Δ'} (unbox {ΓL = ΓL} {a = a} t e) s w
         (factorExtₛ e (wkSub w s))
         ≅⟨ xcong
           (λ ΓL →  Tm ΓL (◻ a)) (CExt Δ')
-          (lCtxₛ-lCtx-comm e w s) (rCtxₛ-rCtx-comm e w s)
+          (lCtxₛ-wkSub-comm e w s) (rCtxₛ-wkSub-comm e w s)
           unbox
           factorSubₛ-wkSub-comm-under-substTm
-          (≡-subst₂-addable (CExt Δ') (lCtxₛ-lCtx-comm e w s) _ _) ⟩
+          (≡-subst₂-addable (CExt Δ') (lCtxₛ-wkSub-comm e w s) _ _) ⟩
      unbox {ΓL = lCtx (factorExtₛ e s) w} {ΓR = rCtx (factorExtₛ e s) w}
         (substTm (wkSub (factorWk (factorExtₛ e s) w) (factorSubₛ e s)) t)
-        (subst₂ (CExt Δ') (lCtxₛ-lCtx-comm e w s) (rCtxₛ-rCtx-comm e w s) (factorExtₛ e (wkSub w s)))
+        (subst₂ (CExt Δ') (lCtxₛ-wkSub-comm e w s) (rCtxₛ-wkSub-comm e w s) (factorExtₛ e (wkSub w s)))
         ≡⟨ cong₂ unbox (nat-substTm t _ _) (factorExtₛ-wkSub-comm e s _) ⟩
       unbox {ΓL = lCtx (factorExtₛ e s) w} {ΓR = rCtx (factorExtₛ e s) w}
         (wkTm (factorWk (factorExtₛ e s) w) (substTm (factorSubₛ e s) t))
@@ -274,7 +274,7 @@ nat-substTm {Γ = Γ} {Δ' = Δ'} (unbox {ΓL = ΓL} {a = a} t e) s w
       wkTm w (substTm s (unbox t e)) ∎
       where
         factorSubₛ-wkSub-comm-under-substTm : substTm (factorSubₛ e (wkSub w s)) t ≅ substTm (wkSub (factorWk (factorExtₛ e s) w) (factorSubₛ e s)) t
-        factorSubₛ-wkSub-comm-under-substTm = HE.icong (λ x → Sub x ΓL) (lCtxₛ-lCtx-comm e w s) (λ z → substTm z t)
+        factorSubₛ-wkSub-comm-under-substTm = HE.icong (λ x → Sub x ΓL) (lCtxₛ-wkSub-comm e w s) (λ z → substTm z t)
           (HE.trans (≡-subst-addable _ _ _) (≡-to-≅ (factorSubₛ-wkSub-comm e s w)))
 
 coh-wkSub-∙ₛ  : {Δ'' : Ctx} (s : Sub Δ Γ) (s' : Sub Δ' Δ) (w : Δ' ⊆ Δ'')
@@ -295,16 +295,16 @@ coh-wkSub-∙ₛ (lock s e) s' w = begin
    -- applying factoring equalities
    ≡⟨ cong₂ lock (cong (_ ∙ₛ_) (sym (factorSubₛ-wkSub-comm e s' w))) (sym (factorExtₛ-wkSub-comm e _ _)) ⟩
  lock
-   (s ∙ₛ subst (λ ΔL → Sub ΔL _) (lCtxₛ-lCtx-comm e w s') (factorSubₛ e (wkSub w s')))
-   (subst₂ (CExt _) (lCtxₛ-lCtx-comm e w s') (rCtxₛ-rCtx-comm e w s') (factorExtₛ e (wkSub w s')))
+   (s ∙ₛ subst (λ ΔL → Sub ΔL _) (lCtxₛ-wkSub-comm e w s') (factorSubₛ e (wkSub w s')))
+   (subst₂ (CExt _) (lCtxₛ-wkSub-comm e w s') (rCtxₛ-wkSub-comm e w s') (factorExtₛ e (wkSub w s')))
    -- remove substs
    ≅⟨ xcong
      (λ ΓL → Sub ΓL _) (CExt _)
-     (sym (lCtxₛ-lCtx-comm e w s')) (sym (rCtxₛ-rCtx-comm e w s'))
+     (sym (lCtxₛ-wkSub-comm e w s')) (sym (rCtxₛ-wkSub-comm e w s'))
      {t2 = s ∙ₛ factorSubₛ e (wkSub w s')}
      {e2 = factorExtₛ e (wkSub w s')}
      lock
-     (HE.icong  (λ ΔL → Sub ΔL _) (sym (lCtxₛ-lCtx-comm e w s')) (s ∙ₛ_) (≡-subst-removable _ _ _))
+     (HE.icong  (λ ΔL → Sub ΔL _) (sym (lCtxₛ-wkSub-comm e w s')) (s ∙ₛ_) (≡-subst-removable _ _ _))
      (≡-subst₂-removable _ _ _ _) ⟩
  lock
    (s ∙ₛ factorSubₛ e (wkSub w s'))
@@ -640,27 +640,27 @@ factorSubₛIdWkIsFactorSubₛId (ext🔒- e)       = factorSubₛIdWkIsFactorSu
 factorSubₛIdWkIsFactorSubₛId (ext {a = a} e) = begin
   factorSubₛ e (wkSub fresh idₛ)
     -- apply `factorSubₛ-wkSub-comm`
-    ≡⟨ subst-sym (lCtxₛ-lCtx-comm e fresh idₛ) (factorSubₛ-wkSub-comm e idₛ fresh)  ⟩
-  subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-lCtx-comm e fresh idₛ))
+    ≡⟨ subst-sym (lCtxₛ-wkSub-comm e fresh idₛ) (factorSubₛ-wkSub-comm e idₛ fresh)  ⟩
+  subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-wkSub-comm e fresh idₛ))
     (wkSub (factorWk (factorExtₛ e idₛ) fresh) (factorSubₛ e idₛ))
     -- apply IH
     ≡⟨ cong
-        (λ z → subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-lCtx-comm e fresh idₛ)) (wkSub (factorWk (factorExtₛ e idₛ) fresh) z))
+        (λ z → subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-wkSub-comm e fresh idₛ)) (wkSub (factorWk (factorExtₛ e idₛ) fresh) z))
         (factorSubₛIdWkIsFactorSubₛId e) ⟩
-  subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-lCtx-comm e fresh idₛ))
+  subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-wkSub-comm e fresh idₛ))
     (wkSub (factorWk (factorExtₛ e idₛ) fresh) (embWk (LFExtTo⊆ (factorSubₛIdWk e))))
     -- apply `substCrunch` which crunches substitution with substitution and weakening equalities
     ≡⟨ cong
         (λ z → subst (λ ΔL → Sub ΔL _)
-        (sym (lCtxₛ-lCtx-comm e fresh idₛ)) z) substCrunch ⟩
-  subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-lCtx-comm e fresh idₛ))
+        (sym (lCtxₛ-wkSub-comm e fresh idₛ)) z) substCrunch ⟩
+  subst (λ ΔL → Sub ΔL _) (sym (lCtxₛ-wkSub-comm e fresh idₛ))
     (embWk (LFExtTo⊆ (extRAssoc (factorSubₛIdWk e) (factorDropsWk (factorExtₛ e idₛ) freshExt))))
     -- pull out subst
     ≡⟨ subst-application′ (λ Γ → LFExt Γ _ _)
          (λ z → embWk (LFExtTo⊆ z))
-         (sym (lCtxₛ-lCtx-comm e fresh idₛ)) ⟩
+         (sym (lCtxₛ-wkSub-comm e fresh idₛ)) ⟩
   embWk (LFExtTo⊆
-    (subst (λ Γ → LFExt Γ _ (←🔒₁rCtx e ,, rCtx′ (factorExtₛ e idₛ) freshExt)) (sym (lCtxₛ-lCtx-comm e fresh idₛ))
+    (subst (λ Γ → LFExt Γ _ (←🔒₁rCtx e ,, rCtx′ (factorExtₛ e idₛ) freshExt)) (sym (lCtxₛ-wkSub-comm e fresh idₛ))
       (extRAssoc (factorSubₛIdWk e) (factorDropsWk (factorExtₛ e idₛ) freshExt))))
     ≡⟨⟩
   embWk (LFExtTo⊆ (factorSubₛIdWk (ext e))) ∎

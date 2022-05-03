@@ -131,39 +131,39 @@ factorSubₛ (ext🔒- e) (lock s e') = factorSubₛ e s
 -- Left context of weakening and applying a substituion
 -- is the same as the
 -- Left context of applying and then weakening it
-lCtxₛ-lCtx-comm : (e  : CExt Γ ΓL ΓR) (w  : Δ ⊆ Δ') (s  : Sub Δ Γ)
+lCtxₛ-wkSub-comm : (e  : CExt Γ ΓL ΓR) (w  : Δ ⊆ Δ') (s  : Sub Δ Γ)
   → lCtxₛ e (wkSub w s) ≡ lCtx (factorExtₛ e s) w
-lCtxₛ-lCtx-comm nil       w s           = refl
-lCtxₛ-lCtx-comm (ext e)   w (s `, _)    = lCtxₛ-lCtx-comm e w s
-lCtxₛ-lCtx-comm (ext🔒- e) w (lock s e') = trans
-  (lCtxₛ-lCtx-comm e (factorWk e' w) s)
+lCtxₛ-wkSub-comm nil       w s           = refl
+lCtxₛ-wkSub-comm (ext e)   w (s `, _)    = lCtxₛ-wkSub-comm e w s
+lCtxₛ-wkSub-comm (ext🔒- e) w (lock s e') = trans
+  (lCtxₛ-wkSub-comm e (factorWk e' w) s)
   (sym (lCtxPresTrans (factorExtₛ e _) e' _))
 
 -- Right context of weakening and applying a substituion
 -- is the same as the
 -- Right context of applying and then weakening it
-rCtxₛ-rCtx-comm : (e  : CExt Γ ΓL ΓR) (w  : Δ ⊆ Δ') (s  : Sub Δ Γ)
+rCtxₛ-wkSub-comm : (e  : CExt Γ ΓL ΓR) (w  : Δ ⊆ Δ') (s  : Sub Δ Γ)
   → rCtxₛ e (wkSub w s) ≡ rCtx (factorExtₛ e s) w
-rCtxₛ-rCtx-comm nil w s                 = refl
-rCtxₛ-rCtx-comm (ext e) w (s `, _)      = rCtxₛ-rCtx-comm e w s
-rCtxₛ-rCtx-comm (ext🔒- e) w (lock s e') = trans
-  (cong₂ _,,_ (rCtxₛ-rCtx-comm e (factorWk e' w) s) refl)
+rCtxₛ-wkSub-comm nil w s                 = refl
+rCtxₛ-wkSub-comm (ext e) w (s `, _)      = rCtxₛ-wkSub-comm e w s
+rCtxₛ-wkSub-comm (ext🔒- e) w (lock s e') = trans
+  (cong₂ _,,_ (rCtxₛ-wkSub-comm e (factorWk e' w) s) refl)
   (sym (rCtxPresTrans (factorExtₛ e _) e' _))
 
 -- Weakening and factoring a subtitution can be achieved by factoring and then weakening it
 factorSubₛ-wkSub-comm : (e :  CExt Γ ΓL ΓR) (s  : Sub Δ Γ) (w : Δ ⊆ Δ')
-  → subst (λ ΔL → Sub ΔL ΓL) (lCtxₛ-lCtx-comm e w s) (factorSubₛ e (wkSub w s)) ≡ wkSub (factorWk (factorExtₛ e s) w) (factorSubₛ e s)
+  → subst (λ ΔL → Sub ΔL ΓL) (lCtxₛ-wkSub-comm e w s) (factorSubₛ e (wkSub w s)) ≡ wkSub (factorWk (factorExtₛ e s) w) (factorSubₛ e s)
 factorSubₛ-wkSub-comm nil       s           w = refl
 factorSubₛ-wkSub-comm (ext e)   (s `, t)    w = factorSubₛ-wkSub-comm e s w
 factorSubₛ-wkSub-comm (ext🔒- e) (lock s e') w = begin
   subst (λ ΔL → Sub ΔL _)
-    (trans (lCtxₛ-lCtx-comm e _ _) (sym (lCtxPresTrans _ e' _)))
+    (trans (lCtxₛ-wkSub-comm e _ _) (sym (lCtxPresTrans _ e' _)))
     (factorSubₛ e (wkSub (factorWk e' w) s))
     -- split `subst _ (trans p q) ...` to `subst _ q (subst _ p ...)`
-    ≡⟨ sym (subst-subst (lCtxₛ-lCtx-comm e _ _)) ⟩
+    ≡⟨ sym (subst-subst (lCtxₛ-wkSub-comm e _ _)) ⟩
   subst (λ ΔL → Sub ΔL _)
     (sym (lCtxPresTrans _ e' _))
-    (subst (λ ΔL → Sub ΔL _) (lCtxₛ-lCtx-comm e _ _)
+    (subst (λ ΔL → Sub ΔL _) (lCtxₛ-wkSub-comm e _ _)
       (factorSubₛ e (wkSub (factorWk e' w) s)))
     -- rewrite inner subst
     ≡⟨ cong (subst (λ ΔL → Sub ΔL _) _) (factorSubₛ-wkSub-comm e s (factorWk e' w)) ⟩
@@ -180,7 +180,7 @@ factorSubₛ-wkSub-comm (ext🔒- e) (lock s e') w = begin
 
 -- factorExtₛ counterpart of factorSubₛ-wkSub-comm
 factorExtₛ-wkSub-comm : (e :  CExt Γ ΓL ΓR) (s  : Sub Δ Γ) (w : Δ ⊆ Δ')
-  → subst₂ (CExt Δ') (lCtxₛ-lCtx-comm e w s) (rCtxₛ-rCtx-comm e w s) (factorExtₛ e (wkSub w s)) ≡ factorExt (factorExtₛ e s) w
+  → subst₂ (CExt Δ') (lCtxₛ-wkSub-comm e w s) (rCtxₛ-wkSub-comm e w s) (factorExtₛ e (wkSub w s)) ≡ factorExt (factorExtₛ e s) w
 factorExtₛ-wkSub-comm _ _ _ = ExtIsProp _ _
 
 lCtxₛ-factorExt-trimSub-assoc : (e : CExt Γ ΓL ΓR) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
@@ -249,7 +249,7 @@ private
 factorSubₛIdWk : (e : CExt Γ ΓL ΓR) → LFExt (lCtxₛ e idₛ) ΓL (←🔒₁rCtx e)
 factorSubₛIdWk nil             = nil
 factorSubₛIdWk {ΓR = ΓR `, a} (ext {a = .a} e) = subst
-  (λ Γ → LFExt Γ _ (←🔒₁rCtx (ext e))) (sym ((lCtxₛ-lCtx-comm e fresh idₛ)))
+  (λ Γ → LFExt Γ _ (←🔒₁rCtx (ext e))) (sym ((lCtxₛ-wkSub-comm e fresh idₛ)))
   (extRAssoc (factorSubₛIdWk e) (factorDropsWk (factorExtₛ e idₛ) freshExt))
 factorSubₛIdWk (ext🔒- e)       = factorSubₛIdWk e
 

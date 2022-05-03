@@ -47,10 +47,10 @@ Tm-setoid Γ a = setoid (_⟶_ {Γ} {a})
 module _ {Γ : Ctx} {a : Ty} where
   open Setoid (Tm-setoid Γ a) public
     using    (_≈_)
-    renaming (refl to ≈-refl ; reflexive to ≡-to-≈ ; sym to ≈-sym ; trans to ≈-trans ; isEquivalence to ≈-equiv)
+    renaming (refl to ≈-refl ; reflexive to ≈-reflexive ; sym to ≈-sym ; trans to ≈-trans ; isEquivalence to ≈-equiv)
 
-≡˘-to-≈ : t' ≡ t → t ≈ t'
-≡˘-to-≈ t'≡t = ≡-to-≈ (≡-sym t'≡t)
+  ≈-reflexive˘ : t' ≡ t → t ≈ t'
+  ≈-reflexive˘ t'≡t = ≈-reflexive (≡-sym t'≡t)
 
 ⟶-to-≈ : t ⟶ t' → t ≈ t'
 ⟶-to-≈ p = inj₁ p ◅ ε
@@ -96,7 +96,7 @@ cong-unbox1≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e
 cong-unbox1≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
 
 cong-unbox2≈ : ∀ (e≡e' : e ≡ e') → unbox t e ≈ unbox t e'
-cong-unbox2≈ e≡e' = ≡-to-≈ (cong₂ unbox ≡-refl e≡e')
+cong-unbox2≈ e≡e' = ≈-reflexive (cong₂ unbox ≡-refl e≡e')
 
 cong-unbox≈ : ∀ (t≈t' : t ≈ t') (e≡e' : e ≡ e') → unbox t e ≈ unbox t' e'
 cong-unbox≈ t≈t' e≡e' = ≈-trans (cong-unbox1≈ t≈t') (cong-unbox2≈ e≡e')
@@ -115,8 +115,8 @@ data _≈ₛ_ : Sub Δ Γ → Sub Δ Γ → Set where
   shift-lock≈ₛ : {ΔLL ΔLR : Ctx} {s : Sub ΔLL Γ} {e : LFExt ΔL ΔLL ΔLR} {e' : CExt Δ ΔL ΔR}
     → lock s (extRAssoc (upLFExt e) e') ≈ₛ lock (wkSub (LFExtTo⊆ e) s) e'
 
-≡-to-≈ₛ : {s s' : Sub Δ Γ} → s ≡ s' → s ≈ₛ s'
-≡-to-≈ₛ ≡-refl = ≈ₛ-refl
+≈ₛ-reflexive : {s s' : Sub Δ Γ} → s ≡ s' → s ≈ₛ s'
+≈ₛ-reflexive ≡-refl = ≈ₛ-refl
 
 Sub-setoid : (Γ Δ : Ctx) → Setoid _ _
 Sub-setoid Γ Δ = record {
@@ -136,22 +136,22 @@ invRed :  {t t' : Tm Γ a}
   → t ⟶ t'
   → wkTm w t ≈ wkTm w t'
 invRed w (red-fun t u)
-  = ≈-trans (⟶-to-≈ (red-fun _ _)) (≡-to-≈ (beta-wk-lemma w u t))
+  = ≈-trans (⟶-to-≈ (red-fun _ _)) (≈-reflexive (beta-wk-lemma w u t))
 invRed w (exp-fun _)
-  = ≈-trans (⟶-to-≈ (exp-fun _)) (≡-to-≈ (cong lam (cong₂ app keepFreshLemma ≡-refl)))
+  = ≈-trans (⟶-to-≈ (exp-fun _)) (≈-reflexive (cong lam (cong₂ app keepFreshLemma ≡-refl)))
 invRed w (red-box t e)
   = ≈-trans
     (⟶-to-≈ (red-box _ _))
     (≈-trans
       (≈-trans
-        (≡-to-≈ (≡-sym (coh-trimSub-wkTm t _ _)))
-        (≡-to-≈
+        (≈-reflexive˘ (coh-trimSub-wkTm t _ _))
+        (≈-reflexive
           (cong
             (λ s → substTm (lock s (factorExt e w)) t)
             (≡-trans
               (trimSubId (factorWk e w))
               (≡-sym (wkSubId _))))))
-      (≡-to-≈ (nat-substTm t _ _)))
+      (≈-reflexive (nat-substTm t _ _)))
 invRed w (exp-box _)
   = ⟶-to-≈ (exp-box _)
 invRed w (cong-lam r)
@@ -309,7 +309,7 @@ fact-ext≅ e = ≅-trans
   (≡-to-≅ (ExtIsProp′ e (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))))
 
 substTmPresId : (t : Tm Γ a) → t ≈ substTm idₛ t
-substTmPresId (var x)     = ≡-to-≈ (≡-sym (substVarPresId x))
+substTmPresId (var x)     = ≈-reflexive˘ (substVarPresId x)
 substTmPresId (lam t)     = cong-lam≈ (substTmPresId t)
 substTmPresId (app t u)   = cong-app≈ (substTmPresId t) (substTmPresId u)
 substTmPresId (box t)     = cong-box≈ (substTmPresId t)

@@ -53,7 +53,7 @@ Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
 Rt-prepend {a = 𝕓} r uRx
   = ≈-trans r uRx
 Rt-prepend {a = a ⇒ b} r uRx
-  = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) (≡-to-≈ refl)) (uRx w uRy)
+  = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) ≈-refl) (uRx w uRy)
 Rt-prepend {a = ◻ a} {t = t} {u} {x = bx} r uRbx
   = λ w e → Rt-prepend (cong-unbox≈ (wkTmPres≈ w r) refl) (uRbx w e)
 
@@ -63,7 +63,7 @@ Rt-cast : {t u : Tm Γ a} {x y : Tm' Γ a}
   → y ≡ x
   → Rt u x
   → Rt t y
-Rt-cast p refl uRx = Rt-prepend (≡-to-≈ p) uRx
+Rt-cast p refl uRx = Rt-prepend (≈-reflexive p) uRx
 
 -- extract reduction trace from Rt
 Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
@@ -80,11 +80,11 @@ Rt-build {a = ◻ a}  tRx
   = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (Rt-build (Rt-cast (cong₂ unbox (sym (wkTmPresId _)) refl) refl (tRx idWk new))))
 
 Rt-reflect {a = 𝕓}     n
-  = ≡-to-≈ refl
+  = ≈-refl
 Rt-reflect {a = a ⇒ b} n
-  = λ w y → Rt-prepend (cong-app≈ (≡-to-≈ (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
+  = λ w y → Rt-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
 Rt-reflect {a = ◻ a}   n
-  = λ w e → Rt-prepend (cong-unbox≈ (≡-to-≈ (nat-embNe _ _)) refl) (Rt-reflect _)
+  = λ w e → Rt-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _)) refl) (Rt-reflect _)
 
 -- Rt is invariant under weakening
 wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}
@@ -92,7 +92,7 @@ wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}
   → Rt t x
   → Rt (wkTm w t) (wkTm' w x)
 wkTmPresRt {a = 𝕓}  {x = x}       w tRx
-  = ≈-trans (wkTmPres≈ _ tRx) (≡-to-≈ (nat-embNf _ (reify x)))
+  = ≈-trans (wkTmPres≈ _ tRx) (≈-reflexive (nat-embNf _ (reify x)))
 wkTmPresRt {a = a ⇒ b}            w tRx
   = λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') y)
 wkTmPresRt {a = ◻ a} w tRx
@@ -133,7 +133,7 @@ private
 
   beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ≈ substTm (wkSub w s `, u) t
-  beta-lemma w s t u = ≈-trans (≡-to-≈ (cong₂ app (cong lam (trans
+  beta-lemma w s t u = ≈-trans (≈-reflexive (cong₂ app (cong lam (trans
     (sym (nat-substTm t (keepₛ s) (keep w)))
     (cong (λ p → substTm (p `, var ze) t)
       (trans
@@ -142,12 +142,12 @@ private
     (≈-trans
       (⟶-to-≈ (red-fun _ _))
       (≈-trans
-        (≡-to-≈ (substTmPres∙ _ _ t))
+        (≈-reflexive (substTmPres∙ _ _ t))
         (substTmPres≈ t
           (cong-`,≈ₛ
             (≈ₛ-trans
-              (≡-to-≈ₛ (sym (coh-trimSub-wkSub s _ _)))
-              (≈ₛ-trans (≡-to-≈ₛ (coh-trimSub-wkSub s idₛ w)) (≈ₛ-sym (rightIdSub _))))
+              (≈ₛ-reflexive˘ (coh-trimSub-wkSub s _ _))
+              (≈ₛ-trans (≈ₛ-reflexive (coh-trimSub-wkSub s idₛ w)) (≈ₛ-sym (rightIdSub _))))
             ≈-refl))))
 
   unboxPresRt : {t : Tm Γ (◻ a)} {x : (Tm'- (◻ a)) Γ}
@@ -206,7 +206,7 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
   lockLemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≈ₛ lock (wkSub w s) e
   lockLemma = ≈ₛ-trans
     (cong-lock≈ₛ (≈ₛ-sym (rightIdSub _)))
-    (≡-to-≈ₛ
+    (≈ₛ-reflexive
       (trans
         (cong₂ lock refl extLeftUnit)
         (≅-to-≡ (HE.icong (CExt _ _) ,,-leftUnit (lock _) (≡-subst-removable (CExt _ _) _ e)))))

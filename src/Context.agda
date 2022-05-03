@@ -75,7 +75,7 @@ data _⊆_  : Ctx → Ctx → Set where
   keep🔒  : Γ ⊆ Δ → Γ 🔒 ⊆ Δ 🔒
 
 {-
-  Notes on _≤_:
+  Notes on _⊆_:
 
   In addition to the regular definition of weakening (`base`, `drop` and `keep`),
   we also allow weakening in the presence of locks:
@@ -330,9 +330,9 @@ extRId : Ext θ Γ Γ []
 extRId = nil
 
 -- lock-free extensions yield a "right" weakening (i.e., adding variables on the right)
-LFExtTo≤ : LFExt Γ ΓL ΓR → ΓL ⊆ Γ
-LFExtTo≤ nil     = idWk
-LFExtTo≤ (ext e) = drop (LFExtTo≤ e)
+LFExtTo⊆ : LFExt Γ ΓL ΓR → ΓL ⊆ Γ
+LFExtTo⊆ nil     = idWk
+LFExtTo⊆ (ext e) = drop (LFExtTo⊆ e)
 
 private
  variable ΓLL ΓLR ΓRL ΓRR : Ctx
@@ -390,7 +390,7 @@ sliceLeft (ext e) (keep w)  = sliceLeft e w
 
 -- slice a weakening to the right of a lock
 sliceRight : (e : LFExt Γ (ΓL 🔒) ΓR) → Γ ⊆ Γ' → (←🔒 Γ') 🔒 ⊆ Γ'
-sliceRight e w = LFExtTo≤ (wkLFExt e w)
+sliceRight e w = LFExtTo⊆ (wkLFExt e w)
 
 -- the operation ←🔒 returns the context to the left of 🔒
 ←🔒IsPre🔒 : LFExt Γ (ΓL 🔒) ΓR → ΓL ≡ (←🔒 Γ)
@@ -402,10 +402,10 @@ sliceRight e w = LFExtTo≤ (wkLFExt e w)
 🔒→isPost🔒 nil     = refl
 🔒→isPost🔒 (ext e) = cong (_`, _) (🔒→isPost🔒 e)
 
-LFExtTo≤PresTrans : (e : LFExt ΓL ΓLL ΓLR) (e' : LFExt Γ ΓL ΓR)
-  → LFExtTo≤ (extRAssoc e e') ≡ LFExtTo≤ e ∙ LFExtTo≤ e'
-LFExtTo≤PresTrans e nil      = sym (rightIdWk (LFExtTo≤ e))
-LFExtTo≤PresTrans e (ext e') = cong drop (LFExtTo≤PresTrans e e')
+LFExtTo⊆PresTrans : (e : LFExt ΓL ΓLL ΓLR) (e' : LFExt Γ ΓL ΓR)
+  → LFExtTo⊆ (extRAssoc e e') ≡ LFExtTo⊆ e ∙ LFExtTo⊆ e'
+LFExtTo⊆PresTrans e nil      = sym (rightIdWk (LFExtTo⊆ e))
+LFExtTo⊆PresTrans e (ext e') = cong drop (LFExtTo⊆PresTrans e e')
 
 ----------------------------------------
 -- Slicing laws for lock-free extensions
@@ -429,7 +429,7 @@ sliceLeftPres∙ (keep🔒 w') (keep🔒 w) nil     = refl
 -- roughly, slicing a weakening into two weakenings, one to left of the lock,
 -- and the other to right, must not change its composition.
 slicingLemma : (w : Γ ⊆ Γ') → (e : LFExt Γ (ΓL 🔒) ΓR)
-  → LFExtTo≤ e ∙ w ≡ (keep🔒 (sliceLeft e w) ∙ sliceRight e w)
+  → LFExtTo⊆ e ∙ w ≡ (keep🔒 (sliceLeft e w) ∙ sliceRight e w)
 slicingLemma (drop w)  nil     = cong drop (slicingLemma w nil)
 slicingLemma (drop w)  (ext e) = cong drop (slicingLemma w (ext e))
 slicingLemma (keep w)  (ext e) = cong drop (slicingLemma w e)
@@ -442,7 +442,7 @@ sliceLeftId {Γ 🔒}    nil     = refl
 wkLFExtPresId :  (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → wkLFExt e idWk ≡ e
 wkLFExtPresId _ = ExtIsProp _ _
 
-sliceRightId : (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → sliceRight e idWk ≡ LFExtTo≤ e
+sliceRightId : (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → sliceRight e idWk ≡ LFExtTo⊆ e
 sliceRightId e rewrite wkLFExtPresId e = refl
 
 -----------------------------------
@@ -469,25 +469,25 @@ module _ where
 
     -- we don't use factor1 anymore
     factor1 : Γ R Δ → Γ' ⊆ Γ → ∃ λ Δ' → Δ' ⊆ Δ × Γ' R Δ'
-    factor1 nil⊑           Γ'≤Γ
-      = _ , Γ'≤Γ , nil⊑
-    factor1 (ext⊑ Γ⊑Δ)     Γ'≤Γ with factor1 (_ , Γ⊑Δ) Γ'≤Γ
-    ... | Δ' , Δ'≤Δ , Γ'⊑Δ'
-      = Δ' , drop Δ'≤Δ , Γ'⊑Δ'
-    factor1 (ext🔒⊑ _ Γ⊑Δ) Γ'≤Γ with factor1 (_ , Γ⊑Δ) Γ'≤Γ
-    ... | Δ' , Δ'≤Δ , Γ'⊑Δ'
-      = (Δ' 🔒) , keep🔒 Δ'≤Δ , ⊑-trans Γ'⊑Δ' (ext🔒⊑ tt extRId)
+    factor1 nil⊑           Γ'⊆Γ
+      = _ , Γ'⊆Γ , nil⊑
+    factor1 (ext⊑ Γ⊑Δ)     Γ'⊆Γ with factor1 (_ , Γ⊑Δ) Γ'⊆Γ
+    ... | Δ' , Δ'⊆Δ , Γ'⊑Δ'
+      = Δ' , drop Δ'⊆Δ , Γ'⊑Δ'
+    factor1 (ext🔒⊑ _ Γ⊑Δ) Γ'⊆Γ with factor1 (_ , Γ⊑Δ) Γ'⊆Γ
+    ... | Δ' , Δ'⊆Δ , Γ'⊑Δ'
+      = (Δ' 🔒) , keep🔒 Δ'⊆Δ , ⊑-trans Γ'⊑Δ' (ext🔒⊑ tt extRId)
 
     -- not used directly, but serves as a specification of
     -- what is expected from factorExt and factorWk
     factor2 : Γ R Δ → Δ ⊆ Δ' → ∃ λ Γ' → Γ ⊆ Γ' × Γ' R Δ'
-    factor2 nil⊑           Δ≤Δ'
-      = _ , Δ≤Δ' , nil⊑
-    factor2 (ext⊑ Γ⊑Δ)     Δ≤Δ'
-      = factor2 (_ , Γ⊑Δ) (fresh ∙ Δ≤Δ')
-    factor2 (ext🔒⊑ _ Γ⊑Δ) Δ≤Δ' with factor2 (_ , Γ⊑Δ) (sliceLeft extRId Δ≤Δ')
-    ... | Γ' , Γ≤Γ' , Γ'⊑Δ'
-      = Γ' , Γ≤Γ' , ⊑-trans Γ'⊑Δ' (⊑-trans (ext🔒⊑ tt extRId) (_ , upLFExt (wkLFExt extRId Δ≤Δ')))
+    factor2 nil⊑           Δ⊆Δ'
+      = _ , Δ⊆Δ' , nil⊑
+    factor2 (ext⊑ Γ⊑Δ)     Δ⊆Δ'
+      = factor2 (_ , Γ⊑Δ) (fresh ∙ Δ⊆Δ')
+    factor2 (ext🔒⊑ _ Γ⊑Δ) Δ⊆Δ' with factor2 (_ , Γ⊑Δ) (sliceLeft extRId Δ⊆Δ')
+    ... | Γ' , Γ⊆Γ' , Γ'⊑Δ'
+      = Γ' , Γ⊆Γ' , ⊑-trans Γ'⊑Δ' (⊑-trans (ext🔒⊑ tt extRId) (_ , upLFExt (wkLFExt extRId Δ⊆Δ')))
 
 -- "Left" context of factoring (see type of factorExt)
 -- lCtx e w == proj₁ (factor2 (_ , e) w)
@@ -637,14 +637,14 @@ rCtx′ {ΓR' = ΓR' `, _} (ext e)   (ext e') = rCtx′ {ΓR' = ΓR'} (ext e) e'
 rCtx′ {ΓR' = ΓR' `, _} (ext🔒- e) (ext e') = rCtx′ {ΓR' = ΓR'} (ext🔒- e) e'
 
 -- Special case of factorWk where the second argument consists of only drops (simulated using LFExt)
-factorDropsWk : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → LFExt (lCtx e (LFExtTo≤ e')) ΓL (rCtx′ e e')
+factorDropsWk : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → LFExt (lCtx e (LFExtTo⊆ e')) ΓL (rCtx′ e e')
 factorDropsWk {ΓR' = []}       e         nil      = subst (λ ΓL → LFExt (lCtx e idWk) ΓL _) (lCtxPresId e) nil
 factorDropsWk {ΓR' = ΓR'}      nil       (ext e') = (ext e')
 factorDropsWk {ΓR' = ΓR' `, _} (ext e)   (ext e') = factorDropsWk {ΓR' = ΓR'} (ext e) e'
 factorDropsWk {ΓR' = ΓR' `, _} (ext🔒- e) (ext e') = factorDropsWk {ΓR' = ΓR'} (ext🔒- e) e'
 
 -- factorDropsWk is indeed a special case of factorWk
-factorDropsWkIsfactorWk : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → LFExtTo≤ (factorDropsWk e e') ≡ factorWk e (LFExtTo≤ e')
+factorDropsWkIsfactorWk : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → LFExtTo⊆ (factorDropsWk e e') ≡ factorWk e (LFExtTo⊆ e')
 factorDropsWkIsfactorWk nil       nil      = refl
 factorDropsWkIsfactorWk nil       (ext e') = refl
 factorDropsWkIsfactorWk (ext e)   nil      = factorDropsWkIsfactorWk e nil
@@ -655,7 +655,7 @@ factorDropsWkIsfactorWk (ext🔒- e) (ext e') = factorDropsWkIsfactorWk (ext🔒
 -- Note: factorDropsExt is not need as it has the same type as factorDrops and ExtIsProp
 
 factorisationLemma : (e : LFExt Γ ΓL ΓR) → (w : Γ ⊆ Γ')
-  → LFExtTo≤ e ∙ w ≡ factorWk e w ∙ LFExtTo≤ (factorExt e w)
+  → LFExtTo⊆ e ∙ w ≡ factorWk e w ∙ LFExtTo⊆ (factorExt e w)
 factorisationLemma nil    w = trans (leftIdWk _) (sym (rightIdWk _))
 factorisationLemma (ext e) (drop w) = cong drop (factorisationLemma (ext e) w)
 factorisationLemma (ext e) (keep w) = cong drop (factorisationLemma e w)

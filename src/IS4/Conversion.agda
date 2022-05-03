@@ -113,7 +113,7 @@ data _≈ₛ_ : Sub Δ Γ → Sub Δ Γ → Set where
   cong-lock≈ₛ  : {s s' : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
     → s ≈ₛ s' → lock s e ≈ₛ lock s' e
   shift-lock≈ₛ : {ΔLL ΔLR : Ctx} {s : Sub ΔLL Γ} {e : LFExt ΔL ΔLL ΔLR} {e' : CExt Δ ΔL ΔR}
-    → lock s (extRAssoc (upLFExt e) e') ≈ₛ lock (wkSub (LFExtTo≤ e) s) e'
+    → lock s (extRAssoc (upLFExt e) e') ≈ₛ lock (wkSub (LFExtTo⊆ e) s) e'
 
 ≡-to-≈ₛ : {s s' : Sub Δ Γ} → s ≡ s' → s ≈ₛ s'
 ≡-to-≈ₛ ≡-refl = ≈ₛ-refl
@@ -208,25 +208,25 @@ invRed {a = a} {Γ' = Γ'} w (shift-unbox t e e')
       -- apply shift-unbox
       ≈⟨ ⟶-to-≈ (shift-unbox _ _ _) ⟩
     unbox
-      (wkTm (LFExtTo≤ (factorExt e (factorWk e' w))) (wkTm (factorWk e (factorWk e' w)) t))
+      (wkTm (LFExtTo⊆ (factorExt e (factorWk e' w))) (wkTm (factorWk e (factorWk e' w)) t))
       (factorExt e' w)
       -- wkTm preserves composition
       ≡⟨ cong₂ unbox (wkTmPres∙ _ _ _) ≡-refl ⟩
     unbox
-      (wkTm (factorWk e (factorWk e' w) ∙ LFExtTo≤ (factorExt e (factorWk e' w))) t)
+      (wkTm (factorWk e (factorWk e' w) ∙ LFExtTo⊆ (factorExt e (factorWk e' w))) t)
       (factorExt e' w)
       -- apply factorisationLemma
       ≡⟨ cong₂ unbox (cong₂ wkTm (≡-sym (factorisationLemma e _)) ≡-refl) ≡-refl ⟩
     unbox
-      (wkTm (LFExtTo≤ e ∙ factorWk e' w) t)
+      (wkTm (LFExtTo⊆ e ∙ factorWk e' w) t)
       (factorExt e' w)
       -- wkTm preserves composition
       ≡⟨ cong₂ unbox (≡-sym (wkTmPres∙ _ _ _)) ≡-refl ⟩
     unbox
-      (wkTm (factorWk e' w) (wkTm (LFExtTo≤ e) t))
+      (wkTm (factorWk e' w) (wkTm (LFExtTo⊆ e) t))
       (factorExt e' w)
       ≡⟨⟩
-    wkTm w (unbox (wkTm (LFExtTo≤ e) t) e') ∎
+    wkTm w (unbox (wkTm (LFExtTo⊆ e) t) e') ∎
   where
   open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
 
@@ -280,25 +280,25 @@ wkSubPres≈ {Δ} {Γ} {Δ'} w (shift-lock≈ₛ {s = s} {e = e} {e' = e'}) = be
    -- apply shift-lock≈ₛ
    ≈⟨ shift-lock≈ₛ ⟩
   lock
-   (wkSub (LFExtTo≤ (factorExt e (factorWk e' w))) (wkSub (factorWk e (factorWk e' w)) s))
+   (wkSub (LFExtTo⊆ (factorExt e (factorWk e' w))) (wkSub (factorWk e (factorWk e' w)) s))
    (factorExt e' w)
    -- wkSub preserves composition
    ≡⟨ cong₂ lock (wkSubPres∙ _ _ _) ≡-refl ⟩
   lock
-   (wkSub (factorWk e (factorWk e' w) ∙ LFExtTo≤ (factorExt e (factorWk e' w))) s)
+   (wkSub (factorWk e (factorWk e' w) ∙ LFExtTo⊆ (factorExt e (factorWk e' w))) s)
    (factorExt e' w)
    -- apply factorisation lemma
    ≡⟨ cong₂ lock (cong₂ wkSub (≡-sym (factorisationLemma e _)) ≡-refl) ≡-refl ⟩
   lock
-   (wkSub (LFExtTo≤ e ∙ factorWk e' w) s)
+   (wkSub (LFExtTo⊆ e ∙ factorWk e' w) s)
    (factorExt e' w)
    -- wkSub preserves composition
    ≡⟨ cong₂ lock (≡-sym (wkSubPres∙ _ _ _)) ≡-refl ⟩
   lock
-   (wkSub (factorWk e' w) (wkSub (LFExtTo≤ e) s))
+   (wkSub (factorWk e' w) (wkSub (LFExtTo⊆ e) s))
    (factorExt e' w)
    ≡⟨⟩
-  wkSub w (lock (wkSub (LFExtTo≤ e) s) e') ∎
+  wkSub w (lock (wkSub (LFExtTo⊆ e) s) e') ∎
   where
   open import Relation.Binary.Reasoning.Setoid (Sub-setoid Δ' Γ)
 
@@ -340,10 +340,10 @@ substTmPresId (unbox t e) = fact-unbox≈ t e
     unbox t (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))
       -- apply shift-unbox
       ≈⟨ ⟶-to-≈ (shift-unbox _ _ _) ⟩
-    unbox (wkTm (LFExtTo≤ (factorSubₛIdWk e)) t) (factorExtₛ e idₛ)
+    unbox (wkTm (LFExtTo⊆ (factorSubₛIdWk e)) t) (factorExtₛ e idₛ)
       -- rewrite wkTm to substTm
       ≈⟨ cong-unbox1≈ (coh-wkTm-substTm t _) ⟩
-    unbox (substTm (embWk (LFExtTo≤ (factorSubₛIdWk e))) t) (factorExtₛ e idₛ)
+    unbox (substTm (embWk (LFExtTo⊆ (factorSubₛIdWk e))) t) (factorExtₛ e idₛ)
       -- show that the subst is the factorisation of the id subst
       ≡⟨ cong₂ unbox (cong₂ substTm {u = t} (≡-sym (factorSubₛIdWkIsFactorSubₛId e)) ≡-refl) ≡-refl ⟩
     unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ) ∎
@@ -365,16 +365,16 @@ rightIdSub (lock s e) = fact-lock≈ s e
     lock s (extRAssoc (upLFExt (factorSubₛIdWk e)) (factorExtₛ e idₛ))
       -- apply shift-lock≈ₛ
       ≈⟨ shift-lock≈ₛ ⟩
-    lock (wkSub (LFExtTo≤ (factorSubₛIdWk e)) s) (factorExtₛ e idₛ)
+    lock (wkSub (LFExtTo⊆ (factorSubₛIdWk e)) s) (factorExtₛ e idₛ)
       -- apply IH
       ≈⟨ cong-lock≈ₛ (wkSubPres≈ _ (rightIdSub s)) ⟩
-    lock (wkSub (LFExtTo≤ (factorSubₛIdWk e)) (s ∙ₛ idₛ)) (factorExtₛ e idₛ)
+    lock (wkSub (LFExtTo⊆ (factorSubₛIdWk e)) (s ∙ₛ idₛ)) (factorExtₛ e idₛ)
       -- rewrite using coherence between weakening and composing substs (associativity, really)
-      ≡⟨ cong₂ lock (coh-wkSub-∙ₛ s idₛ (LFExtTo≤ (factorSubₛIdWk e))) ≡-refl ⟩
-    lock (s ∙ₛ wkSub (LFExtTo≤ (factorSubₛIdWk e)) idₛ) (factorExtₛ e idₛ)
+      ≡⟨ cong₂ lock (coh-wkSub-∙ₛ s idₛ (LFExtTo⊆ (factorSubₛIdWk e))) ≡-refl ⟩
+    lock (s ∙ₛ wkSub (LFExtTo⊆ (factorSubₛIdWk e)) idₛ) (factorExtₛ e idₛ)
       --  weakening of id subst is itself a weakening
       ≡⟨ cong₂ lock (cong (s ∙ₛ_) (wkSubId _)) ≡-refl ⟩
-    lock (s ∙ₛ (embWk (LFExtTo≤ (factorSubₛIdWk e)))) (factorExtₛ e idₛ)
+    lock (s ∙ₛ (embWk (LFExtTo⊆ (factorSubₛIdWk e)))) (factorExtₛ e idₛ)
       -- show that the weakening subst is the factorisation of the id subst
       ≡⟨ cong₂ lock (cong (s ∙ₛ_) (≡-sym (factorSubₛIdWkIsFactorSubₛId e))) ≡-refl ⟩
     lock (s ∙ₛ factorSubₛ e idₛ) (factorExtₛ e idₛ) ∎

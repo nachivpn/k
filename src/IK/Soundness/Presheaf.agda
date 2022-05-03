@@ -165,7 +165,7 @@ psh-eval (box t)           s         ps
   = psh-eval t (lock s nil) ps
 psh-eval (unbox t nil)     (lock s e') ps with eval t s | psh-eval t s ps
 ... | box x | px
-  = wkTm'PresPsh (LFExtTo≤ e') x px
+  = wkTm'PresPsh (LFExtTo⊆ e') x px
 psh-eval (unbox t (ext e)) (s , _)  (ps , _)
   = psh-eval (unbox t e) s ps
 

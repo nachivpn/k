@@ -35,7 +35,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → t ⟶ lam (app (wkTm fresh t) (var ze))
 
   red-box : {t : Tm (ΓL 🔒) a} {e : LFExt Γ (ΓL 🔒) ΓR}
-    → unbox (box t) e ⟶ wkTm (LFExtTo≤ e) t
+    → unbox (box t) e ⟶ wkTm (LFExtTo⊆ e) t
 
   exp-box : {t : Tm Γ (◻ a)}
     → t ⟶ box (unbox t nil)

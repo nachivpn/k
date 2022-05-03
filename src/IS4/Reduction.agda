@@ -59,7 +59,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → unbox t e ⟶ unbox t' e
 
   shift-unbox : {ΓLL ΓLR : Ctx} (t : Tm ΓLL (◻ a)) (e : LFExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR)
-   → unbox t (extRAssoc (upLFExt e) e') ⟶ unbox (wkTm (LFExtTo≤ e) t) e'
+   → unbox t (extRAssoc (upLFExt e) e') ⟶ unbox (wkTm (LFExtTo⊆ e) t) e'
 
 -- zero or more steps of reduction
 Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _

@@ -100,7 +100,7 @@ wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (sliceLeft e w) s) (wkLFEx
 
 -- semantic counterpart of `unbox` from `Tm`
 unbox' : Box (λ Δ → Tm' Δ a) ΓL → LFExt Γ (ΓL 🔒) ΓR → Tm' Γ a
-unbox' (box x) e = wkTm' (LFExtTo≤ e) x
+unbox' (box x) e = wkTm' (LFExtTo⊆ e) x
 
 unlock' : Sub' Δ (Γ 🔒) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × LFExt Δ (ΔL 🔒) ΔR }
 unlock' (lock γ e) = _ , γ , e

@@ -308,8 +308,8 @@ keepFreshLemma = trans (wkTmPres∙ _ _ _) (sym (trans
     (cong₂ wkTm (cong drop (trans (leftIdWk _) (sym (rightIdWk _)))) refl)))
 
 sliceCompLemma : (w : Γ ⊆ Δ) (e : LFExt Γ (ΓL 🔒) ΓR) (t : Tm (ΓL 🔒) a)
-  → wkTm (LFExtTo≤ (wkLFExt e w)) (wkTm (keep🔒 (sliceLeft e w)) t) ≡
-      wkTm w (wkTm (LFExtTo≤ e) t)
+  → wkTm (LFExtTo⊆ (wkLFExt e w)) (wkTm (keep🔒 (sliceLeft e w)) t) ≡
+      wkTm w (wkTm (LFExtTo⊆ e) t)
 sliceCompLemma w e t = (trans (wkTmPres∙ _ _ _) (sym (trans
   (wkTmPres∙ _ _ _)
   (cong₂ wkTm (slicingLemma w e) refl))))

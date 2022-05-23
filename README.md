@@ -1,40 +1,35 @@
 # k
-Mechanisation of Fitch-style Intuitionistic K in Agda
+
+Normalisation for Fitch-style Modal Calculi
 
 ## About
 
-Fitch-style modal lambda calculi provide an elegant approach to programming
-necessity (or box) modalities by extending typed-lambda calculi with 
-a delimiting context operator (or lock). 
-The addition of locks simplifies the formulation of typing rules for 
-different modalities, but obscures syntactic lemmas 
-involving the context, and makes it difficult to formalise 
-and prove meta-theoretic properties about these calculi.
+Fitch-style modal lambda calculi enable programming with necessity
+modalities in a typed lambda calculus by extending the typing context
+with a delimiting operator that is denoted by a lock. The addition of
+locks simplifies the formulation of typing rules for calculi that
+incorporate different modal axioms, but each variant demands different,
+tedious and seemingly ad hoc syntactic lemmas to prove normalization.
 
-This repo contains a mechanisation of an intrinsically typed formalisation 
-of the Fitch-style Intuitionistic K (IK) calculus in Agda. The trick 
-here is to identify a suitable inductive notion of weakening and 
-parallel substitution that is amenable to implementation and proofs.
-These are then used to guide the development of a normalisation-by-evaluation 
-procedure for IK.
+This repo contains a mechanisation of some intrinsically-typed
+Fitch-style modal lambda calculi and a proof of normalization for them.
+Normalization is achieved using normalization by evaluation
+(NbE), by leveraging the possible-world semantics of
+Fitch-style calculi. The semantics-based approach
+of NbE yields a more modular approach to normalization
+that allows us to separate reasoning about the modal fragment
+from the rest of the calculus.
 
 ## Current status
 
-Implements an executable normalisation function for IK, and a "tracing" function that prints 
-out a sequence of reduction steps that explain the result of the normalisation function.
-The latter yields a proof of completness for normalisation, i.e., norm t = norm t' => t ~ t'.
-
-## Plan
-
-I'd like to prove confluence and decidability for IK (which demand soundness of normalisation), 
-and illustrate applications of normalisation in modal logic, and possibly in partial evaluation. 
-If all this goes well, then I'll probably turn to S4 next. 
-
-
-Thoughts?
+Implements executable normalisation functions for IK (the calculus
+with the modal axiom K) and IS4 (the calculus with axioms K, T and 4),
+and a "tracing" function for each calculus that prints out a
+sequence of reduction steps that explain the result of the
+normalisation function. This yields a proof of completeness
+for normalisation, i.e., norm t = norm t' => t ~ t'.
 
 ## References
 
 * Ranald Clouston. 2018. [Fitch-Style Modal Lambda Calculi](https://arxiv.org/abs/1710.08326).
 * V.A.J. Borghuis. 1994. [Coming to terms with modal logic: on the interpretation of modalities in typed lambda-calculus](https://research.tue.nl/en/publications/coming-to-terms-with-modal-logic-on-the-interpretation-of-modalit).
-

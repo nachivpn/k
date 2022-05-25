@@ -26,7 +26,7 @@ Implements executable normalisation functions for IK (the calculus
 with the modal axiom K) and IS4 (the calculus with axioms K, T and 4),
 and a "tracing" function for each calculus that prints out a
 sequence of reduction steps that explain the result of the
-normalisation function. This yields a proof of completeness
+normalisation function. This yields a proof of soundness
 for normalisation, i.e., norm t = norm t' => t ~ t'.
 
 ## References

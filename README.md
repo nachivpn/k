@@ -1,6 +1,6 @@
 # k
 
-Normalisation for Fitch-style Modal Calculi
+Normalization for Fitch-style Modal Calculi
 
 ## About
 
@@ -11,7 +11,7 @@ locks simplifies the formulation of typing rules for calculi that
 incorporate different modal axioms, but each variant demands different,
 tedious and seemingly ad hoc syntactic lemmas to prove normalization.
 
-This repo contains a mechanisation of some intrinsically-typed
+This repo contains a mechanization of some intrinsically-typed
 Fitch-style modal lambda calculi and a proof of normalization for them.
 Normalization is achieved using normalization by evaluation
 (NbE), by leveraging the possible-world semantics of
@@ -22,12 +22,12 @@ from the rest of the calculus.
 
 ## Current status
 
-Implements executable normalisation functions for IK (the calculus
+Implements executable normalization functions for IK (the calculus
 with the modal axiom K) and IS4 (the calculus with axioms K, T and 4),
 and a "tracing" function for each calculus that prints out a
 sequence of reduction steps that explain the result of the
-normalisation function. This yields a proof of soundness
-for normalisation, i.e., norm t = norm t' => t ~ t'.
+normalization function. This yields a proof of soundness
+for normalization, i.e., norm t = norm t' => t ~ t'.
 
 ## References
 

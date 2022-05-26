@@ -1,35 +1,65 @@
 # k
 
-Normalization for Fitch-style Modal Calculi
+This repository contains the artifact accompanying the paper
+*Normalization for Fitch-style Modal Calculi*.
 
-## About
+## Dependencies
 
-Fitch-style modal lambda calculi enable programming with necessity
-modalities in a typed lambda calculus by extending the typing context
-with a delimiting operator that is denoted by a lock. The addition of
-locks simplifies the formulation of typing rules for calculi that
-incorporate different modal axioms, but each variant demands different,
-tedious and seemingly ad hoc syntactic lemmas to prove normalization.
+- [Agda](https://agda.readthedocs.io/en/v2.6.2.1/) version 2.6.2.1
+- [Agda standard library](https://github.com/agda/agda-stdlib/) version 1.7.1
 
-This repo contains a mechanization of some intrinsically-typed
-Fitch-style modal lambda calculi and a proof of normalization for them.
-Normalization is achieved using normalization by evaluation
-(NbE), by leveraging the possible-world semantics of
-Fitch-style calculi. The semantics-based approach
-of NbE yields a more modular approach to normalization
-that allows us to separate reasoning about the modal fragment
-from the rest of the calculus.
+## Check
 
-## Current status
+To typecheck the code, run the following command line from the
+repository directory:
 
-Implements executable normalization functions for IK (the calculus
-with the modal axiom K) and IS4 (the calculus with axioms K, T and 4),
-and a "tracing" function for each calculus that prints out a
-sequence of reduction steps that explain the result of the
-normalization function. This yields a proof of soundness
-for normalization, i.e., norm t = norm t' => t ~ t'.
+> agda src/Everything.agda
 
-## References
+## Contents
 
-* Ranald Clouston. 2018. [Fitch-Style Modal Lambda Calculi](https://arxiv.org/abs/1710.08326).
-* V.A.J. Borghuis. 1994. [Coming to terms with modal logic: on the interpretation of modalities in typed lambda-calculus](https://research.tue.nl/en/publications/coming-to-terms-with-modal-logic-on-the-interpretation-of-modalit).
+The repository contains the mechanization of the normalization
+function for the calculi $λ_\text{IK}$ (`src/IK/`) and $λ_\text{IS4}$
+(`src/IS4/`) as described in the paper.
+
+### Pointers from the paper to the code
+
++ Section 3
+
+  - Type syntax -> `src/IK/Type.agda`
+  - Context syntax and order-preserving embeddings (OPEs) -> `src/Context.agda`
+
++ Section 3.1 ($λ_\text{IK}$)
+
+  - Section 3.1.1
+    + Modal accessibility relation (Fig. 4) -> `src/Context.agda`
+    + Substitutions (Fig. 6) -> `src/Context.agda`
+    + Intrinsically typed syntax (Fig. 5), weakening and substitution -> `src/IK/Term.agda`
+    + Equational theory (Fig. 7) -> `src/IK/Conversion.agda`
+
+  - Section 3.1.2
+    + Evaluation function `eval` -> `src/IK/Norm.agda`
+    + Soundness of evaluation (Theorem 2) -> `src/IK/Soundness/`
+
+  - Section 3.1.3
+    + Normal and neutral forms (Fig 7.) -> `src/IK/Norm.agda`
+    + `reify` and `reflect` -> `src/IK/Norm.agda`
+    + `quote` and identity environment `freshEnv` (***FIXME called `id_s` in the code***) -> `src/IK/Norm.agda`
+    + Logical relation (Fig. 9) and fundamental theorem (Proposition 3) -> `src/IK/Completeness/`
+    + Completeness and adequacy of normalization (Theorem 4) -> ***FIXME***
+
++ Section 3.2 ($λ_\text{IS4}$)
+
+  - Section 3.2.1
+    + Modal accessibility relation (Fig. 10) -> `src/Context.agda`
+    + Substitutions (Fig. 11.) -> `src/Context.agda`
+    + Intrinsically typed syntax (Fig. 11), weakening and substitution -> `src/IS4/Term.agda`
+    + Equational theory (Fig. 12) -> `src/IS4/Conversion.agda`
+
+  - Section 3.2.2
+    + Evaluation function -> ***FIXME***
+    + Soundness of evaluation (Theorem 6) -> ***FIXME***
+
+  - Section 3.2.3
+    + Normal and neutral forms -> `src/IS4/Norm.agda`
+    + `reify` and `reflect` -> `src/IS4/Norm.agda`
+    + Completeness and adequacy of normalization (Theorem 7) -> ***FIXME***

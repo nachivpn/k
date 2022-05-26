@@ -16,6 +16,7 @@ open import IS4.Term
 open import IS4.Norm
 
 open import HEUtil
+open import PEUtil
 
 open ≡-Reasoning
 
@@ -52,14 +53,6 @@ cong-lock≅ : {ΓL1 ΓL2 ΓR1 ΓR2 : Ctx} →
           lock s1 e1 ≅ lock s2 e2
 cong-lock≅ {Γ = Γ} ΓL1≡ΓL2 ΓR1≡ΓR2 s1≅s2 e1≅e2
   = xcong (λ ΓL → Sub ΓL _) (CExt Γ) {R = λ _ _ → Sub Γ _} ΓL1≡ΓL2 ΓR1≡ΓR2 lock s1≅s2 e1≅e2
-
-subst-application′ : ∀ {a b₁ b₂} {A : Set a}
-                    (B₁ : A → Set b₁) {B₂ : A → Set b₂}
-                    {x₁ x₂ : A} {y : B₁ x₁}
-                    (g : {x : A} → B₁ x → B₂ x)
-                    (eq : x₁ ≡ x₂) →
-                    subst B₂ eq (g y) ≡ g (subst B₁ eq y)
-subst-application′ _ _ refl = refl
 
 subst-sym : ∀ {A : Set} {x y : A} {P : A → Set} {p : P x} {q : P y} (x≡y : x ≡ y)
   → subst P x≡y p ≡ q

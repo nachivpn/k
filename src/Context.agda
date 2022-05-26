@@ -1,10 +1,5 @@
 module Context (Ty : Set) where
 
-open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; _≢_ ; cong ; cong₂ ; sym ; trans ; subst ; subst₂)
-
-open _≡_
-
 private
   variable
     a b c d : Ty
@@ -13,9 +8,14 @@ infixl 6 _🔒 _`,_
 infix  5 _⊆_
 infixl 5 _,,_
 
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Unit  using (⊤ ; tt)
-open import Data.Product  using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂ ; proj₂)
+open import Data.Empty   using (⊥ ; ⊥-elim)
+open import Data.Product using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂ ; proj₂)
+open import Data.Unit    using (⊤ ; tt)
+
+open import Relation.Binary.PropositionalEquality
+  using (_≡_ ; _≢_ ; refl ; sym ; trans ; subst ; subst₂ ; cong ; cong₂)
+
+open import PEUtil
 
 -----------
 -- Contexts
@@ -196,6 +196,9 @@ assocWk w3         (drop w2)  (keep w1)  = cong drop (assocWk w3 w2 w1)
 assocWk (drop w3)  (keep w2)  (keep w1)  = cong drop (assocWk w3 w2 w1)
 assocWk (keep w3)  (keep w2)  (keep w1)  = cong keep (assocWk w3 w2 w1)
 assocWk (keep🔒 w3) (keep🔒 w2) (keep🔒 w1) = cong keep🔒 (assocWk w3 w2 w1)
+
+fresh-keep : fresh[ a ] ∙ keep[ a ] w ≡ w ∙ fresh[ a ]
+fresh-keep = cong drop (trans˘ (leftIdWk _) (rightIdWk _))
 
 --------------------
 -- Context extension

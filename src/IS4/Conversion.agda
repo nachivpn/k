@@ -35,21 +35,6 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive
 open import Relation.Binary.PropositionalEquality
   using    (_≡_ ; cong ; cong₂ ; subst ; subst₂ ; module ≡-Reasoning)
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
-module _ {a} {A : Set a} where
-  ≡-trans˘ : ∀ {x y z : A} → y ≡ x → y ≡ z → x ≡ z
-  ≡-trans˘ y≡x y≡z = ≡-trans (≡-sym y≡x) y≡z
-module _ {a} {b} {c} where
-  dcong₂ : ∀ {A : Set a} {B : A → Set b} {C : Set c}
-           (f : (x : A) → B x → C) {x₁ x₂ y₁ y₂}
-         → (p : x₁ ≡ x₂) → subst B p y₁ ≡ y₂
-         → f x₁ y₁ ≡ f x₂ y₂
-  dcong₂ _f ≡-refl ≡-refl = ≡-refl
-module _ {a} {b} {c} {d} where
-  dcong₃ : ∀ {A : Set a} {B : A → Set b} {C : A → Set c} {D : Set d}
-           (f : (x : A) → B x → C x → D) {x₁ x₂ y₁ y₂ z₁ z₂}
-         → (p : x₁ ≡ x₂) → subst B p y₁ ≡ y₂ → subst C p z₁ ≡ z₂
-         → f x₁ y₁ z₁ ≡ f x₂ y₂ z₂
-  dcong₃ _f ≡-refl ≡-refl ≡-refl = ≡-refl
 
 import Relation.Binary.Reasoning.Setoid
   as SetoidReasoning
@@ -63,6 +48,8 @@ module RelReasoning {a} {A : Set a} {r} (R : A → A → Set r) where
 open import Relation.Binary.HeterogeneousEquality as HE
   using    (_≅_)
   renaming (refl to ≅-refl ; sym to ≅-sym ; trans to ≅-trans)
+
+open import PEUtil renaming (˘trans to ≡-˘trans)
 
 open Sum public
   using (inj₁ ; inj₂)
@@ -211,7 +198,7 @@ module _ where
     = step-≡
       (red-box _ _)
       (≡-trans
-        (≡-trans˘
+        (≡-˘trans
           (coh-trimSub-wkTm t _ _)
           (cong
             (λ s → substTm (lock s (factorExt e w)) t)

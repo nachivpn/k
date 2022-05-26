@@ -70,8 +70,8 @@ _,,_ : Ctx → Ctx → Ctx
 -- weakening relation
 data _⊆_  : Ctx → Ctx → Set where
   base   : [] ⊆ []
-  drop   : Γ ⊆ Δ → Γ ⊆ (Δ `, a)
-  keep   : Γ ⊆ Δ → (Γ `, a) ⊆ (Δ `, a)
+  drop   : Γ ⊆ Δ → Γ ⊆ Δ `, a
+  keep   : Γ ⊆ Δ → Γ `, a ⊆ Δ `, a
   keep🔒  : Γ ⊆ Δ → Γ 🔒 ⊆ Δ 🔒
 
 {-
@@ -87,6 +87,10 @@ data _⊆_  : Ctx → Ctx → Set where
   weakening with locks.
 
 -}
+
+drop[_] = λ {Γ} {Δ} a → drop {Γ} {Δ} {a}
+
+keep[_] = λ {Γ} {Δ} a → keep {Γ} {Δ} {a}
 
 variable
   w w' w'' : Γ ⊆ Γ'
@@ -108,8 +112,10 @@ keep w  ∙ keep w'  = keep (w ∙ w')
 keep🔒 w ∙ keep🔒 w' = keep🔒 (w ∙ w')
 
 -- weakening that "generates a fresh variable"
-fresh : Γ ⊆ (Γ `, a)
+fresh : Γ ⊆ Γ `, a
 fresh = drop idWk
+
+fresh[_] = λ {Γ} a → fresh {Γ} {a}
 
 variable
   ΓL' ΓL'' ΓR'' : Ctx
@@ -151,7 +157,7 @@ wkVarPresId ze = refl
 wkVarPresId (su x) = cong su (wkVarPresId x)
 
 -- weakening a variable index increments
-wkIncr : (x : Var Γ a) → wkVar (fresh {a = b}) x ≡ su x
+wkIncr : (x : Var Γ a) → wkVar fresh[ b ] x ≡ su x
 wkIncr ze = refl
 wkIncr (su x) = cong su (cong su (wkVarPresId x))
 
@@ -199,6 +205,8 @@ data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
   nil  : Ext θ Γ Γ []
   ext  : (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ `, a) ΓL (ΓR `, a)
   ext🔒 : WL θ → (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ 🔒) ΓL (ΓR 🔒)
+
+ext[_] = λ {θ} {Γ} {ΓL} {ΓR} a → ext {θ} {Γ} {ΓL} {ΓR} {a}
 
 -- Lock-Free Extension
 LFExt : Ctx → Ctx → Ctx → Set
@@ -328,6 +336,12 @@ extLId {Γ = Γ 🔒}    = ext🔒 tt extLId
 -- right identity of extension
 extRId : Ext θ Γ Γ []
 extRId = nil
+
+-- extension that "generates a fresh variable"
+freshExt : Ext θ (Γ `, a) Γ ([] `, a)
+freshExt = ext nil
+
+freshExt[_] = λ {θ} {Γ} a → freshExt {θ} {Γ} {a}
 
 -- lock-free extensions yield a "right" weakening (i.e., adding variables on the right)
 LFExtTo⊆ : LFExt Γ ΓL ΓR → ΓL ⊆ Γ

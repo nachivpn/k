@@ -26,9 +26,6 @@ new = ext🔒- nil
 
 new[_] = λ Γ → new {Γ}
 
-freshExt : Ext θ (Γ `, a) Γ ([] `, a)
-freshExt = ext nil
-
 ----------------
 -- Substitutions
 ----------------
@@ -232,13 +229,13 @@ factorExtₛ-trimSub-comm _ _ _ = ExtIsProp _ _
 
 ←🔒₁rCtx : (e : CExt Γ ΓL ΓR) → Ctx
 ←🔒₁rCtx nil             = []
-←🔒₁rCtx (ext {a = a} e) = ←🔒₁rCtx e ,, rCtx′ (factorExtₛ e idₛ) (freshExt {a = a})
+←🔒₁rCtx (ext {a = a} e) = ←🔒₁rCtx e ,, rCtx′ (factorExtₛ e idₛ) freshExt[ a ]
 ←🔒₁rCtx (ext🔒- e)       = ←🔒₁rCtx e
 
 private
 
   ex : {a b c : Ty} → CExt (ΓL `, a `, b 🔒 `, c 🔒) ΓL ([] `, a `, b 🔒 `, c 🔒)
-  ex {Γ} {a} {b} {c} = ext🔒- (ext {a = c} (ext🔒- (ext {a = b} (ext {Γ = Γ} {a = a} nil))))
+  ex {Γ} {a} {b} {c} = ext🔒- (ext[ c ] (ext🔒- (ext[ b ] (ext[ a ] nil))))
 
   _ : ←🔒₁rCtx (ex {ΓL} {c = c}) ≡ [] `, a `, b
   _ = refl

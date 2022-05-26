@@ -258,7 +258,7 @@ assocSub (lock s3 (ext e)) (s2 `, _) s1
 
 private
   -- just a helper to reduce redundancy, nothing too interesting
-  auxLemma : (w : Γ ⊆ Δ) → wkSub (drop {a = a} (w ∙ idWk)) idₛ ≡ dropₛ (embWk w)
+  auxLemma : (w : Γ ⊆ Δ) → wkSub (drop[ a ] (w ∙ idWk)) idₛ ≡ dropₛ (embWk w)
 
 wkSubId : (w : Γ ⊆ Δ) → wkSub w idₛ ≡ embWk w
 

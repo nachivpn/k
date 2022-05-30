@@ -209,6 +209,8 @@ data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
   ext  : (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ `, a) ΓL (ΓR `, a)
   ext🔒 : WL θ → (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ 🔒) ΓL (ΓR 🔒)
 
+nil[_] = λ {θ} Γ → nil {θ} {Γ}
+
 ext[_] = λ {θ} {Γ} {ΓL} {ΓR} a → ext {θ} {Γ} {ΓL} {ΓR} {a}
 
 -- Lock-Free Extension

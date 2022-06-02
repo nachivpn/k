@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Term.NormalForm.Base where
 
 open import IS4.Term.Base

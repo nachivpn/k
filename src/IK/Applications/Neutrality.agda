@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IK.Applications.Neutrality where
 
 open import IK.Term

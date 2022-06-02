@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module Context (Ty : Set) where
 
 private

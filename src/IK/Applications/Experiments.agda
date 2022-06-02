@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IK.Applications.Experiments where
 
 import Context as C

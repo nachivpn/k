@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module Everything where
 
 import Context
@@ -15,9 +16,9 @@ import IK.Applications.Experiments
 import IK.Applications.Neutrality
 import IK.Applications.WeakNorm
 
-import IK.Soundness.Presheaf
-import IK.Soundness.HellOfSemanticLemmas
-import IK.Soundness.Soundness
+import IK.Soundness.Presheaf -- depends on function extensionality
+import IK.Soundness.HellOfSemanticLemmas -- depends on function extensionality
+import IK.Soundness.Soundness -- depends on function extensionality
 
 import IK.Completeness.Trace
 import IK.Completeness.Completeness

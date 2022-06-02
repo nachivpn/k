@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Norm where
 
 open import IS4.Norm.Base                    public

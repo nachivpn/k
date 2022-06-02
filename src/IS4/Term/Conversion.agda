@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Term.Conversion where
 
 open import Data.Product using (Σ ; _,_)

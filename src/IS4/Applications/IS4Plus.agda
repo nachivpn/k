@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Applications.IS4Plus where
 -- IS4 with extensions
 

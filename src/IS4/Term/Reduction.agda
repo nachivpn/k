@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Term.Reduction where
 
 open import Relation.Binary using (Preorder)

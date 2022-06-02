@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 open import Context using ()
   renaming (Ctx to ICtx ; _⊆_ to I⊆ ; Var to IVar)
 

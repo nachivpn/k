@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Term where
 
 open import IS4.Term.Base       public

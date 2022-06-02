@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Applications.Purity where
 
 data Ty : Set where

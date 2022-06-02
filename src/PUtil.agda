@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module PUtil where
 
 open import Data.Product            using (Σ ; _,_ ; proj₁ ; proj₂ ; ∃ ; _×_)

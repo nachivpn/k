@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IK.Type where
 
 infixr 7 _⇒_

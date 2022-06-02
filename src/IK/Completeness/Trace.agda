@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IK.Completeness.Trace where
 
 open import Data.Unit

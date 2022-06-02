@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IK.HellOfSyntacticLemmas where
 
 -- Welcome to the hell of mind-numbing syntactic lemmas.

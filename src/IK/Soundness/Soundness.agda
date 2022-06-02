@@ -1,4 +1,10 @@
-module IK.Soundness.Soundness where
+{-# OPTIONS --safe --with-K #-}
+open import Relation.Binary.PropositionalEquality using (_≡_)
+module IK.Soundness.Soundness
+  (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
+           → ((x : A) → f x ≡ g x) → f ≡ g)
+  (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
+           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g) where
 
 open import Data.Unit
   using (⊤ ; tt)
@@ -11,9 +17,9 @@ open import IK.Term
 open import IK.Norm
 open import IK.Reduction
 open import IK.Conversion
-open import IK.Soundness.Presheaf
+open import IK.Soundness.Presheaf funext funexti
 open import IK.HellOfSyntacticLemmas
-open import IK.Soundness.HellOfSemanticLemmas
+open import IK.Soundness.HellOfSemanticLemmas funext funexti
 
 -- soundness relation on semantic values
 _≋_ : Tm' Γ a → Tm' Γ a → Set

@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IK.Completeness.Completeness where
 
 open import IK.Term

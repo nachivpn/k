@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IK.Conversion where
 
 open import IK.Term

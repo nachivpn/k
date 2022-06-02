@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module IS4.Norm.Base where
 
 open import Data.Unit    using (tt)

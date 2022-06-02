@@ -1,3 +1,4 @@
+{-# OPTIONS --safe --with-K #-}
 module HEUtil where
 
 infixr 2 step-≅

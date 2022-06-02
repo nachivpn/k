@@ -17,17 +17,15 @@ import IK.Term.Reduction
 import IK.Term.Substitution
 
 import IK.Norm
+import IK.Norm.NbE.Model
+import IK.Norm.NbE.Reification
+open import IK.Norm.Properties.Completeness.Completeness funext funexti
+import IK.Norm.Properties.Soundness.Soundness
+import IK.Norm.Properties.Soundness.Trace
 
 import IK.Applications.Experiments
 import IK.Applications.Neutrality
 import IK.Applications.WeakNorm
-
-open import IK.Completeness.Completeness         funext funexti
-open import IK.Completeness.HellOfSemanticLemmas funext funexti
-open import IK.Completeness.Presheaf             funext funexti
-
-import IK.Soundness.Soundness
-import IK.Soundness.Trace
 
 import IS4.Term
 import IS4.Term.Conversion

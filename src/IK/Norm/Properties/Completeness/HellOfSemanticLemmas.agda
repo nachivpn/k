@@ -1,6 +1,6 @@
 {-# OPTIONS --safe --with-K #-}
 open import Relation.Binary.PropositionalEquality using (_≡_)
-module IK.Completeness.HellOfSemanticLemmas
+module IK.Norm.Properties.Completeness.HellOfSemanticLemmas
   (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
            → ((x : A) → f x ≡ g x) → f ≡ g)
   (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
@@ -13,7 +13,10 @@ open import Relation.Binary.PropositionalEquality
 
 import Context
 
-open import IK.Norm
+open import IK.Norm.Base
+
+open import IK.Norm.NbE.Model
+
 open import IK.Term
 
 -- semantic counterpart of trimSub

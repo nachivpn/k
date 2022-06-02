@@ -8,7 +8,8 @@ open import Data.Product using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂)
 open import Relation.Nullary
 
 open import IK.Norm
-open import IK.Soundness.Trace
+open import IK.Norm.Properties.Soundness.Trace
+
 open import IK.Term
 
 -- defines a beta-reduction relation (_⟶β_)

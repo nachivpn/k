@@ -1,13 +1,17 @@
 {-# OPTIONS --safe --with-K #-}
-module IK.Soundness.Soundness where
+module IK.Norm.Properties.Soundness.Soundness where
 
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; cong ; cong₂ ; trans)
 
-open import IK.Norm
-open import IK.Term
+open import IK.Norm.Base
 
-open import IK.Soundness.Trace
+open import IK.Norm.NbE.Model
+open import IK.Norm.NbE.Reification
+
+open import IK.Norm.Properties.Soundness.Trace
+
+open import IK.Term
 
 --
 -- This module proves the completeness of evaluation (eval-complete),

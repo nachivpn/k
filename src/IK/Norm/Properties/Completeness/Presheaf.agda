@@ -1,6 +1,6 @@
 {-# OPTIONS --safe --with-K #-}
 open import Relation.Binary.PropositionalEquality using (_≡_)
-module IK.Completeness.Presheaf
+module IK.Norm.Properties.Completeness.Presheaf
   (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
            → ((x : A) → f x ≡ g x) → f ≡ g)
   (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
@@ -11,7 +11,11 @@ open import Data.Product using (Σ ; _×_ ; _,_ ; proj₁ ; proj₂)
 
 open import Relation.Binary.PropositionalEquality
 
-open import IK.Norm
+open import IK.Norm.Base
+
+open import IK.Norm.NbE.Model
+open import IK.Norm.NbE.Reification
+
 open import IK.Term
 
 -----------------------------

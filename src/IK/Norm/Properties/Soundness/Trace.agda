@@ -1,5 +1,5 @@
 {-# OPTIONS --safe --with-K #-}
-module IK.Soundness.Trace where
+module IK.Norm.Properties.Soundness.Trace where
 
 open import Data.Unit
   using (⊤ ; tt)
@@ -8,7 +8,11 @@ open import Data.Product
 
 open import Relation.Binary.PropositionalEquality
 
-open import IK.Norm
+open import IK.Norm.Base
+
+open import IK.Norm.NbE.Model
+open import IK.Norm.NbE.Reification
+
 open import IK.Term
 
 quotTm : Tm' Γ a → Tm Γ a

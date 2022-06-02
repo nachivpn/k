@@ -20,6 +20,15 @@ data Nf where
   lam : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
   box : Nf (Γ 🔒) a → Nf Γ (□ a)
 
+-- normal forms of substitutions (simply "do everything pointwise")
+data Nfₛ : Ctx → Ctx → Set where
+  []   : Nfₛ Γ []
+  _`,_ : Nfₛ Γ Δ → Nf Γ a → Nfₛ Γ (Δ `, a)
+  lock : Nfₛ ΔL Γ → LFExt Δ (ΔL 🔒) ΔR → Nfₛ Δ (Γ 🔒)
+
+Nfₛ- : Ctx → Ctx → Set
+Nfₛ- Δ Γ = Nfₛ Γ Δ
+
 -- embedding into terms
 
 embNe : Ne Γ a → Tm Γ a
@@ -32,6 +41,12 @@ embNe (unbox n x) = unbox (embNe n) x
 embNf (up𝕓 x) = embNe x
 embNf (lam n) = lam (embNf n)
 embNf (box n) = box (embNf n)
+
+-- embeddding of substitution normal forms back into substitutions (simply "do everything pointwise")
+embNfₛ : Nfₛ Γ Δ → Sub Γ Δ
+embNfₛ []         = []
+embNfₛ (n `, s)   = embNfₛ n `, embNf s
+embNfₛ (lock n s) = lock (embNfₛ n) s
 
 -- weakening lemmas
 

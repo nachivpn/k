@@ -1,3 +1,0 @@
-# Soundness
-
-Work in progress!

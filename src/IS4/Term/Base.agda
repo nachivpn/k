@@ -38,9 +38,9 @@ data Tm : Ctx → Ty → Set where
 
   box   : (t : Tm (Γ 🔒) a)
         ------------------
-        → Tm Γ (◻ a)
+        → Tm Γ (□ a)
 
-  unbox : (t : Tm ΓL (◻ a))
+  unbox : (t : Tm ΓL (□ a))
         → (e : CExt Γ ΓL ΓR)
         --------------------
         → Tm Γ a

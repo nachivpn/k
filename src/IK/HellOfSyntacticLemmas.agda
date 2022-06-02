@@ -182,7 +182,7 @@ substVarPresId (su x) = trans (nat-substVar x idₛ fresh) (trans
   (cong var (wkIncr x)))
 
 private
-  dropUnboxLemma : (e  : LFExt Γ (ΓL 🔒) ΓR) {t : Tm ΓL (◻ a)}
+  dropUnboxLemma : (e  : LFExt Γ (ΓL 🔒) ΓR) {t : Tm ΓL (□ a)}
     → wkTm (fresh {a = b}) (unbox t e) ≡ unbox t (ext e)
   dropUnboxLemma e with (←🔒IsPre🔒 e) | 🔒→isPost🔒 e
   dropUnboxLemma e | refl | refl = cong₂ unbox (trans

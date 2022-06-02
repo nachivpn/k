@@ -209,7 +209,7 @@ trimSubId (keep🔒 w) = cong₂ lock (trimSubId w) ≡-refl
 
 cong-unbox≅ : {ΓL1 ΓL2 ΓR1 ΓR2 : Ctx} →
            ΓL1 ≡ ΓL2 → ΓR1 ≡ ΓR2 →
-          {t1 : Tm ΓL1 (◻ a)} {t2 : Tm ΓL2 (◻ a)} {e1 : CExt Γ ΓL1 ΓR1} {e2 : CExt Γ ΓL2 ΓR2} →
+          {t1 : Tm ΓL1 (□ a)} {t2 : Tm ΓL2 (□ a)} {e1 : CExt Γ ΓL1 ΓR1} {e2 : CExt Γ ΓL2 ΓR2} →
           t1 ≅ t2 →
           e1 ≅ e2 →
           unbox t1 e1 ≅ unbox t2 e2
@@ -241,7 +241,7 @@ wkTmPresId {Γ = Γ} {a = a} (unbox {ΓL = ΓL} {ΓR = ΓR} t e) = let open ≡-
     ≡⟨⟩
   unbox {ΓL = lCtx e idWk} {ΓR = rCtx e idWk} (wkTm (factorWk e idWk[ Γ ]) t) (factorExt e idWk[ Γ ])
     ≅⟨ xcong
-      (λ ΓL → Tm ΓL (◻ a)) (CExt Γ)
+      (λ ΓL → Tm ΓL (□ a)) (CExt Γ)
       (lCtxPresId e) (rCtxPresId e)
       unbox
       factorWkPresId-under-wkTm
@@ -292,7 +292,7 @@ wkTmPres∙ {Γ = Γ} {Γ' = Γ'} {Γ'' = Γ''} w w' (unbox {ΓL = ΓL} {a = a} 
     (wkTm (factorWk e w ∙ factorWk (factorExt e w) w') t)
     (subst₂ (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w')))
     ≅⟨ xcong
-      (λ ΓL → Tm ΓL (◻ a)) (CExt Γ'')
+      (λ ΓL → Tm ΓL (□ a)) (CExt Γ'')
       (≡-sym (lCtxPres∙ e w w')) (≡-sym (rCtxPres∙ e w w'))
       unbox
       factorWkPres∙-under-wkTm
@@ -360,7 +360,7 @@ nat-substTm {Γ = Γ} {Δ' = Δ'} (unbox {ΓL = ΓL} {a = a} t e) s w
         (substTm (factorSubₛ e (wkSub w s)) t)
         (factorExtₛ e (wkSub w s))
         ≅⟨ xcong
-          (λ ΓL →  Tm ΓL (◻ a)) (CExt Δ')
+          (λ ΓL →  Tm ΓL (□ a)) (CExt Δ')
           (lCtxₛ-wkSub-comm e w s) (rCtxₛ-wkSub-comm e w s)
           unbox
           factorSubₛ-wkSub-comm-under-substTm
@@ -607,7 +607,7 @@ substTmPres∙ {Δ = Δ} {a = a} s s' (unbox t e) = let open ≡-Reasoning in be
     (subst₂ (CExt _) (lCtxₛPres∙ₛ e s s') (rCtxₛPres∙ₛ e s s') (factorExtₛ e (s ∙ₛ s')))
     -- remove substs
     ≅⟨ xcong
-      (λ ΓL → Tm ΓL (◻ a)) (CExt Δ)
+      (λ ΓL → Tm ΓL (□ a)) (CExt Δ)
       (≡-sym (lCtxₛPres∙ₛ e s s')) (≡-sym (rCtxₛPres∙ₛ e s s'))
       {t2 = substTm (factorSubₛ e (s ∙ₛ s')) t}
       {e2 = factorExtₛ e (s ∙ₛ s')}
@@ -969,7 +969,7 @@ substTmPresId (unbox t e) = fact-unbox≈ t e
     where
     open SetoidReasoning (Tm-setoid Γ' a)
   --
-  fact-unbox≈ : (t : Tm ΓL (◻ a)) (e : CExt Γ ΓL ΓR)
+  fact-unbox≈ : (t : Tm ΓL (□ a)) (e : CExt Γ ΓL ΓR)
     → unbox t e ≈ unbox (substTm (factorSubₛ e idₛ) t) (factorExtₛ e idₛ)
   fact-unbox≈ {a = a} {Γ = Γ} t e = begin
     unbox t e
@@ -1040,7 +1040,7 @@ substTmPres⟶ (unbox t e) r = h e r t
   where
     h : ∀ (e    : CExt Γ ΓL ΓR)
           (σ⟶σ' : σ ⟶ₛ σ')
-          (t    : Tm ΓL (◻ a))
+          (t    : Tm ΓL (□ a))
           {e'   : CExt Θ _ ΔR}
           {e''  : CExt Θ _ ΔR'}
         → unbox (substTm (factorSubₛ e σ)  t) e'

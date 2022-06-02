@@ -66,7 +66,7 @@ exp-fun≈ t = ⟶-to-≈ Reduction.exp-fun
 red-box≈ : (t : Tm (ΓL 🔒) a) (e : LFExt Γ (ΓL 🔒) ΓR) → unbox (box t) e ≈ wkTm (LFExtTo⊆ e) t
 red-box≈ t e = ⟶-to-≈ Reduction.red-box
 
-exp-box≈ : (t : Tm Γ (◻ a)) → t ≈ box (unbox t new)
+exp-box≈ : (t : Tm Γ (□ a)) → t ≈ box (unbox t new)
 exp-box≈ t = ⟶-to-≈ Reduction.exp-box
 
 cong-lam≈ : ∀ (t≈t' : t ≈ t') → lam t ≈ lam t'

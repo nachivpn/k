@@ -32,7 +32,7 @@ reflect (a ⇒ b) n = record
       reflect b (app (wkNe w' (wkNe w n)) (reify a (wk[ evalTy a ] w' p)))  ≡⟨  cong (λ n → reflect b (app n _)) (wkNePres∙ w w' n) ⟩
       reflect b (app (wkNe (w ∙ w') n) (reify a (wk[ evalTy a ] w' p)))     ∎
   }
-reflect (◻ a) n = record
+reflect (□ a) n = record
   { fun     = λ w (_ , e)    → reflect a (unbox (wkNe w n) e)
   ; natural = λ w (_ , e) w' → let open EqReasoning ≋[ evalTy a ]-setoid in begin
       reflect a (unbox (wkNe (w ∙ factorWk e w') n) (factorExt e w'))       ≡˘⟨ cong (λ n → reflect a (unbox n _)) (wkNePres∙ w (factorWk e w') n) ⟩
@@ -51,22 +51,22 @@ reflect-natural (a ⇒ b) n w = record
       reflect b (app (wkNe (w ∙ w') n) (reify a p))           ≡⟨⟩
       wk[ evalTy (a ⇒ b) ] w (reflect (a ⇒ b) n) .apply w' p  ∎
   }
-reflect-natural (◻ a) n w = record
+reflect-natural (□ a) n w = record
   { pw = λ w' r@(_ , e) → let open EqReasoning ≋[ evalTy a ]-setoid in begin
-      reflect (◻ a) (wkNe w n) .apply w' r                ≡⟨⟩
+      reflect (□ a) (wkNe w n) .apply w' r                ≡⟨⟩
       reflect a (unbox (wkNe w' (wkNe w n)) e)            ≡⟨ cong (λ n → reflect a (unbox n e)) (wkNePres∙ w w' n) ⟩
       reflect a (unbox (wkNe (w ∙ w') n) e)               ≡⟨⟩
-      wk[ evalTy (◻ a) ] w (reflect (◻ a) n) .apply w' r  ∎
+      wk[ evalTy (□ a) ] w (reflect (□ a) n) .apply w' r  ∎
   }
 
 -- reify values to normal forms
 reify 𝕓       n = up𝕓 n
 reify (a ⇒ b) f = lam (reify b (f .apply (fresh[ a ]) (reflect a var0)))
-reify (◻ a)   g = box (reify a (g .apply idWk newR))
+reify (□ a)   g = box (reify a (g .apply idWk newR))
 
 reify-pres-≋ 𝕓       x≋x' = cong up𝕓 x≋x'
 reify-pres-≋ (a ⇒ b) x≋x' = cong lam (reify-pres-≋ b (x≋x' .pw (fresh[ a ]) (reflect a var0)))
-reify-pres-≋ (◻ a)   x≋x' = cong box (reify-pres-≋ a (x≋x' .pw idWk newR))
+reify-pres-≋ (□ a)   x≋x' = cong box (reify-pres-≋ a (x≋x' .pw idWk newR))
 
 reify-natural 𝕓       x w = refl
 reify-natural (a ⇒ b) x w = let open ≡-Reasoning in begin
@@ -77,16 +77,16 @@ reify-natural (a ⇒ b) x w = let open ≡-Reasoning in begin
   lam (reify b (wk[ evalTy b ] (keep[ a ] w) (x .apply (fresh[ a ]) (reflect a var0))))                ≡⟨  cong lam (reify-natural b _ (keep[ a ] w)) ⟩
   lam (wkNf (keep[ a ] w) (reify b (x .apply (fresh[ a ]) (reflect a var0))))                          ≡⟨⟩
   wkNf w (reify (a ⇒ b) x)                                                                             ∎
-reify-natural (◻ a) x w = let open ≡-Reasoning in begin
-  reify (◻ a) (wk[ evalTy (◻ a) ] w x)                                                    ≡⟨⟩
-  box (reify a (wk[ evalTy (◻ a) ] w x .apply idWk newR))                                 ≡⟨⟩
+reify-natural (□ a) x w = let open ≡-Reasoning in begin
+  reify (□ a) (wk[ evalTy (□ a) ] w x)                                                    ≡⟨⟩
+  box (reify a (wk[ evalTy (□ a) ] w x .apply idWk newR))                                 ≡⟨⟩
   box (reify a (x .apply (w ∙ idWk)                newR))                                 ≡⟨  cong (λ w → box (reify a (x .apply w newR))) (rightIdWk w) ⟩
   box (reify a (x .apply w                         newR))                                 ≡˘⟨ cong (λ w → box (reify a (x .apply w newR))) (leftIdWk w) ⟩
   box (reify a (x .apply (idWk ∙ w)                newR))                                 ≡⟨⟩
   box (reify a (x .apply (idWk ∙ factor2⊆ newR (keep🔒 w)) (factor2R newR (keep🔒 w))))  ≡⟨  cong box (reify-pres-≋ a (x .natural idWk newR (keep🔒 w))) ⟩
   box (reify a (wk[ evalTy a ] (keep🔒 w) (x .apply idWk newR)))                         ≡⟨  cong box (reify-natural a (x .apply idWk newR) (keep🔒 w)) ⟩
   box (wkNf (keep🔒 w) (reify a (x .apply idWk newR)))                                   ≡⟨⟩
-  wkNf w (reify (◻ a) x) ∎
+  wkNf w (reify (□ a) x) ∎
 
 -- (reflected) identity substitution (one direction of the prinicipal lemma?)
 idₛ' : (Γ : Ctx) → Ctx' Γ Γ

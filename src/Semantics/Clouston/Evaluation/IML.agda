@@ -117,7 +117,7 @@ module Eval (N : Ty') where
   evalTy : (a : Ty) → Ty'
   evalTy 𝕓       = N
   evalTy (a ⇒ b) = evalTy a ⇒' evalTy b
-  evalTy (◻ a)   = □' evalTy a
+  evalTy (□ a)   = □' evalTy a
 
   evalCtx : (Γ : Ctx) → Ty'
   evalCtx []       = []'

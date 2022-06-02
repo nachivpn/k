@@ -181,7 +181,7 @@ wkCtx' Δ = wk[ evalCtx Δ ]
 wkSub' = wkCtx'
 
 -- semantic counterpart of `unbox` from `Tm`
-unbox' : Tm' ΓL (◻ a) → CExt Γ ΓL ΓR → Tm' Γ a
+unbox' : Tm' ΓL (□ a) → CExt Γ ΓL ΓR → Tm' Γ a
 unbox' (elem bx _bx-nat) e = bx idWk (-, e)
 
 unlock' : Sub' Δ (Γ 🔒) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × CExt Δ ΔL ΔR }

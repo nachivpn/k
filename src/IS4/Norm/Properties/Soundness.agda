@@ -29,7 +29,7 @@ Rt {𝕓}          t x =
 Rt {a ⇒ b} {Γ}  t f =
   {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
     → (e : Γ ⊆ Γ') → Rt u x → Rt (app (wkTm e t) u) (f .apply e x)
-Rt {◻ a}  {ΓL} t bx =
+Rt {□ a}  {ΓL} t bx =
   {ΓL' Γ ΓR : Ctx}
     → (w : ΓL ⊆ ΓL') → (e : CExt Γ ΓL' ΓR) → Rt (unbox (wkTm w t) e) (bx .apply w (-, e))
 
@@ -53,7 +53,7 @@ Rt-prepend {a = 𝕓} r uRx
   = ≈-trans r uRx
 Rt-prepend {a = a ⇒ b} r uRx
   = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) ≈-refl) (uRx w uRy)
-Rt-prepend {a = ◻ a} {t = t} {u} {x = bx} r uRbx
+Rt-prepend {a = □ a} {t = t} {u} {x = bx} r uRbx
   = λ w e → Rt-prepend (cong-unbox≈ (wkTmPres≈ w r)) (uRbx w e)
 
 -- reduction-free version of Rt-prepend
@@ -75,14 +75,14 @@ Rt-build {a = 𝕓}     r
   = r
 Rt-build {a = a ⇒ b} tRx
   = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (Rt-build (tRx _ (Rt-reflect (var ze)))))
-Rt-build {a = ◻ a}  tRx
+Rt-build {a = □ a}  tRx
   = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (Rt-build (Rt-cast (cong₂ unbox (sym (wkTmPresId _)) refl) refl (tRx idWk new))))
 
 Rt-reflect {a = 𝕓}     n
   = ≈-refl
 Rt-reflect {a = a ⇒ b} n
   = λ w y → Rt-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
-Rt-reflect {a = ◻ a}   n
+Rt-reflect {a = □ a}   n
   = λ w e → Rt-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _))) (Rt-reflect _)
 
 -- Rt is invariant under weakening
@@ -94,7 +94,7 @@ wkTmPresRt {a = 𝕓}  {x = x}       w tRx
   = ≈-trans (wkTmPres≈ _ tRx) (≈-reflexive (nat-embNf _ (reify _ x)))
 wkTmPresRt {a = a ⇒ b}            w tRx
   = λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') y)
-wkTmPresRt {a = ◻ a} w tRx
+wkTmPresRt {a = □ a} w tRx
   = λ w' e → Rt-cast (cong₂ unbox (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') e)
 
 -- Rs is invariant under weakening
@@ -149,7 +149,7 @@ private
               (≈ₛ-trans (≈ₛ-reflexive (coh-trimSub-wkSub s idₛ w)) (≈ₛ-sym (rightIdSub _))))
             ≈-refl))))
 
-  unboxPresRt : {t : Tm Γ (◻ a)} {x : (Tm'- (◻ a)) Γ}
+  unboxPresRt : {t : Tm Γ (□ a)} {x : (Tm'- (□ a)) Γ}
     → (e : CExt Γ' Γ ΓR)
     → (e' : CExt Γ' Γ ΓR)
     → Rt t x

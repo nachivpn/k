@@ -38,7 +38,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
   red-box : {t : Tm (ΓL 🔒) a} {e : LFExt Γ (ΓL 🔒) ΓR}
     → unbox (box t) e ⟶ wkTm (LFExtTo⊆ e) t
 
-  exp-box : {t : Tm Γ (◻ a)}
+  exp-box : {t : Tm Γ (□ a)}
     → t ⟶ box (unbox t nil)
 
   cong-lam : {t t' : Tm (Γ `, a) b}
@@ -57,7 +57,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → t ⟶ t'
     → box t ⟶ box t'
 
-  cong-unbox : {t t' : Tm ΓL (◻ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
+  cong-unbox : {t t' : Tm ΓL (□ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
     → t ⟶ t'
     → unbox t e ⟶ unbox t' e
 
@@ -91,7 +91,7 @@ cong-box* : {t t' : Tm (Γ 🔒) a}
   → box t ⟶* box t'
 cong-box* = cong-⟶-to-cong-⟶* cong-box
 
-cong-unbox* : {t t' : Tm ΓL (◻ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
+cong-unbox* : {t t' : Tm ΓL (□ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
   → t ⟶* t'
   → unbox t e ⟶* unbox t' e
 cong-unbox* = cong-⟶-to-cong-⟶* cong-unbox

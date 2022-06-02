@@ -36,9 +36,9 @@ data Tm : Ctx → Ty → Set where
 
   box   : (t : Tm (Γ 🔒) a)
         ------------------
-        → Tm Γ (◻ a)
+        → Tm Γ (□ a)
 
-  unbox : (t : Tm ΓL (◻ a))
+  unbox : (t : Tm ΓL (□ a))
         → (e : LFExt Γ (ΓL 🔒) ΓR)
         -------------------------
         → Tm Γ a

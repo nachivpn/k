@@ -42,7 +42,7 @@ wkNePresId {Γ = Γ} (unbox {ΓL = ΓL} {a = a} n e) = let open ≡-Reasoning in
     ≡⟨⟩
   unbox (wkNe (factorWk e idWk) n) (factorExt e idWk)
     ≅⟨ xcong
-      (λ ΓL → Ne ΓL (◻ a)) (CExt Γ)
+      (λ ΓL → Ne ΓL (□ a)) (CExt Γ)
       (lCtxPresId e) (rCtxPresId e)
       unbox
       factorWkPresId-under-wkNe
@@ -77,7 +77,7 @@ wkNePres∙ {Γ'' = Γ''} w w' (unbox {ΓL = ΓL} {a = a} n e) = let open ≡-Re
     (wkNe (factorWk e w ∙ factorWk (factorExt e w) w') n)
     (subst₂ (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w')))
     ≅⟨ xcong
-      (λ ΓL → Ne ΓL (◻ a)) (CExt Γ'')
+      (λ ΓL → Ne ΓL (□ a)) (CExt Γ'')
       (≡-sym (lCtxPres∙ e w w')) (≡-sym (rCtxPres∙ e w w'))
       unbox
       factorWkPres∙-under-wkNe

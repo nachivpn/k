@@ -13,12 +13,12 @@ data Nf : Ctx → Ty → Set
 data Ne where
   var   : Var Γ a → Ne Γ a
   app   : Ne Γ (a ⇒ b) → Nf Γ a → Ne Γ b
-  unbox : Ne ΓL (◻ a) → CExt Γ ΓL ΓR → Ne Γ a
+  unbox : Ne ΓL (□ a) → CExt Γ ΓL ΓR → Ne Γ a
 
 data Nf where
   up𝕓 : Ne Γ 𝕓 → Nf Γ 𝕓
   lam : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
-  box : Nf (Γ 🔒) a → Nf Γ (◻ a)
+  box : Nf (Γ 🔒) a → Nf Γ (□ a)
 
 -- normal forms of substitutions (simply "do everything pointwise")
 data Nfₛ : Ctx → Ctx → Set where

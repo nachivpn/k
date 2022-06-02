@@ -72,7 +72,7 @@ exp-fun≈ t = ⟶-to-≈ (Reduction.exp-fun t)
 red-box≈ : (t : Tm (ΓL 🔒) a) (e : CExt Γ ΓL ΓR) → unbox (box t) e ≈ substTm (lock idₛ e) t
 red-box≈ t e = ⟶-to-≈ (Reduction.red-box t e)
 
-exp-box≈ : (t : Tm Γ (◻ a)) → t ≈ box (unbox t new)
+exp-box≈ : (t : Tm Γ (□ a)) → t ≈ box (unbox t new)
 exp-box≈ t = ⟶-to-≈ (Reduction.exp-box t)
 
 cong-lam≈ : ∀ (t≈t' : t ≈ t') → lam t ≈ lam t'
@@ -93,16 +93,16 @@ cong-box≈ = cong-⟶-to-cong-≈ Reduction.cong-box
 cong-unbox1≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e
 cong-unbox1≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
 
-cong-unbox2≈ : ∀ {t : Tm Γ (◻ a)} {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ ΓR'} → unbox t e ≈ unbox t e'
+cong-unbox2≈ : ∀ {t : Tm Γ (□ a)} {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ ΓR'} → unbox t e ≈ unbox t e'
 cong-unbox2≈ {t = t} {e} {e'} = subst (λ (_ , e') → unbox t e ≈ unbox t e') (Σ-≡,≡→≡ (extRUniq e e' , ExtIsProp′ e e')) ≈-refl
 
 cong-unbox≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e'
 cong-unbox≈ t≈t' = ≈-trans (cong-unbox1≈ t≈t') cong-unbox2≈
 
-dcong-unbox≈ : ∀ (Γ≡Γ' : Γ ≡ Γ') (t≈t' : subst (λ Γ → Tm Γ (◻ a)) Γ≡Γ' t ≈ t') → unbox t e ≈ unbox t' e'
+dcong-unbox≈ : ∀ (Γ≡Γ' : Γ ≡ Γ') (t≈t' : subst (λ Γ → Tm Γ (□ a)) Γ≡Γ' t ≈ t') → unbox t e ≈ unbox t' e'
 dcong-unbox≈ ≡-refl = cong-unbox≈
 
-shift-unbox≈ : ∀ (t : Tm Γ (◻ a)) (w : LFExt Γ' Γ ΓR) → unbox t e ≈ unbox (wkTm (LFExtTo⊆ w) t) e'
+shift-unbox≈ : ∀ (t : Tm Γ (□ a)) (w : LFExt Γ' Γ ΓR) → unbox t e ≈ unbox (wkTm (LFExtTo⊆ w) t) e'
 shift-unbox≈ t w = ≈-trans cong-unbox2≈ (⟶-to-≈ (Reduction.shift-unbox t w _))
 
 ----------------------------------------------------------------------

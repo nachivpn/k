@@ -27,10 +27,10 @@ uniqIdFun noB (lam (up𝕓 (app m n)))    with neutrality m
 ... | there p                               =
   ⊥-elim (noB (⊲-lift (sbr⇒ ⊲-refl) p))
 uniqIdFun noB (lam (up𝕓 (unbox n (ext e)))) =
-  ⊥-elim (sfPrefix noB e (⊲-lift (sb◻ ⊲-refl) (there🔒 (neutrality n))))
+  ⊥-elim (sfPrefix noB e (⊲-lift (sb□ ⊲-refl) (there🔒 (neutrality n))))
 
 -- if there are no boxed-formulas in `Γ`, then there are no neutrals in `Γ 🔒`
-noLeftPeek : ({x : Ty} → ¬ (◻ x ⊲ᶜ Γ)) → ¬ (Ne (Γ 🔒) a)
+noLeftPeek : ({x : Ty} → ¬ (□ x ⊲ᶜ Γ)) → ¬ (Ne (Γ 🔒) a)
 noLeftPeek f (app n x)     = noLeftPeek f n
 noLeftPeek f (unbox n nil) = f (neutrality n)
 
@@ -60,7 +60,7 @@ strenNf r (box n) = box (strenNf (keep🔒 r) n)
 
 -- NOTE:
 -- direct induction to show strengthing for terms fails;
--- consider a `t : Tm [] (◻ a)` and defining
+-- consider a `t : Tm [] (□ a)` and defining
 -- `strenTm : Γ' ⋗ Γ → Tm Γ a → Tm Γ' a`,
 -- what should `strenTm add🔒 (unbox t nil) : Tm [] a` be?
 
@@ -69,22 +69,22 @@ strenTm r t = embNf (strenNf r (norm t))
 
 module _ where
 
-  -- Show that `a` is a theorem iff `◻ a` is a theorem,
-  -- i.e., [] ⊢ a iff [] ⊢ ◻ a.
+  -- Show that `a` is a theorem iff `□ a` is a theorem,
+  -- i.e., [] ⊢ a iff [] ⊢ □ a.
 
-  -- forth : Tm [] a → Tm Γ (◻ a)
+  -- forth : Tm [] a → Tm Γ (□ a)
   -- forth t = {!!}
 
-  back : Tm [] (◻ a) → Tm [] a
+  back : Tm [] (□ a) → Tm [] a
   back t = embNf (strenNf add🔒 (norm (unbox t nil)))
 
-noFreeUnbox : ¬ (Nf [] (◻ 𝕓 ⇒ 𝕓))
+noFreeUnbox : ¬ (Nf [] (□ 𝕓 ⇒ 𝕓))
 noFreeUnbox (lam (up𝕓 (var (C.su ()))))
 noFreeUnbox (lam (up𝕓 (app n _))) with neutrality n
-... | here (sb◻ ())
+... | here (sb□ ())
 noFreeUnbox (lam (up𝕓 (unbox x (C.ext ()))))
 
-noFreeBox : ¬ (Nf [] (𝕓 ⇒ ◻ 𝕓))
+noFreeBox : ¬ (Nf [] (𝕓 ⇒ □ 𝕓))
 noFreeBox (lam (box (up𝕓 (app n _)))) with neutrality n
 ... | there🔒 (here ())
 ... | there🔒 (there ())

@@ -540,7 +540,7 @@ abstract
       ≈˘⟨ evalTm-pres-∘ t (lock idₛ e) ⟩
     evalTm (substTm (lock idₛ[ ΓL ] e) t)
       ∎
-  evalTm-sound (exp-box {Γ} {a} t) = let open EqReasoning (Tm'-setoid Γ (◻ a)) in begin
+  evalTm-sound (exp-box {Γ} {a} t) = let open EqReasoning (Tm'-setoid Γ (□ a)) in begin
     evalTm t
       ≈⟨ □'-eta (evalTm t) ⟩
     box' (λ' (evalTm t))

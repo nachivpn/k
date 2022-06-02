@@ -25,7 +25,7 @@ Rt {𝕓}         t x =
 Rt {a ⇒ b} {Γ} t f =
   {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
     → (e : Γ ⊆ Γ') → Rt u x → Rt (app (wkTm e t) u) (f e x)
-Rt {◻ a}       t (box x) =
+Rt {□ a}       t (box x) =
   ∃ λ u → Rt u x × t ⟶* box u
 
 data Rs : Sub Γ Δ → Sub' Γ Δ → Set where
@@ -48,7 +48,7 @@ Rt-prepend {a = 𝕓} r uRx
   = multi r uRx
 Rt-prepend {a = a ⇒ b} r uRx
   = λ w uRy → Rt-prepend (cong-app* (invRed* w r) (zero refl)) (uRx w uRy)
-Rt-prepend {a = ◻ a} {t = t} {u} {x = box x} r (t' , t'Rx , r')
+Rt-prepend {a = □ a} {t = t} {u} {x = box x} r (t' , t'Rx , r')
   = t' , t'Rx , multi r r'
 
 -- reduction-free version of Rt-prepend
@@ -69,14 +69,14 @@ Rt-build {a = 𝕓}                 r
   = r
 Rt-build {a = a ⇒ b}             tRx
   = multi (one exp-fun) (cong-lam* (Rt-build (tRx _ (Rt-reflect (var ze)))))
-Rt-build {a = ◻ a}   {x = box x} (u , uR- , r)
+Rt-build {a = □ a}   {x = box x} (u , uR- , r)
   = multi r (cong-box* (Rt-build uR-))
 
 Rt-reflect {a = 𝕓}     n
   = zero refl
 Rt-reflect {a = a ⇒ b} n
   = λ e y → Rt-prepend (cong-app* (zero (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
-Rt-reflect {a = ◻ a}   n
+Rt-reflect {a = □ a}   n
   = unbox (embNe n) nil , Rt-reflect (unbox n nil) , one exp-box
 
 -- Rt is invariant under weakening
@@ -88,7 +88,7 @@ invRt {a = 𝕓}  {x = x}       w tRx =
   multi (invRed* _ tRx) (zero (nat-embNf _ (reify x)))
 invRt {a = a ⇒ b}            w tRx =
   λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) (tRx (w ∙ w') y)
-invRt {a = ◻ a} {x = box x}  e (u , uRx , r) =
+invRt {a = □ a} {x = box x}  e (u , uRx , r) =
   wkTm (keep🔒 e) u , invRt (keep🔒 e) uRx , invRed* e r
 
 -- Rs is invariant under weakening
@@ -140,7 +140,7 @@ private
           (sym (coh-trimSub-wkSub s _ _))
           (trans (coh-trimSub-wkSub s idₛ w) (rightIdSub _)))))))
 
-  unboxPresRt : {t : Tm Γ (◻ a)} {x : Box (Tm'- a) Γ}
+  unboxPresRt : {t : Tm Γ (□ a)} {x : Box (Tm'- a) Γ}
     → (e : LFExt Γ' (Γ 🔒) ΓR)
     → Rt t x
     → Rt (unbox t e) (unbox' x e)

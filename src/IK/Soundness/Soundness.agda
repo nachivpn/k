@@ -29,7 +29,7 @@ _≋_ {Γ} {a = a ⇒ b}  f       g
   = {Γ' : Ctx} (w : Γ ⊆ Γ') → {x y : Tm' Γ' a}
     → Psh x → Psh y
     → x ≋ y → f w x ≋ g w y
-_≋_ {Γ} {a = ◻ a}    (box x) (box y)
+_≋_ {Γ} {a = □ a}    (box x) (box y)
   = x ≋ y
 
 -- soundness relation on semantic substitutions
@@ -52,7 +52,7 @@ sym-≋ {a = 𝕓}     x≡y
   = sym x≡y
 sym-≋ {a = a ⇒ b} x≋y
   = λ w px' py' x'≋y' → sym-≋ {a = b} (x≋y w py' px' (sym-≋ {a = a} x'≋y'))
-sym-≋ {a = ◻ a} {box x} {box y} x≋y
+sym-≋ {a = □ a} {box x} {box y} x≋y
   = sym-≋ {a = a} x≋y
 
 -- ≋ is transitive
@@ -64,7 +64,7 @@ trans-≋ {a = a ⇒ b} {x} {y} {z} x≋y y≋z w {x = x'} {y = y'} px' py' x'�
   = trans-≋ {a = b}
       (x≋y w px' py' x'≋y')
       (y≋z w py' py' ((trans-≋ {a = a} (sym-≋ {a = a} x'≋y') x'≋y')))
-trans-≋ {a = ◻ a} {box x} {box y} {box z} x≋y y≋z
+trans-≋ {a = □ a} {box x} {box y} {box z} x≋y y≋z
   = trans-≋ {x = x} x≋y y≋z
 
 -- WTH should this thing be called?
@@ -106,7 +106,7 @@ wkTm'Pres≋ {a = 𝕓}                           w x≡y
   = cong (wkNf w) x≡y
 wkTm'Pres≋ {a = a ⇒ b} {x = f} {y = g}       w f≋g
   = λ w' px py x≋y → f≋g (w ∙ w') px py x≋y
-wkTm'Pres≋ {a = ◻ a} {x = box x} {y = box y} w x≋y
+wkTm'Pres≋ {a = □ a} {x = box x} {y = box y} w x≋y
   = wkTm'Pres≋ {a = a} (keep🔒 w) x≋y
 
 -- wkSub' preserves the relation _≋_
@@ -248,7 +248,7 @@ private
   lemma1 {t = t} (ext e) (s  , _) (s' , _) (s≋s' `, _)
     = lemma1 {t = t} e s s' s≋s'
 
-  lemma2 : {x y : Tm' Γ (◻ a)}
+  lemma2 : {x y : Tm' Γ (□ a)}
     → x ≋ y
     → x ≋ box (unbox' y nil)
   lemma2 {x = box x} {box y} x≋y rewrite wkTm'PresId y
@@ -342,14 +342,14 @@ unique-reify {a = a ⇒ b}  x≋y = cong lam
   (unique-reify
     (x≋y fresh (psh-reflect {a = a} (var ze)) (psh-reflect {a = a} (var ze))
     (sound-reflect {a = a} refl)))
-unique-reify {a = ◻ a} {box x} {box y} x≋y
+unique-reify {a = □ a} {box x} {box y} x≋y
   = cong box (unique-reify x≋y)
 
 sound-reflect {a = 𝕓}      n≡n'
   = cong up𝕓 n≡n'
 sound-reflect {a = a ⇒ b}  n≡n' w px py x≋y
   = sound-reflect {a = b} (cong₂ app (cong (wkNe w) n≡n') (unique-reify x≋y))
-sound-reflect {a = ◻ a}    n≡n'
+sound-reflect {a = □ a}    n≡n'
   = sound-reflect {a = a} (cong₂ unbox n≡n' refl)
 
 --------------------------------

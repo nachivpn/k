@@ -26,7 +26,7 @@ Psh {Γ} {a ⇒ b} f      = {Γ' : Ctx} (w : Γ ⊆ Γ')
   -- naturality of presheaf exponentials
   → ({Γ⁰ : Ctx} → (w' : Γ' ⊆ Γ⁰) → f (w ∙ w') (wkTm' w' x) ≡ wkTm' w' (f w x))
     × Psh (f w x)
-Psh {Γ} {◻ a} (box x) = Psh x
+Psh {Γ} {□ a} (box x) = Psh x
 
 -- Psh extended to interpretation of contexts
 Pshₛ : Sub' Γ Δ → Set
@@ -48,7 +48,7 @@ wkTm'PresPsh {a = a ⇒ b} w f       p = λ w' y q →
   in (λ {Γ⁰} w'' →
     subst (λ z → f z _ ≡ wkTm' _ _) (assocWk w w' w'') (nf w''))
     , pfx
-wkTm'PresPsh {a = ◻ a}  w (box x) p = wkTm'PresPsh (keep🔒 w) x p
+wkTm'PresPsh {a = □ a}  w (box x) p = wkTm'PresPsh (keep🔒 w) x p
 
 -- wkSub' preserves Pshₛ
 wkSub'PresPsh : (w : Γ ⊆ Γ') (s : Sub' Γ Δ) → Pshₛ s → Pshₛ (wkSub' w s)
@@ -73,7 +73,7 @@ wkTm'PresId {a = 𝕓}     n
   = wkNfPresId n
 wkTm'PresId {a = a ⇒ b} f
   = funexti (λ _ → funext (λ _ → cong f (leftIdWk _)))
-wkTm'PresId {a = ◻ a}  (box x)
+wkTm'PresId {a = □ a}  (box x)
   = cong box (wkTm'PresId x)
 
 -- composition functor law of `Tm'- a`
@@ -84,7 +84,7 @@ wkTm'Pres∙ {a = 𝕓}     w w' n       =
 wkTm'Pres∙ {a = a ⇒ b} w w' f       =
   funexti (λ _ → funext (λ w'' →
     cong f (sym (assocWk w w' w''))))
-wkTm'Pres∙ {a = ◻ a}  w w' (box x) =
+wkTm'Pres∙ {a = □ a}  w w' (box x) =
   cong box (wkTm'Pres∙ (keep🔒 w) (keep🔒 w') x)
 
 --------------------------
@@ -189,7 +189,7 @@ nat-eval (unbox t nil)     w (lock s e) ps = trans
   (cong (λ z → unbox' z (wkLFExt e w)) (nat-eval t (sliceLeft e w) s ps))
   (gsLemma w e (eval t s))
   where
-  gsLemma : (w : Δ ⊆ Δ') (e : LFExt Δ (ΓL 🔒) ΓR) (x : Tm' ΓL (◻ a))
+  gsLemma : (w : Δ ⊆ Δ') (e : LFExt Δ (ΓL 🔒) ΓR) (x : Tm' ΓL (□ a))
     → unbox' (wkTm' (sliceLeft e w) x) (wkLFExt e w) ≡ wkTm' w (unbox' x e)
   gsLemma w e (box x) = trans (wkTm'Pres∙ _ _ _)
     (sym (trans
@@ -241,7 +241,7 @@ nat-reflect : (w : Γ ⊆ Γ') (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w 
 nat-reflect {a = 𝕓}     w n = refl
 nat-reflect {a = a ⇒ b} w n = funexti (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
-nat-reflect {a = ◻ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
+nat-reflect {a = □ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
 
 -- image of reflect is in Psh
 psh-reflect : (n : Ne Γ a) → Psh (reflect n)
@@ -256,7 +256,7 @@ psh-reflect {a = a ⇒ b} n = λ w x px
          (cong₂ app (sym (wkNePres∙ _ _ _)) (nat-reify _ _ px)))
        (nat-reflect w' (app (wkNe w n) (reify x))))
   , psh-reflect (app (wkNe w n) _)
-psh-reflect {a = ◻ a}  n = psh-reflect (unbox n nil)
+psh-reflect {a = □ a}  n = psh-reflect (unbox n nil)
 
 -- nat-reify
 nat-reify {a = 𝕓}         w x   px
@@ -272,7 +272,7 @@ nat-reify {Γ} {a = a ⇒ b} w f   pf
             (nat-reflect (keep w) (var ze)))
           (nf (keep w))))
       (nat-reify (keep w) (f fresh (reflect (var ze))) pfx))
-nat-reify {a = ◻ a} w  (box x) px
+nat-reify {a = □ a} w  (box x) px
   = cong box (nat-reify (keep🔒 w) x px)
 
 -- idₛ' is in Pshₛ

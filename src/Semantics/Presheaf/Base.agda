@@ -109,7 +109,7 @@ record _≈̇_ (φ ψ : 𝒫 →̇ 𝒬) : Set where -- type \~~ \^.
   field
     proof : ∀ (p : 𝒫 ₀ Γ) → φ .apply p ≋[ 𝒬 ] ψ .apply p
 
-  apply-sq : ∀ {p p' : 𝒫 ₀ Γ} → p ≋[ 𝒫 ] p' → φ .apply p ≋[ 𝒬 ] ψ .apply p' -- XXX: rename
+  apply-sq : ∀ {p p' : 𝒫 ₀ Γ} → p ≋[ 𝒫 ] p' → φ .apply p ≋[ 𝒬 ] ψ .apply p'
   apply-sq {p = p} {p'} p≋p' = let open EqReasoning ≋[ 𝒬 ]-setoid in begin
     φ .apply p   ≈⟨ φ .apply-≋ p≋p' ⟩
     φ .apply p'  ≈⟨ proof p' ⟩

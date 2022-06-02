@@ -39,12 +39,6 @@ private
     t t'     : 𝒫 →̇ 𝒬
     u u'     : 𝒫 →̇ 𝒬
 
--- XXX: ✦ 𝒫 and □ 𝒫 can be expressed internally as the dependent sum
--- and product over the types R⁻¹ and R, respectively. This should
--- reduce the constructions to showing that R⁻¹ and R are types (and
--- thereby simplify them), which is implied by the two frame
--- conditions.
-
 record ✦'-Fam (𝒫 : Psh) (Γ : C) : Set where
   constructor elem
   field

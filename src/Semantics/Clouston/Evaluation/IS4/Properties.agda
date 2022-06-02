@@ -96,7 +96,6 @@ open import Semantics.Clouston.Evaluation.IS4.Base
 
 open CloustonEvaluationIS4BaseEval N
 
--- XXX: make parameters
 private
   ≈̇-equiv : ∀ (P Q : Ctx') → IsEquivalence (_≈̇_ {P} {Q})
   ≈̇-equiv  P Q = record { refl = ≈̇-refl {P} {Q} ; sym = ≈̇-sym {P} {Q} ; trans = ≈̇-trans {P} {Q} }
@@ -256,7 +255,7 @@ abstract
 
 module _ {ΓL : Ctx} where
   abstract
-    acc-nat' : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Δ) → evalAcc e ∘ evalWk w ≈̇ ✦'-map (evalWk (factorWk e w)) ∘ evalAcc (factorExt e w) -- XXX: rename and split up
+    acc-nat' : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Δ) → evalAcc e ∘ evalWk w ≈̇ ✦'-map (evalWk (factorWk e w)) ∘ evalAcc (factorExt e w)
     acc-nat' nil w = ≈̇-sym (η'-nat _)
     acc-nat' (ext {a = a} e) (keep {Δ = Δ} {a} w) = let open EqReasoning (Sub'-setoid (Δ `, a) (ΓL 🔒)) in begin
       evalAcc (ext[ a ] e) ∘ evalWk (keep[ a ] w)
@@ -309,7 +308,7 @@ module _ {ΓL : Ctx} where
 
 module _ {ΓL : Ctx} where
   abstract
-     acc-nat : ∀ (e : CExt Γ ΓL ΓR) (σ : Sub Δ Γ) → evalAcc e ∘ evalSub σ ≈̇ ✦'-map (evalSub (factorSubₛ e σ)) ∘ evalAcc (factorExtₛ e σ) -- XXX: rename and split up
+     acc-nat : ∀ (e : CExt Γ ΓL ΓR) (σ : Sub Δ Γ) → evalAcc e ∘ evalSub σ ≈̇ ✦'-map (evalSub (factorSubₛ e σ)) ∘ evalAcc (factorExtₛ e σ)
      acc-nat nil σ = ≈̇-sym (η'-nat (evalSub σ))
      acc-nat {Δ = Δ} (ext {a = a} e) (σ `, t) = let open EqReasoning (Sub'-setoid Δ (ΓL 🔒)) in begin
        evalAcc (ext[ a ] e) ∘ (evalSub (σ `, t))
@@ -582,7 +581,6 @@ abstract
 
 module _ {Γ : Ctx} {a : Ty} where
   abstract
-    -- XXX: fold
     evalTm-sound' : ∀ {t t' : Tm Γ a} (t≈t' : t ≈ t') → evalTm t ≈̇ evalTm t'
     evalTm-sound' ε                     = ≈̇-refl
     evalTm-sound' (inj₁ t⟶t'' ◅ t''≈t') = ≈̇-trans (evalTm-sound t⟶t'') (evalTm-sound' t''≈t')

@@ -61,7 +61,6 @@ open import IK.Type
 
 open import Context (Ty)
 
--- XXX: make parameters
 private
   ≈̇-equiv : ∀ (P Q : Ctx') → IsEquivalence (_≈̇_ {P} {Q})
   ≈̇-equiv  P Q = record { refl = ≈̇-refl {P} {Q} ; sym = ≈̇-sym {P} {Q} ; trans = ≈̇-trans {P} {Q} }

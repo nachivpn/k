@@ -57,7 +57,6 @@ module _ {Γ : Ctx} {a : Ty} where
 ⟵-to-≈ p = inj₂ p ◅ ε
 
 module _ {t : Tm Γ a → Tm Δ b} (cong-t : ∀ {u u' : Tm Γ a} → (u⟶u' : u ⟶ u') → t u ⟶ t u') where
-  -- XXX: fold
   cong-⟶-to-cong-≈ : ∀ (u≈u' : u ≈ u') → t u ≈ t u'
   cong-⟶-to-cong-≈ ε                     = ε
   cong-⟶-to-cong-≈ (inj₁ u⟶u'' ◅ u''≈u') = inj₁ (cong-t u⟶u'') ◅ cong-⟶-to-cong-≈ u''≈u'
@@ -135,7 +134,6 @@ module _ {Δ Γ : Ctx} where
 ⟶ₛ-to-≈ₛ p = inj₁ p ◅ ε
 
 module _ {σ : Sub Δ Γ → Sub Δ' Γ'} (cong-σ : ∀ {τ τ' : Sub Δ Γ} → (τ⟶τ' : τ ⟶ₛ τ') → σ τ ⟶ₛ σ τ') where
-  -- XXX: fold
   cong-⟶ₛ-to-cong-≈ₛ : ∀ (τ≈τ' : τ ≈ₛ τ') → σ τ ≈ₛ σ τ'
   cong-⟶ₛ-to-cong-≈ₛ ε                     = ε
   cong-⟶ₛ-to-cong-≈ₛ (inj₁ τ⟶τ'' ◅ τ''≈τ') = inj₁ (cong-σ τ⟶τ'') ◅ cong-⟶ₛ-to-cong-≈ₛ τ''≈τ'

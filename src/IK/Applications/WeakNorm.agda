@@ -55,7 +55,6 @@ nfBetaShort (lam n)                (cong-lam r , p)   = nfBetaShort n (r , p)
 nfBetaShort (box n)                (cong-box r , p)   = nfBetaShort n (r , p)
 
 -- defines an eta-expansion relation (_⟶η_)
--- TODO: this definition could be very wrong, need to check this up!
 EtaRule : (t : Tm Γ a) → {u : Tm Γ a} → t ⟶ u → Set
 EtaRule _       red-fun          = ⊥
 EtaRule _       red-box          = ⊥

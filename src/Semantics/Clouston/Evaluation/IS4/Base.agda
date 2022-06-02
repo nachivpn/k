@@ -66,7 +66,6 @@ import Semantics.Clouston.Evaluation.IML
 
 open CloustonEvaluationIML public hiding (module Eval)
 
--- XXX: make parameters
 private
   η' = λ {P} → η'[ P ]
 

@@ -1025,7 +1025,6 @@ substVarPres⟶ ze     (cong-`,⟶ₛ2 t≈t') = t≈t'
 substVarPres⟶ (su v) (cong-`,⟶ₛ1 s⟶s') = substVarPres⟶ v s⟶s'
 substVarPres⟶ (su v) (cong-`,⟶ₛ2 t≈t') = ≈-refl
 
--- XXX: fold
 substVarPres≈ : (v : Var Γ a) → σ ≈ₛ σ' → substVar σ v ≈ substVar σ' v
 substVarPres≈ v ε                    = ≈-refl
 substVarPres≈ v (inj₁ σ⟶σ' ◅ σ'≈σ'') = ≈-trans (substVarPres⟶ v σ⟶σ') (substVarPres≈ v σ'≈σ'')
@@ -1062,7 +1061,6 @@ substTmPres⟶ (unbox t e) r = h e r t
           unbox (substTm (factorSubₛ e (wkSub (LFExtToWk w) σ)) t) e''
         ∎
 
--- XXX: fold
 substTmPres≈ : (t : Tm Γ a) → (σ≈σ' : σ ≈ₛ σ') → substTm σ t ≈ substTm σ' t
 substTmPres≈ t ε                    = ≈-refl
 substTmPres≈ t (inj₁ σ⟶σ' ◅ σ'≈σ'') = ≈-trans (substTmPres⟶ t σ⟶σ') (substTmPres≈ t σ'≈σ'')

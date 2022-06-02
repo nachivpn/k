@@ -1,17 +1,16 @@
 {-# OPTIONS --safe --with-K #-}
 module IK.Applications.WeakNorm where
 
+open import Data.Empty
+open import Data.Unit
+open import Data.Product using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂)
 
-open import IK.Term
+open import Relation.Nullary
+
 open import IK.Norm
 open import IK.Reduction
-open import IK.Completeness.Trace
-
-open import Data.Unit
-open import Data.Product  using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂)
-
-open import Data.Empty
-open import Relation.Nullary
+open import IK.Soundness.Trace
+open import IK.Term
 
 -- defines a beta-reduction relation (_⟶β_)
 BetaRule : {t u : Tm Γ a} → t ⟶ u → Set

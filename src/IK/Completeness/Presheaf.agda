@@ -1,18 +1,19 @@
 {-# OPTIONS --safe --with-K #-}
 open import Relation.Binary.PropositionalEquality using (_≡_)
-module IK.Soundness.Presheaf
+module IK.Completeness.Presheaf
   (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
            → ((x : A) → f x ≡ g x) → f ≡ g)
   (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
            → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g) where
 
-open import Data.Unit  using (⊤ ; tt)
-open import Data.Product  using (Σ ; _×_ ; _,_ ; proj₁ ; proj₂)
+open import Data.Unit    using (⊤ ; tt)
+open import Data.Product using (Σ ; _×_ ; _,_ ; proj₁ ; proj₂)
+
 open import Relation.Binary.PropositionalEquality
 
-open import IK.Term
-open import IK.Norm
 open import IK.HellOfSyntacticLemmas
+open import IK.Norm
+open import IK.Term
 
 -----------------------------
 -- Presheaf refinement of Tm'

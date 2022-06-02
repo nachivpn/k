@@ -20,12 +20,12 @@ import IK.Applications.Experiments
 import IK.Applications.Neutrality
 import IK.Applications.WeakNorm
 
-open import IK.Soundness.Presheaf funext funexti
-open import IK.Soundness.HellOfSemanticLemmas funext funexti
-open import IK.Soundness.Soundness funext funexti
+open import IK.Completeness.Completeness         funext funexti
+open import IK.Completeness.HellOfSemanticLemmas funext funexti
+open import IK.Completeness.Presheaf             funext funexti
 
-import IK.Completeness.Trace
-import IK.Completeness.Completeness
+import IK.Soundness.Soundness
+import IK.Soundness.Trace
 
 import IS4.Term
 import IS4.Term.Conversion

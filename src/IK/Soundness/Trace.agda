@@ -1,16 +1,17 @@
 {-# OPTIONS --safe --with-K #-}
-module IK.Completeness.Trace where
+module IK.Soundness.Trace where
 
 open import Data.Unit
   using (⊤ ; tt)
 open import Data.Product
   using (Σ ; _×_ ; _,_ ; ∃)
+
 open import Relation.Binary.PropositionalEquality
 
-open import IK.Term
-open import IK.Reduction
-open import IK.Norm
 open import IK.HellOfSyntacticLemmas
+open import IK.Norm
+open import IK.Reduction
+open import IK.Term
 
 quotTm : Tm' Γ a → Tm Γ a
 quotTm x = embNf (reify x)

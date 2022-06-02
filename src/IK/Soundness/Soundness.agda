@@ -255,10 +255,10 @@ private
       = x≋y
 
 -- soundness of evaluation wrt single-step reduction
-sound-eval-red : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
+eval-sound-red : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ⟶ t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-eval-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-fun ps ps' s≋s'
+eval-sound-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'} red-fun ps ps' s≋s'
   rewrite wkSub'PresId s
   | evalₛPresId s'
     = trans-≋ {Γ = Δ} {a = b}
@@ -267,7 +267,7 @@ sound-eval-red {Γ = Γ} {Δ = Δ} {t = app (lam {b = b} t) u} {s = s} {s' = s'}
             (subst Pshₛ (sym (evalₛPresId s')) ps' , psh-eval u s' ps')
             (subst (s ≋ₛ_) (sym (evalₛPresId s')) s≋s' `, fund u ps ps' s≋s'))
       (coh-substTm-evalₛ t (idₛ `, u) {s} {s'} ps ps' s≋s')
-sound-eval-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
+eval-sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
   rewrite sym (rightIdWk w)
   | sym (cong (λ f → f idWk x) (nat-eval t w s ps))
   | sym (trimSub'PresId (wkSub' w s))
@@ -281,52 +281,52 @@ sound-eval-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
            px
            py
            x≋y
-sound-eval-red {t = unbox (box t) e} {s = s} {s' = s'} red-box ps ps' s≋s'
+eval-sound-red {t = unbox (box t) e} {s = s} {s' = s'} red-box ps ps' s≋s'
   rewrite coh-trimSub'-wkTm (LFExtTo⊆ e) s' t
   = lemma1 {t = t} e ps ps' s≋s'
-sound-eval-red {t = t} {s = s} {s'} exp-box ps ps' s≋s'
+eval-sound-red {t = t} {s = s} {s'} exp-box ps ps' s≋s'
   = lemma2 {x = eval t s} (fund t ps ps' s≋s')
-sound-eval-red {t = t} {s = s} {s'} (cong-lam r) ps ps' s≋s' w {x = x} px py x≋y
-  = sound-eval-red r
+eval-sound-red {t = t} {s = s} {s'} (cong-lam r) ps ps' s≋s' w {x = x} px py x≋y
+  = eval-sound-red r
       (wkSub'PresPsh w s ps , px)
       (wkSub'PresPsh w s' ps' , py)
       ((wkSub'Pres≋ w s≋s') `, x≋y)
-sound-eval-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app1 r) ps ps' s≋s'
-  = sound-eval-red r ps ps' s≋s'
+eval-sound-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app1 r) ps ps' s≋s'
+  = eval-sound-red r ps ps' s≋s'
       idWk
       (psh-eval u s ps)
       (psh-eval u s' ps')
       (fund u ps ps' s≋s')
-sound-eval-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app2 r) ps ps' s≋s'
-  = fund t ps ps' s≋s' idWk (psh-eval u s ps) (psh-eval u' s' ps') (sound-eval-red r ps ps' s≋s')
-sound-eval-red (cong-box r) ps ps' s≋s'
-  = sound-eval-red r ps ps' (lock s≋s' nil)
-sound-eval-red {s = lock s e} {s' = lock s' .e} (cong-unbox {t = t} {e = nil} r) ps ps' (lock s≋s' e)
-  = unbox'Pres≋ {x = eval t s} e (sound-eval-red r ps ps' s≋s')
-sound-eval-red {s = s , _} {s' = s' , _} (cong-unbox {t = t} {e = ext e} r) (ps , _) (ps' , _) (s≋s' `, _)
-  = sound-eval-red (cong-unbox {e = e} r) ps ps' s≋s'
+eval-sound-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app2 r) ps ps' s≋s'
+  = fund t ps ps' s≋s' idWk (psh-eval u s ps) (psh-eval u' s' ps') (eval-sound-red r ps ps' s≋s')
+eval-sound-red (cong-box r) ps ps' s≋s'
+  = eval-sound-red r ps ps' (lock s≋s' nil)
+eval-sound-red {s = lock s e} {s' = lock s' .e} (cong-unbox {t = t} {e = nil} r) ps ps' (lock s≋s' e)
+  = unbox'Pres≋ {x = eval t s} e (eval-sound-red r ps ps' s≋s')
+eval-sound-red {s = s , _} {s' = s' , _} (cong-unbox {t = t} {e = ext e} r) (ps , _) (ps' , _) (s≋s' `, _)
+  = eval-sound-red (cong-unbox {e = e} r) ps ps' s≋s'
 
 -- soundness of evaluation wrt multi-step reduction
-sound-eval-red* : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
+eval-sound-red* : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ⟶* t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-eval-red* {t = t} {t' = .t} ε        ps ps' s≋s'
+eval-sound-red* {t = t} {t' = .t} ε        ps ps' s≋s'
   = fund t ps ps' s≋s'
-sound-eval-red* {a = a} {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
-  = trans-≋ {a = a} (sound-eval-red r ps ps' s≋s') (sound-eval-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
+eval-sound-red* {a = a} {t = t} {t' = t'} (r ◅ rs) ps ps' s≋s'
+  = trans-≋ {a = a} (eval-sound-red r ps ps' s≋s') (eval-sound-red* rs ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
 
 -- soundness of evaluation wrt conversion
-sound-eval-≈ : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
+eval-sound : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ≈ t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
-sound-eval-≈ {t = t} ε ps ps' s≋s'
-  = sound-eval-red* {t = t} (zero refl) ps ps' s≋s'
-sound-eval-≈ {a = a} (inj₁ r ◅ t≈t') ps ps' s≋s'
-  = trans-≋ {a = a} (sound-eval-red r ps ps' s≋s') (sound-eval-≈ t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
-sound-eval-≈ {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s≋s'
+eval-sound {t = t} ε ps ps' s≋s'
+  = eval-sound-red* {t = t} (zero refl) ps ps' s≋s'
+eval-sound {a = a} (inj₁ r ◅ t≈t') ps ps' s≋s'
+  = trans-≋ {a = a} (eval-sound-red r ps ps' s≋s') (eval-sound t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
+eval-sound {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s≋s'
   = trans-≋ {a = a}
-      (sym-≋ {y = eval t s} (sound-eval-red r ps' ps (sym-≋ₛ s≋s')))
-      (sound-eval-≈ t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
+      (sym-≋ {y = eval t s} (eval-sound-red r ps' ps (sym-≋ₛ s≋s')))
+      (eval-sound t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
 
 --------------------------------------------------------
 -- Uniqueness of reification and soundness of reflection
@@ -352,17 +352,17 @@ sound-reflect {a = a ⇒ b}  n≡n' w px py x≋y
 sound-reflect {a = ◻ a}    n≡n'
   = sound-reflect {a = a} (cong₂ unbox n≡n' refl)
 
------------------------------
--- Soundness of normalization
------------------------------
+--------------------------------
+-- Completeness of normalization
+--------------------------------
 
 idₛ'≋idₛ' : {Γ : Ctx} → idₛ' {Γ} ≋ₛ idₛ'
 idₛ'≋idₛ' {[]}     = []
 idₛ'≋idₛ' {Γ `, a} = (wkSub'Pres≋ fresh (idₛ'≋idₛ' {Γ})) `, (sound-reflect {a = a} refl)
 idₛ'≋idₛ' {Γ 🔒}    = lock idₛ'≋idₛ' nil
 
-sound-norm-red* : {t t' : Tm Γ a} → t ⟶* t' → norm t ≡ norm t'
-sound-norm-red* {Γ = Γ} r = unique-reify (sound-eval-red* r (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')
+norm-complete-red* : {t t' : Tm Γ a} → t ⟶* t' → norm t ≡ norm t'
+norm-complete-red* {Γ = Γ} r = unique-reify (eval-sound-red* r (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')
 
-sound-norm-≈ : {t t' : Tm Γ a} → t ≈ t' → norm t ≡ norm t'
-sound-norm-≈ {Γ = Γ} p = unique-reify (sound-eval-≈ p (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')
+norm-complete : {t t' : Tm Γ a} → t ≈ t' → norm t ≡ norm t'
+norm-complete {Γ = Γ} p = unique-reify (eval-sound p (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')

@@ -69,25 +69,16 @@ new[_] = λ Γ → new {Γ}
 open Substitution Tm var wkTm CExt new lCtx factorWk rCtx factorExt public
   renaming (module Composition to SubstitutionComposition)
 
-private
-
-  factor2ₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × CExt Δ ΔL ΔR
-  factor2ₛ nil        s           = -, -, s , nil
-  factor2ₛ (ext e)    (s `, _)    = factor2ₛ e s
-  factor2ₛ (ext🔒- e) (lock {ΔR = ΔR} s es)  = let (ΔL' , ΔR' , s' , e'') = factor2ₛ e s
-    in ΔL' , (ΔR' ,, ΔR) , s' , extRAssoc e'' es
-
-  factor2Subₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub _ ΓL
-  factor2Subₛ = λ e s → factor2ₛ e s .proj₂ .proj₂ .proj₁
-
-  factor2Extₛ : ∀ (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ _ _
-  factor2Extₛ = λ e s → factor2ₛ e s .proj₂ .proj₂ .proj₂
-
--- "Left" context of factoring with a substitution (see factorExtₛ)
+-- "Left" context of factoring with a substitution (see factorSubₛ and factorExtₛ)
 lCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
 lCtxₛ {Δ = Δ} nil       s           = Δ
 lCtxₛ         (ext e)   (s `, t)    = lCtxₛ e s
 lCtxₛ         (ext🔒- e) (lock s e') = lCtxₛ e s
+
+factorSubₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub (lCtxₛ e s) ΓL
+factorSubₛ nil       s           = s
+factorSubₛ (ext e)   (s `, t)    = factorSubₛ e s
+factorSubₛ (ext🔒- e) (lock s e') = factorSubₛ e s
 
 -- "Right" context of factoring with a substitution (see factorExtₛ)
 rCtxₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Ctx
@@ -95,17 +86,10 @@ rCtxₛ nil       s                     = []
 rCtxₛ (ext e)   (s `, t)              = rCtxₛ e s
 rCtxₛ (ext🔒- e) (lock {ΔR = ΔR} s e') = rCtxₛ e s ,, ΔR
 
--- same as factor2Extₛ
 factorExtₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → CExt Δ (lCtxₛ e s) (rCtxₛ e s)
 factorExtₛ nil       s           = nil
 factorExtₛ (ext e)   (s `, _)    = factorExtₛ e s
 factorExtₛ (ext🔒- e) (lock s e') = extRAssoc (factorExtₛ e s) e'
-
--- same as factor2Subₛ
-factorSubₛ : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) → Sub (lCtxₛ e s) ΓL
-factorSubₛ nil       s           = s
-factorSubₛ (ext e)   (s `, t)    = factorSubₛ e s
-factorSubₛ (ext🔒- e) (lock s e') = factorSubₛ e s
 
 -- apply substitution to a term
 substTm : Sub Δ Γ → Tm Γ a → Tm Δ a

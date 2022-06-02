@@ -509,7 +509,7 @@ module _ where
     ... | Γ' , Γ⊆Γ' , Γ'⊑Δ'
       = Γ' , Γ⊆Γ' , ⊑-trans Γ'⊑Δ' (⊑-trans (ext🔒⊑ tt extRId) (_ , upLFExt (wkLFExt extRId Δ⊆Δ')))
 
--- "Left" context of factoring (see type of factorExt)
+-- "Left" context of factoring (see type of factorWk and factorExt)
 -- lCtx e w == proj₁ (factor2 (_ , e) w)
 lCtx : Ext θ Γ ΓL ΓR → Γ ⊆ Γ' → Ctx
 lCtx {Γ = Γ}      {Γ' = Γ'}       nil        w
@@ -522,6 +522,14 @@ lCtx {Γ = Γ 🔒} {Γ' = Γ' `, a}     (ext🔒 f e) (drop w)
   = lCtx  (ext🔒 f e) w
 lCtx {Γ = Γ 🔒} {Γ' = Γ' 🔒}        (ext🔒 f e) (keep🔒 w)
   = lCtx e w
+
+-- factorWk e w == proj₁ (proj₂ (factor2 (_ , e) w))
+factorWk : (e : Ext θ Γ ΓL ΓR) → (w : Γ ⊆ Γ') → ΓL ⊆ (lCtx e w)
+factorWk nil        w         = w
+factorWk (ext e)    (drop w)  = factorWk (ext e) w
+factorWk (ext e)    (keep w)  = factorWk e w
+factorWk (ext🔒 f e) (drop w)  = factorWk (ext🔒 f e) w
+factorWk (ext🔒 f e) (keep🔒 w) = factorWk e w
 
 -- "Right" context of factoring (see type of factorExt)
 -- rCtx e w == proj₁ (proj₂ (proj₂ (factor2 (_ , e) w)))
@@ -544,14 +552,6 @@ factorExt (ext e)    (drop w)  = ext (factorExt (ext e) w)
 factorExt (ext  e)   (keep w)  = ext (factorExt e w)
 factorExt (ext🔒 f e) (drop w)  = ext (factorExt (ext🔒 f e) w)
 factorExt (ext🔒 f e) (keep🔒 w) = ext🔒 f (factorExt e w)
-
--- factorWk e w == proj₁ (proj₂ (factor2 (_ , e) w))
-factorWk : (e : Ext θ Γ ΓL ΓR) → (w : Γ ⊆ Γ') → ΓL ⊆ (lCtx e w)
-factorWk nil        w         = w
-factorWk (ext e)    (drop w)  = factorWk (ext e) w
-factorWk (ext e)    (keep w)  = factorWk e w
-factorWk (ext🔒 f e) (drop w)  = factorWk (ext🔒 f e) w
-factorWk (ext🔒 f e) (keep🔒 w) = factorWk e w
 
 --------------------------------------------
 -- Factorisation laws for general extensions

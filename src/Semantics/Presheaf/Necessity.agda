@@ -6,28 +6,20 @@ open import Relation.Binary using (Reflexive; Symmetric; Transitive; IsEquivalen
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong)
 
 module Semantics.Presheaf.Necessity
-  (C                  : Set)
-  (_⊆_                : (Γ Δ : C) → Set)
-  (⊆-trans            : ∀ {Γ Γ' Γ'' : C} (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → Γ ⊆ Γ'')
-  (⊆-trans-assoc      : ∀ {Γ Γ' Γ'' Γ''' : C} (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (w'' : Γ'' ⊆ Γ''') → ⊆-trans w (⊆-trans w' w'') ≡ ⊆-trans (⊆-trans w w') w'')
-  (⊆-refl             : ∀ {Γ : C} → Γ ⊆ Γ)
-  (⊆-refl-unit-left   : ∀ {Γ Γ' : C} (w : Γ ⊆ Γ') → ⊆-trans w ⊆-refl ≡ w)
-  (⊆-refl-unit-right  : ∀ {Γ Γ' : C} (w : Γ ⊆ Γ') → ⊆-trans ⊆-refl w ≡ w)
-  (_R_                : (Γ Δ : C) → Set)
-  -- (factor1            : ∀ {Γ Γ' Δ' : C} → (w : Γ ⊆ Γ') → (r : Γ' R Δ') → ∃ λ Δ → Γ R Δ ∧ Δ ⊆ Δ')
-  -- (let factor1C       : {Γ Γ' Δ' : C} → (w : Γ ⊆ Γ') → (r : Γ' R Δ') → C    ; factor1C = λ w r → factor1 w r .fst)
-  -- (let factor1R       : ∀ {Γ Γ' Δ' : C} (w : Γ ⊆ Γ') (r : Γ' R Δ') → Γ R _  ; factor1R = λ w r → factor1 w r .snd .fst)
-  -- (let factor1⊆       : ∀ {Γ Γ' Δ' : C} (w : Γ ⊆ Γ') (r : Γ' R Δ') → _ ⊆ Δ' ; factor1⊆ = λ w r → factor1 w r .snd .snd)
-  -- (factor1-pres-refl  : ∀ {Γ Δ' : C} (r : Γ R Δ') → factor1 ⊆-refl r ≡ (-, r , ⊆-refl))
-  -- (factor1-pres-trans : ∀ {Γ Γ' Γ'' Δ''} (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (r : Γ'' R Δ'') → factor1 (⊆-trans w w') r ≡ (-, factor1R w (factor1R w' r) , ⊆-trans (factor1⊆ w (factor1R w' r)) (factor1⊆ w' r)))
-  (factor2            : ∀ {Γ Δ Δ' : C} → (r : Γ R Δ) → (w : Δ ⊆ Δ') → ∃ λ Γ' → Γ ⊆ Γ' ∧ Γ' R Δ')
-  (let factor2C       : {Γ Δ Δ' : C} → (r : Γ R Δ) → (w : Δ ⊆ Δ') → C    ; factor2C = λ r w → factor2 r w .fst)
-  (let factor2Wk       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → Γ ⊆ _  ; factor2Wk = λ r w → factor2 r w .snd .fst)
-  (let factor2R       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → _ R Δ' ; factor2R = λ r w → factor2 r w .snd .snd)
-  (factor2-pres-refl  : ∀ {Γ Δ : C} (r : Γ R Δ) → factor2 r ⊆-refl ≡ (-, ⊆-refl , r))
-  (factor2-pres-trans : ∀ {Γ Δ Δ' Δ''} (r : Γ R Δ) (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') → factor2 r (⊆-trans w w') ≡ (-, ⊆-trans (factor2Wk r w) (factor2Wk (factor2R r w) w') , factor2R (factor2R r w) w'))
-  -- (factor2-factor1    : ∀ {Γ Γ' Δ' : C} → (w : Γ ⊆ Γ') → (r : Γ' R Δ') → factor2 (factor1R w r) (factor1⊆ w r) ≡ (-, w , r))
-  -- (factor1-factor2    : ∀ {Γ Δ  Δ' : C} → (r : Γ R Δ)  → (w : Δ ⊆ Δ')  → factor1 (factor2Wk r w) (factor2R r w) ≡ (-, r , w))
+  (C                 : Set)
+  (_⊆_               : (Γ Δ : C) → Set)
+  (⊆-trans           : ∀ {Γ Γ' Γ'' : C} (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') → Γ ⊆ Γ'')
+  (⊆-trans-assoc     : ∀ {Γ Γ' Γ'' Γ''' : C} (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (w'' : Γ'' ⊆ Γ''') → ⊆-trans w (⊆-trans w' w'') ≡ ⊆-trans (⊆-trans w w') w'')
+  (⊆-refl            : ∀ {Γ : C} → Γ ⊆ Γ)
+  (⊆-refl-unit-left  : ∀ {Γ Γ' : C} (w : Γ ⊆ Γ') → ⊆-trans w ⊆-refl ≡ w)
+  (⊆-refl-unit-right : ∀ {Γ Γ' : C} (w : Γ ⊆ Γ') → ⊆-trans ⊆-refl w ≡ w)
+  (_R_               : (Γ Δ : C) → Set)
+  (factor            : ∀ {Γ Δ Δ' : C} → (r : Γ R Δ) → (w : Δ ⊆ Δ') → ∃ λ Γ' → Γ ⊆ Γ' ∧ Γ' R Δ')
+  (let lCtx          : {Γ Δ Δ' : C} → (r : Γ R Δ) → (w : Δ ⊆ Δ') → C    ; lCtx     = λ r w → factor r w .fst)
+  (let factorWk      : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → Γ ⊆ _  ; factorWk = λ r w → factor r w .snd .fst)
+  (let factorR       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → _ R Δ' ; factorR  = λ r w → factor r w .snd .snd)
+  (factor-pres-refl  : ∀ {Γ Δ : C} (r : Γ R Δ) → factor r ⊆-refl ≡ (-, ⊆-refl , r))
+  (factor-pres-trans : ∀ {Γ Δ Δ' Δ''} (r : Γ R Δ) (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') → factor r (⊆-trans w w') ≡ (-, ⊆-trans (factorWk r w) (factorWk (factorR r w) w') , factorR (factorR r w) w'))
   where
 
 import Relation.Binary.Reasoning.Setoid as EqReasoning
@@ -83,17 +75,17 @@ record _✦'-≋_ {𝒫 : Psh} {Γ : C} (x x' : ✦'-Fam 𝒫 Γ) : Set where
         }
 
     wk : (w : Γ ⊆ Γ') → (x : ✦'-Fam 𝒫 Γ) → ✦'-Fam 𝒫 Γ'
-    wk w (elem (Δ , r , p)) = let (Δ' , w' , r') = factor2 r w in elem (Δ' , r' , wk[ 𝒫 ] w' p)
+    wk w (elem (Δ , r , p)) = let (Δ' , w' , r') = factor r w in elem (Δ' , r' , wk[ 𝒫 ] w' p)
 
     abstract
       wk-pres-≋ : ∀ (w : Γ ⊆ Γ') {x x' : ✦'-Fam 𝒫 Γ} (x≋x' : x ✦'-≋ x') → wk w x ✦'-≋ wk w x'
       wk-pres-≋ w (proof (refl , refl , p≋p')) = proof (refl , refl , wk[ 𝒫 ]-pres-≋ _ p≋p')
 
       wk-pres-refl : ∀ (x : ✦'-Fam 𝒫 Γ) → wk ⊆-refl x ✦'-≋ x
-      wk-pres-refl {_Γ} x@(elem (_ , r , p)) = subst (λ (Δ' , w' , r') → elem (Δ' , r' , wk[ 𝒫 ] w' p) ✦'-≋ x) (sym (factor2-pres-refl r)) (proof (refl , refl , wk[ 𝒫 ]-pres-refl p))
+      wk-pres-refl {_Γ} x@(elem (_ , r , p)) = subst (λ (Δ' , w' , r') → elem (Δ' , r' , wk[ 𝒫 ] w' p) ✦'-≋ x) (sym (factor-pres-refl r)) (proof (refl , refl , wk[ 𝒫 ]-pres-refl p))
 
       wk-pres-trans : ∀ (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (x : ✦'-Fam 𝒫 Γ) → wk (⊆-trans w w') x ✦'-≋ wk w' (wk w x)
-      wk-pres-trans {_Γ} {_Γ'} {_Γ''} w w' x@(elem (_ , r , p)) = subst (λ (Δ'' , w'' , r'') → elem (Δ'' , r'' , wk[ 𝒫 ] w'' p) ✦'-≋ wk w' (wk w x)) (sym (factor2-pres-trans r w w')) (proof (refl , refl , (wk[ 𝒫 ]-pres-trans (factor2Wk r w) (factor2Wk (factor2R r w) w') p)))
+      wk-pres-trans {_Γ} {_Γ'} {_Γ''} w w' x@(elem (_ , r , p)) = subst (λ (Δ'' , w'' , r'') → elem (Δ'' , r'' , wk[ 𝒫 ] w'' p) ✦'-≋ wk w' (wk w x)) (sym (factor-pres-trans r w w')) (proof (refl , refl , (wk[ 𝒫 ]-pres-trans (factorWk r w) (factorWk (factorR r w) w') p)))
 
 ✦'-map_ : (t : 𝒫 →̇ 𝒬) → ✦' 𝒫 →̇ ✦' 𝒬
 ✦'-map_ {_} {𝒬} t = record
@@ -113,24 +105,24 @@ abstract
   ✦'-map-pres-∘ {ℛ = ℛ} _ _ = record { proof = λ p → proof (refl , refl , ≋[ ℛ ]-refl) }
 
 module IS4
-  (R-trans            : ∀ {Γ Δ Θ : C} (r : Γ R Δ) (r' : Δ R Θ) → Γ R Θ)
-  (R-trans-assoc      : ∀ {Γ Δ Θ Ξ : C} (r : Γ R Δ) (r' : Δ R Θ) (r'' : Θ R Ξ) → R-trans r (R-trans r' r'') ≡ R-trans (R-trans r r') r'')
-  (R-refl             : ∀ {Γ : C} → Γ R Γ)
-  (R-refl-unit-left   : ∀ {Γ Δ : C} (r : Γ R Δ) → R-trans r R-refl ≡ r)
-  (R-refl-unit-right  : ∀ {Γ Δ : C} (r : Γ R Δ) → R-trans R-refl r ≡ r)
-  (let factor2C       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → C      ; factor2C r w = factor2 r w .fst)
-  (let factor2Wk       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → Γ ⊆ _  ; factor2Wk r w = factor2 r w .snd .fst)
-  (let factor2R       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → _ R Δ' ; factor2R r w = factor2 r w .snd .snd)
-  (factor2-pres-refl  : ∀ {Γ Γ' : C} (w : Γ ⊆ Γ') → factor2 R-refl w ≡ (Γ' , w , R-refl))
-  (factor2-pres-trans : ∀ {Γ Δ Θ Θ' : C} (r : Γ R Δ) (r' : Δ R Θ) (w : Θ ⊆ Θ') → factor2 (R-trans r r') w ≡ (factor2C r (factor2Wk r' w) , factor2Wk r _ , R-trans (factor2R r _) (factor2R r' w)))
+  (R-trans           : ∀ {Γ Δ Θ : C} (r : Γ R Δ) (r' : Δ R Θ) → Γ R Θ)
+  (R-trans-assoc     : ∀ {Γ Δ Θ Ξ : C} (r : Γ R Δ) (r' : Δ R Θ) (r'' : Θ R Ξ) → R-trans r (R-trans r' r'') ≡ R-trans (R-trans r r') r'')
+  (R-refl            : ∀ {Γ : C} → Γ R Γ)
+  (R-refl-unit-left  : ∀ {Γ Δ : C} (r : Γ R Δ) → R-trans r R-refl ≡ r)
+  (R-refl-unit-right : ∀ {Γ Δ : C} (r : Γ R Δ) → R-trans R-refl r ≡ r)
+  (let lCtx          : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → C      ; lCtx     = λ r w → factor r w .fst)
+  (let factorWk      : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → Γ ⊆ _  ; factorWk = λ r w → factor r w .snd .fst)
+  (let factorR       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → _ R Δ' ; factorR  = λ r w → factor r w .snd .snd)
+  (factor-pres-refl  : ∀ {Γ Γ' : C} (w : Γ ⊆ Γ') → factor R-refl w ≡ (Γ' , w , R-refl))
+  (factor-pres-trans : ∀ {Γ Δ Θ Θ' : C} (r : Γ R Δ) (r' : Δ R Θ) (w : Θ ⊆ Θ') → factor (R-trans r r') w ≡ (lCtx r (factorWk r' w) , factorWk r _ , R-trans (factorR r _) (factorR r' w)))
   where
     η'[_] : (𝒫 : Psh) → 𝒫 →̇ ✦' 𝒫
     η'[_] 𝒫 = record
       { fun     = λ {Γ} p → elem (Γ , R-refl , p)
       ; pres-≋  = λ p≋p' → proof (refl , refl , p≋p')
       ; natural = λ w p → let open EqReasoning ≋[ ✦' 𝒫 ]-setoid in begin
-          elem (-, factor2R R-refl w , wk[ 𝒫 ] (factor2Wk R-refl w) p)
-            ≡⟨ cong (λ { (_ , w , r) → elem (-, r , wk[ 𝒫 ] w p) }) (factor2-pres-refl w) ⟩
+          elem (-, factorR R-refl w , wk[ 𝒫 ] (factorWk R-refl w) p)
+            ≡⟨ cong (λ { (_ , w , r) → elem (-, r , wk[ 𝒫 ] w p) }) (factor-pres-refl w) ⟩
           elem (-, R-refl , wk[ 𝒫 ] w p)
             ∎
       }
@@ -144,9 +136,9 @@ module IS4
       { fun     = λ (elem (Δ , r' , elem (Γ , r , p))) → elem (Γ , R-trans r r' , p)
       ; pres-≋  = λ { (proof (refl , refl , proof (refl , refl , p≋p'))) → proof (refl , refl , p≋p') }
       ; natural = λ w (elem (Δ , r' , elem (Γ , r , p))) → let open EqReasoning ≋[ ✦' 𝒫 ]-setoid in begin
-          elem (-, factor2R (R-trans r r') w , wk[ 𝒫 ] (factor2Wk (R-trans r r') w) p)
-            ≡⟨ cong (λ { (_ , w , r) → elem (-, r , wk[ 𝒫 ] w p) }) (factor2-pres-trans r r' w) ⟩
-          elem (-, R-trans (factor2R r (factor2Wk r' w)) (factor2R r' w) , wk[ 𝒫 ] (factor2Wk r (factor2Wk r' w)) p)
+          elem (-, factorR (R-trans r r') w , wk[ 𝒫 ] (factorWk (R-trans r r') w) p)
+            ≡⟨ cong (λ { (_ , w , r) → elem (-, r , wk[ 𝒫 ] w p) }) (factor-pres-trans r r' w) ⟩
+          elem (-, R-trans (factorR r (factorWk r' w)) (factorR r' w) , wk[ 𝒫 ] (factorWk r (factorWk r' w)) p)
             ∎
       }
 
@@ -176,7 +168,7 @@ module _ (𝒫 : Psh) where
     constructor elem
     field
       fun     : {Γ' Δ : C} → (w : Γ ⊆ Γ') → (r : Γ' R Δ) → 𝒫 ₀ Δ
-      natural : ∀ {Γ' Δ Δ' : C} (w : Γ ⊆ Γ') (r : Γ' R Δ) (w' : Δ ⊆ Δ') → fun (⊆-trans w (factor2Wk r w')) (factor2R r w') ≋[ 𝒫 ] wk[ 𝒫 ] w' (fun w r)
+      natural : ∀ {Γ' Δ Δ' : C} (w : Γ ⊆ Γ') (r : Γ' R Δ) (w' : Δ ⊆ Δ') → fun (⊆-trans w (factorWk r w')) (factorR r w') ≋[ 𝒫 ] wk[ 𝒫 ] w' (fun w r)
 
   open □'-Fam using (natural) renaming (fun to apply) public
 
@@ -214,9 +206,9 @@ module _ (𝒫 : Psh) where
       wk w x = record
         { fun     = λ w' r → x .apply (⊆-trans w w') r
         ; natural = λ w' r w'' → let open EqReasoning ≋[ 𝒫 ]-setoid in begin
-            x .apply (⊆-trans w (⊆-trans w' (factor2Wk r w''))) (factor2R r w'')  ≡⟨ cong (λ hole → x .apply hole (factor2R r w'')) (⊆-trans-assoc w w' (factor2Wk r w'')) ⟩
-            x .apply (⊆-trans (⊆-trans w w') (factor2Wk r w'')) (factor2R r w'')  ≈⟨ x .natural (⊆-trans w w') r w'' ⟩
-            wk[ 𝒫 ] w'' (x .apply (⊆-trans w w') r)                              ∎
+            x .apply (⊆-trans w (⊆-trans w' (factorWk r w''))) (factorR r w'')  ≡⟨ cong (λ hole → x .apply hole (factorR r w'')) (⊆-trans-assoc w w' (factorWk r w'')) ⟩
+            x .apply (⊆-trans (⊆-trans w w') (factorWk r w'')) (factorR r w'')  ≈⟨ x .natural (⊆-trans w w') r w'' ⟩
+            wk[ 𝒫 ] w'' (x .apply (⊆-trans w w') r)                             ∎
         }
 
       abstract
@@ -234,9 +226,9 @@ module _ (𝒫 : Psh) where
   { fun     = λ x → record
       { fun     = λ w r → t .apply (x .apply w r)
       ; natural = λ w r w' → let open EqReasoning ≋[ 𝒬 ]-setoid in begin
-          t .apply (x .apply (⊆-trans w (factor2Wk r w')) (factor2R r w'))  ≈⟨ t .apply-≋ (x .natural w r w') ⟩
-          t .apply (wk[ 𝒫 ] w' (x .apply w r))                             ≈˘⟨ t .natural w' (x .apply w r) ⟩
-          wk[ 𝒬 ] w' (t .apply (x .apply w r))                             ∎
+          t .apply (x .apply (⊆-trans w (factorWk r w')) (factorR r w'))  ≈⟨ t .apply-≋ (x .natural w r w') ⟩
+          t .apply (wk[ 𝒫 ] w' (x .apply w r))                            ≈˘⟨ t .natural w' (x .apply w r) ⟩
+          wk[ 𝒬 ] w' (t .apply (x .apply w r))                            ∎
       }
   ; pres-≋  = λ x≋x' → record { pw = λ w r → t .apply-≋ (x≋x' .pw w r) }
   ; natural = λ _w _x → record { pw = λ _w' _r → ≋[ 𝒬 ]-refl }
@@ -248,10 +240,10 @@ module _ {𝒫 𝒬 : Psh} where
     { fun     = λ p → record
         { fun     = λ w r → t .apply (elem (_ , r , wk[ 𝒫 ] w p))
         ; natural = λ w r w' → let open EqReasoning ≋[ 𝒬 ]-setoid in begin
-            t .apply (elem (_ , factor2R r w' , wk[ 𝒫 ] (⊆-trans w (factor2Wk r w')) p))  ≈⟨ t .apply-≋ (proof (refl , refl , wk[ 𝒫 ]-pres-trans w (factor2Wk r w') p)) ⟩
-            t .apply (elem (_ , factor2R r w' , wk[ 𝒫 ] (factor2Wk r w') (wk[ 𝒫 ] w p)))  ≡⟨⟩
-            t .apply (wk[ ✦' 𝒫 ] w' (elem (_ , r , wk[ 𝒫 ] w p)))                        ≈˘⟨ t .natural w' (elem (_ , r , wk[ 𝒫 ] w p)) ⟩
-            wk[ 𝒬 ] w' (t .apply (elem (_ , r , wk[ 𝒫 ] w p)))                           ∎
+            t .apply (elem (_ , factorR r w' , wk[ 𝒫 ] (⊆-trans w (factorWk r w')) p))  ≈⟨ t .apply-≋ (proof (refl , refl , wk[ 𝒫 ]-pres-trans w (factorWk r w') p)) ⟩
+            t .apply (elem (_ , factorR r w' , wk[ 𝒫 ] (factorWk r w') (wk[ 𝒫 ] w p)))  ≡⟨⟩
+            t .apply (wk[ ✦' 𝒫 ] w' (elem (_ , r , wk[ 𝒫 ] w p)))                       ≈˘⟨ t .natural w' (elem (_ , r , wk[ 𝒫 ] w p)) ⟩
+            wk[ 𝒬 ] w' (t .apply (elem (_ , r , wk[ 𝒫 ] w p)))                          ∎
         }
     ; pres-≋  = λ p≋p' → record { pw = λ w r  → t .apply-≋ (proof (refl , refl , wk[ 𝒫 ]-pres-≋ w p≋p')) }
     ; natural = λ w p → record
@@ -270,12 +262,12 @@ module _ {𝒫 𝒬 : Psh} where
   { fun     = λ (elem (_ , r , p)) → t .apply p .apply ⊆-refl r
   ; pres-≋  = λ { (proof (refl , refl , p≋p')) → t .apply-≋ p≋p' .pw ⊆-refl _ }
   ; natural = λ w (elem (_ , r , p)) → let open EqReasoning ≋[ 𝒬 ]-setoid in begin
-      wk[ 𝒬 ] w (t .apply p .apply ⊆-refl r)                               ≈˘⟨ t .apply p .natural ⊆-refl r w ⟩
-      t .apply p .apply (⊆-trans ⊆-refl (factor2Wk r w)) (factor2R r w)     ≡⟨ cong (λ hole → t .apply p .apply hole (factor2R r w)) (⊆-refl-unit-right (factor2Wk r w)) ⟩
-      t .apply p .apply (factor2Wk r w) (factor2R r w)                      ≡˘⟨ cong (λ hole → t .apply p .apply hole (factor2R r w)) (⊆-refl-unit-left (factor2Wk r w)) ⟩
-      t .apply p .apply (⊆-trans (factor2Wk r w) ⊆-refl) (factor2R r w)     ≡⟨⟩
-      wk[ □' 𝒬 ] (factor2Wk r w) (t .apply p) .apply ⊆-refl (factor2R r w)  ≈⟨ t .natural (factor2Wk r w) p .pw ⊆-refl (factor2R r w) ⟩
-      t .apply (wk[ 𝒫 ] (factor2Wk r w) p) .apply ⊆-refl (factor2R r w)     ∎
+      wk[ 𝒬 ] w (t .apply p .apply ⊆-refl r)                              ≈˘⟨ t .apply p .natural ⊆-refl r w ⟩
+      t .apply p .apply (⊆-trans ⊆-refl (factorWk r w)) (factorR r w)     ≡⟨ cong (λ hole → t .apply p .apply hole (factorR r w)) (⊆-refl-unit-right (factorWk r w)) ⟩
+      t .apply p .apply (factorWk r w) (factorR r w)                      ≡˘⟨ cong (λ hole → t .apply p .apply hole (factorR r w)) (⊆-refl-unit-left (factorWk r w)) ⟩
+      t .apply p .apply (⊆-trans (factorWk r w) ⊆-refl) (factorR r w)     ≡⟨⟩
+      wk[ □' 𝒬 ] (factorWk r w) (t .apply p) .apply ⊆-refl (factorR r w)  ≈⟨ t .natural (factorWk r w) p .pw ⊆-refl (factorR r w) ⟩
+      t .apply (wk[ 𝒫 ] (factorWk r w) p) .apply ⊆-refl (factorR r w)     ∎
   }
 
 abstract

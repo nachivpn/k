@@ -12,20 +12,12 @@ module Semantics.Presheaf.Evaluation.IML
   (⩽-refl-unit-left  : ∀ {X X' : C} (f : X ⩽ X') → ⩽-trans ⩽-refl f ≡ f)
   (⩽-refl-unit-right : ∀ {X X' : C} (f : X ⩽ X') → ⩽-trans f ⩽-refl ≡ f)
   (_R_               : (X Y : C) → Set)
-  (factor1           : ∀ {X X' Y' : C} → (w : X ⩽ X') → (r : X' R Y') → ∃ λ Y → X R Y ∧ Y ⩽ Y')
-  (let factor1C      : {X X' Y' : C} → (w : X ⩽ X') → (r : X' R Y') → C    ; factor1C = λ w r → factor1 w r .fst)
-  (let factor1R      : ∀ {X X' Y' : C} (w : X ⩽ X') (r : X' R Y') → X R _  ; factor1R = λ w r → factor1 w r .snd .fst)
-  (let factor1⩽      : ∀ {X X' Y' : C} (w : X ⩽ X') (r : X' R Y') → _ ⩽ Y' ; factor1⩽ = λ w r → factor1 w r .snd .snd)
-  (factor1-pres-id   : ∀ {X Y' : C} (r : X R Y') → factor1 ⩽-refl r ≡ (-, r , ⩽-refl))
-  (factor1-pres-∘    : ∀ {X X' X'' Y''} (w : X ⩽ X') (w' : X' ⩽ X'') (r : X'' R Y'') → factor1 (⩽-trans w w') r ≡ (-, factor1R w (factor1R w' r) , ⩽-trans (factor1⩽ w (factor1R w' r)) (factor1⩽ w' r)))
-  (factor2           : ∀ {X Y Y' : C} → (r : X R Y) → (w : Y ⩽ Y') → ∃ λ X' → X ⩽ X' ∧ X' R Y')
-  (let factor2C      : {Γ Δ Δ' : C} → (r : Γ R Δ) → (w : Δ ⩽ Δ') → C    ; factor2C = λ r w → factor2 r w .fst)
-  (let factor2⩽      : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⩽ Δ') → Γ ⩽ _  ; factor2⩽ = λ r w → factor2 r w .snd .fst)
-  (let factor2R      : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⩽ Δ') → _ R Δ' ; factor2R = λ r w → factor2 r w .snd .snd)
-  (factor2-pres-id   : ∀ {X Y : C} (r : X R Y) → factor2 r ⩽-refl ≡ (-, ⩽-refl , r))
-  (factor2-pres-∘    : ∀ {X Y Y' Y'' : C} (r : X R Y) (w : Y ⩽ Y') (w' : Y' ⩽ Y'') → factor2 r (⩽-trans w w') ≡ (-, ⩽-trans (factor2⩽ r w) (factor2⩽ (factor2R r w) w') , factor2R (factor2R r w) w'))
-  (factor2-factor1   : ∀ {X X' Y' : C} → (w : X ⩽ X') → (r : X' R Y') → factor2 (factor1R w r) (factor1⩽ w r) ≡ (-, w , r))
-  (factor1-factor2   : ∀ {X Y  Y' : C} → (r : X R Y)  → (w : Y ⩽ Y')  → factor1 (factor2⩽ r w) (factor2R r w) ≡ (-, r , w))
+  (factor            : ∀ {X Y Y' : C} → (r : X R Y) → (w : Y ⩽ Y') → ∃ λ X' → X ⩽ X' ∧ X' R Y')
+  (let lCtx          : {Γ Δ Δ' : C} → (r : Γ R Δ) → (w : Δ ⩽ Δ') → C    ; lCtx     = λ r w → factor r w .fst)
+  (let factorWk      : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⩽ Δ') → Γ ⩽ _  ; factorWk = λ r w → factor r w .snd .fst)
+  (let factorR       : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⩽ Δ') → _ R Δ' ; factorR  = λ r w → factor r w .snd .snd)
+  (factor-pres-id    : ∀ {X Y : C} (r : X R Y) → factor r ⩽-refl ≡ (-, ⩽-refl , r))
+  (factor-pres-∘     : ∀ {X Y Y' Y'' : C} (r : X R Y) (w : Y ⩽ Y') (w' : Y' ⩽ Y'') → factor r (⩽-trans w w') ≡ (-, ⩽-trans (factorWk r w) (factorWk (factorR r w) w') , factorR (factorR r w) w'))
   where
 
 open import Level using (0ℓ)
@@ -45,7 +37,7 @@ import Semantics.Presheaf.CartesianClosure
   C _⩽_ ⩽-trans ⩽-trans-assoc ⩽-refl ⩽-refl-unit-right ⩽-refl-unit-left
   as PresheafCartesianClosure
 import Semantics.Presheaf.Necessity
-  C _⩽_ ⩽-trans ⩽-trans-assoc ⩽-refl ⩽-refl-unit-right ⩽-refl-unit-left _R_ factor2 factor2-pres-id factor2-pres-∘
+  C _⩽_ ⩽-trans ⩽-trans-assoc ⩽-refl ⩽-refl-unit-right ⩽-refl-unit-left _R_ factor factor-pres-id factor-pres-∘
   as PresheafNecessity
 
 open PresheafBase             public

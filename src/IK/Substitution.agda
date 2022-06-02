@@ -79,15 +79,15 @@ idₛ = embWk idWk
 idₛ[_] = λ Γ → idₛ {Γ}
 
 private
-  factor2 : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × LFExt Δ (ΔL 🔒) ΔR
-  factor2 nil     (lock s e) = -, -, s , e
-  factor2 (ext e) (s `, t)   = factor2 e s
+  factorₛ : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → ∃ λ ΔL → ∃ λ ΔR → Sub ΔL ΓL × LFExt Δ (ΔL 🔒) ΔR
+  factorₛ nil     (lock s e) = -, -, s , e
+  factorₛ (ext e) (s `, t)   = factorₛ e s
 
-factor2Sub : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → Sub _ ΓL
-factor2Sub = λ e s → factor2 e s .proj₂ .proj₂ .proj₁
+factorSubₛ : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → Sub _ ΓL
+factorSubₛ = λ e s → factorₛ e s .proj₂ .proj₂ .proj₁
 
-factor2R : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → LFExt Δ _ _
-factor2R = λ e s → factor2 e s .proj₂ .proj₂ .proj₂
+factorExtₛ : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → LFExt Δ _ _
+factorExtₛ = λ e s → factorₛ e s .proj₂ .proj₂ .proj₂
 
 --------------------
 -- Substitution laws

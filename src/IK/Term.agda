@@ -69,10 +69,10 @@ substTm s (var x)     = substVar s x
 substTm s (lam t)     = lam (substTm (keepₛ s) t)
 substTm s (app t u)   = app (substTm s t) (substTm s u)
 substTm s (box t)     = box (substTm (keep🔒ₛ s) t)
-substTm s (unbox t e) = unbox (substTm (factor2Sub e s) t) (factor2R e s)
+substTm s (unbox t e) = unbox (substTm (factorSubₛ e s) t) (factorExtₛ e s)
 
 -- substitution composition
 _∙ₛ_ : Sub Δ Γ → Sub Δ' Δ → Sub Δ' Γ
 []        ∙ₛ s = []
 (s' `, t) ∙ₛ s = s' ∙ₛ s `, substTm s t
-lock s' e ∙ₛ s = lock (s' ∙ₛ factor2Sub e s) (factor2R e s)
+lock s' e ∙ₛ s = lock (s' ∙ₛ factorSubₛ e s) (factorExtₛ e s)

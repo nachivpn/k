@@ -11,7 +11,7 @@ open import HEUtil
 
 open import IS4.Norm.Base
 
-open import IS4.Norm.NbE.Model
+open import IS4.Norm.NbE.Model       hiding (factorWk)
 open import IS4.Norm.NbE.Reification
 
 open import IS4.Term

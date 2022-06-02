@@ -6,6 +6,12 @@ module IK.Soundness.Soundness
   (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
            → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g) where
 
+
+--
+-- This module proves the soundness of evaluation (eval-sound),
+-- from which the completeness of normalization (norm-complete) follows.
+--
+
 open import Data.Unit
   using (⊤ ; tt)
 open import Data.Product

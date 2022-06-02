@@ -9,6 +9,11 @@ open import IK.Completeness.Trace
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; cong ; cong₂ ; trans)
 
+--
+-- This module proves the completeness of evaluation (eval-complete),
+-- from which the soundness of normalization (norm-sound) follows.
+--
+
 eval-complete : {t t' : Tm Γ a}
   → ({Δ : Ctx} {γ : Sub' Δ Γ} → eval t γ ≡ eval t' γ)
   → t ≈ t'

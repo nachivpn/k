@@ -1,5 +1,9 @@
-{-# OPTIONS --safe --with-K #-}
-module Everything where
+open import Relation.Binary.PropositionalEquality using (_≡_)
+module Everything
+  (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
+           → ((x : A) → f x ≡ g x) → f ≡ g)
+  (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
+           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g) where
 
 import Context
 import HEUtil
@@ -16,9 +20,9 @@ import IK.Applications.Experiments
 import IK.Applications.Neutrality
 import IK.Applications.WeakNorm
 
-import IK.Soundness.Presheaf -- depends on function extensionality
-import IK.Soundness.HellOfSemanticLemmas -- depends on function extensionality
-import IK.Soundness.Soundness -- depends on function extensionality
+open import IK.Soundness.Presheaf funext funexti
+open import IK.Soundness.HellOfSemanticLemmas funext funexti
+open import IK.Soundness.Soundness funext funexti
 
 import IK.Completeness.Trace
 import IK.Completeness.Completeness

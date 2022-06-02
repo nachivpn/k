@@ -6,7 +6,7 @@ module IK.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import IK.Type as Type using (Ty ; Ty-Decidable)
+open import Type as Type using (Ty ; Ty-Decidable)
 
 open import Context Ty Ty-Decidable as Context
 

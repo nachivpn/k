@@ -10,7 +10,7 @@ open import Data.Product using (∃ ; _×_ ; _,_ ; -,_ ; proj₁ ; proj₂)
 
 open import Relation.Binary.PropositionalEquality using (sym ; subst)
 
-open import IK.Type as Type using (Ty ; Ty-Decidable)
+open import Type as Type using (Ty ; Ty-Decidable)
 
 import Context Ty Ty-Decidable as Context
 

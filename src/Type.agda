@@ -1,5 +1,5 @@
 {-# OPTIONS --safe --without-K #-}
-module IK.Type where
+module Type where
 
 open import Relation.Nullary using (_because_; yes; no)
 

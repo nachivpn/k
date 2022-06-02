@@ -8,10 +8,9 @@ module Everything
   (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
            → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g) where
 
+import Type
 import Context
 import HEUtil
-
-import IK.Type
 
 import IK.Term
 import IK.Term.Conversion

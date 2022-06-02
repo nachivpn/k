@@ -57,7 +57,7 @@ open import Relation.Binary using (Reflexive; Symmetric; Transitive; IsEquivalen
 
 import Relation.Binary.Reasoning.Setoid as EqReasoning
 
-open import IK.Type
+open import Type
 
 open import Context Ty Ty-Decidable
 

@@ -102,7 +102,7 @@ cong-unbox≈ t≈t' = ≈-trans (cong-unbox1≈ t≈t') cong-unbox2≈
 dcong-unbox≈ : ∀ (Γ≡Γ' : Γ ≡ Γ') (t≈t' : subst (λ Γ → Tm Γ (□ a)) Γ≡Γ' t ≈ t') → unbox t e ≈ unbox t' e'
 dcong-unbox≈ ≡-refl = cong-unbox≈
 
-shift-unbox≈ : ∀ (t : Tm Γ (□ a)) (w : LFExt Γ' Γ ΓR) → unbox t e ≈ unbox (wkTm (LFExtTo⊆ w) t) e'
+shift-unbox≈ : ∀ (t : Tm Γ (□ a)) (w : LFExt Γ' Γ ΓR) → unbox t e ≈ unbox (wkTm (LFExtToWk w) t) e'
 shift-unbox≈ t w = ≈-trans cong-unbox2≈ (⟶-to-≈ (Reduction.shift-unbox t w _))
 
 ----------------------------------------------------------------------
@@ -118,7 +118,7 @@ data _⟶ₛ_ : Sub Δ Γ → Sub Δ Γ → Set where
   cong-lock⟶ₛ  : {s s' : Sub ΔL ΓL} {e : CExt Δ ΔL ΔR}
     → s ⟶ₛ s' → lock s e ⟶ₛ lock s' e
   shift-lock⟶ₛ : {ΔLL ΔLR : Ctx} {s : Sub ΔLL Γ} (w : LFExt ΔL ΔLL ΔLR) {e : CExt Δ ΔL ΔR}
-    → lock s (extRAssoc (upLFExt w) e) ⟶ₛ lock (wkSub (LFExtTo⊆ w) s) e
+    → lock s (extRAssoc (upLFExt w) e) ⟶ₛ lock (wkSub (LFExtToWk w) s) e
 
 Sub-setoid : (Δ Γ : Ctx) → Setoid _ _
 Sub-setoid Δ Γ = setoid (_⟶ₛ_ {Δ} {Γ})
@@ -153,7 +153,7 @@ cong-`,≈ₛ σ≈σ' t≈t' = ≈ₛ-trans (cong-`,1≈ₛ σ≈σ') (cong-`,2
 cong-lock≈ₛ : (σ≈σ' : σ ≈ₛ σ') → lock σ e ≈ₛ lock σ' e
 cong-lock≈ₛ = cong-⟶ₛ-to-cong-≈ₛ cong-lock⟶ₛ
 
-shift-lock≈ₛ : (w : LFExt Δ' Δ ΔR) → lock σ (extRAssoc (upLFExt w) e) ≈ₛ lock (wkSub (LFExtTo⊆ w) σ) e
+shift-lock≈ₛ : (w : LFExt Δ' Δ ΔR) → lock σ (extRAssoc (upLFExt w) e) ≈ₛ lock (wkSub (LFExtToWk w) σ) e
 shift-lock≈ₛ w = ⟶ₛ-to-≈ₛ (shift-lock⟶ₛ w)
 
 --------------------

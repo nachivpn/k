@@ -83,7 +83,7 @@ reify-natural (□ a) x w = let open ≡-Reasoning in begin
   box (reify a (x .apply (w ∙ idWk)                newR))                                 ≡⟨  cong (λ w → box (reify a (x .apply w newR))) (rightIdWk w) ⟩
   box (reify a (x .apply w                         newR))                                 ≡˘⟨ cong (λ w → box (reify a (x .apply w newR))) (leftIdWk w) ⟩
   box (reify a (x .apply (idWk ∙ w)                newR))                                 ≡⟨⟩
-  box (reify a (x .apply (idWk ∙ factor2⊆ newR (keep🔒 w)) (factor2R newR (keep🔒 w))))  ≡⟨  cong box (reify-pres-≋ a (x .natural idWk newR (keep🔒 w))) ⟩
+  box (reify a (x .apply (idWk ∙ factor2Wk newR (keep🔒 w)) (factor2R newR (keep🔒 w))))  ≡⟨  cong box (reify-pres-≋ a (x .natural idWk newR (keep🔒 w))) ⟩
   box (reify a (wk[ evalTy a ] (keep🔒 w) (x .apply idWk newR)))                         ≡⟨  cong box (reify-natural a (x .apply idWk newR) (keep🔒 w)) ⟩
   box (wkNf (keep🔒 w) (reify a (x .apply idWk newR)))                                   ≡⟨⟩
   wkNf w (reify (□ a) x) ∎

@@ -146,7 +146,7 @@ private
     → x ≋ y
     → unbox' x e ≋ unbox' y e
   unbox'Pres≋ {a = a} {x = box x} {y = box y} e x≋y
-    = wkTm'Pres≋ {a = a} (LFExtTo⊆ e) x≋y
+    = wkTm'Pres≋ {a = a} (LFExtToWk e) x≋y
 
 --
 fund :  (t : Tm Γ a) {s s' : Sub' Δ Γ}
@@ -233,21 +233,21 @@ private
   lemma1 : {t : Tm (ΓL 🔒) a} (e : LFExt Γ (ΓL 🔒) ΓR) {s s' : Sub' Δ Γ}
     → Pshₛ s → Pshₛ s'
     → s ≋ₛ s'
-    → eval (unbox (box t) e) s ≋ eval t (trimSub' (LFExtTo⊆ e) s')
+    → eval (unbox (box t) e) s ≋ eval t (trimSub' (LFExtToWk e) s')
   lemma1 {t = t} nil {s = lock s e} {s' = lock s' e} ps ps' (lock s≋s' e)
     with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
   ... | refl | refl
-    rewrite sym (nat-eval t (LFExtTo⊆ e) (lock s nil) ps)
-      | ExtIsProp (wkLFExt nil (LFExtTo⊆ e)) e
+    rewrite sym (nat-eval t (LFExtToWk e) (lock s nil) ps)
+      | ExtIsProp (wkLFExt nil (LFExtToWk e)) e
         = fund t
-               (wkSub'PresPsh (sliceLeft nil (LFExtTo⊆ e)) s ps)
+               (wkSub'PresPsh (sliceLeft nil (LFExtToWk e)) s ps)
                (subst Pshₛ (sym (trimSub'PresId s')) ps')
                (lock lemma1-2 e)
     where
-      lemma1-1 : ∀ (e : LFExt Γ (←🔒 Γ 🔒) ΓR) → sliceLeft nil (LFExtTo⊆ e) ≡ idWk
+      lemma1-1 : ∀ (e : LFExt Γ (←🔒 Γ 🔒) ΓR) → sliceLeft nil (LFExtToWk e) ≡ idWk
       lemma1-1 {Γ Context.`, x} (Context.ext e) = lemma1-1 e
       lemma1-1 {Γ Context.🔒} Context.nil = refl
-      lemma1-2 : wkSub' (sliceLeft nil (LFExtTo⊆ e)) s ≋ₛ trimSub' idWk s'
+      lemma1-2 : wkSub' (sliceLeft nil (LFExtToWk e)) s ≋ₛ trimSub' idWk s'
       lemma1-2 rewrite lemma1-1 e
         | trimSub'PresId s'
         | wkSub'PresId s = s≋s'
@@ -288,7 +288,7 @@ eval-sound-red {t = t} {s = s} {s'} exp-fun  ps ps' s≋s' w {x = x} px py x≋y
            py
            x≋y
 eval-sound-red {t = unbox (box t) e} {s = s} {s' = s'} red-box ps ps' s≋s'
-  rewrite coh-trimSub'-wkTm (LFExtTo⊆ e) s' t
+  rewrite coh-trimSub'-wkTm (LFExtToWk e) s' t
   = lemma1 {t = t} e ps ps' s≋s'
 eval-sound-red {t = t} {s = s} {s'} exp-box ps ps' s≋s'
   = lemma2 {x = eval t s} (fund t ps ps' s≋s')

@@ -56,8 +56,8 @@ private
 factor2 : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') → ∃ λ Γ' → Γ ⊆ Γ' × Γ' R Δ'
 factor2 (_ , ΓRΔ) w = -, factorWk ΓRΔ w , -, factorExt ΓRΔ w
 
-factor2⊆ : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') → Γ ⊆ _
-factor2⊆ r w = factor2 r w .proj₂ .proj₁
+factor2Wk : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') → Γ ⊆ _
+factor2Wk r w = factor2 r w .proj₂ .proj₁
 
 factor2R : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') → _ R Δ'
 factor2R r w = factor2 r w .proj₂ .proj₂
@@ -66,13 +66,13 @@ private
   factor2-pres-id : ∀ (r : Γ R Δ) → factor2 r idWk ≡ (-, idWk , r)
   factor2-pres-id (_ , ΓRΔ) = Σ×-≡,≡,≡→≡ (lCtxPresId ΓRΔ , factorWkPresId ΓRΔ , R-irrel _ _)
 
-  factor2-pres-∙ : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') → factor2 r (w ∙ w') ≡ (-, factor2⊆ r w ∙ factor2⊆ (factor2R r w) w' , factor2R (factor2R r w) w')
+  factor2-pres-∙ : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') → factor2 r (w ∙ w') ≡ (-, factor2Wk r w ∙ factor2Wk (factor2R r w) w' , factor2R (factor2R r w) w')
   factor2-pres-∙ (_ , ΓRΔ) w w' = Σ×-≡,≡,≡→≡ (lCtxPres∙ ΓRΔ w w' , factorWkPres∙ ΓRΔ w w' , R-irrel _ _)
 
   factor2-pres-refl : ∀ (w : Γ ⊆ Γ') → factor2 R-refl w ≡ (-, w , R-refl)
   factor2-pres-refl w = Σ-≡,≡→≡ (lCtxPresRefl {θ = tt} w , ×-≡,≡→≡ (factorWkPresRefl {θ = tt} w , R-irrel _ _))
 
-  factor2-pres-trans : ∀ (r : Γ R Δ) (r' : Δ R Θ) (w : Θ ⊆ Θ') → factor2 (R-trans r r') w ≡ (-, factor2⊆ r (factor2⊆ r' w) , R-trans (factor2R r (factor2⊆ r' w)) (factor2R r' w))
+  factor2-pres-trans : ∀ (r : Γ R Δ) (r' : Δ R Θ) (w : Θ ⊆ Θ') → factor2 (R-trans r r') w ≡ (-, factor2Wk r (factor2Wk r' w) , R-trans (factor2R r (factor2Wk r' w)) (factor2R r' w))
   factor2-pres-trans (_ , ΓRΔ) (_ , ΔRΘ) w = Σ×-≡,≡,≡→≡ (lCtxPresTrans ΓRΔ ΔRΘ w , factorWkPresTrans ΓRΔ ΔRΘ w , R-irrel _ _)
 
 module PresheafEvaluationIS4 = Semantics.Presheaf.Evaluation.IS4

@@ -226,7 +226,7 @@ module _ {Δ Γ : Ctx} where
         ∎
 
 abstract
-  evalAcc-pres-wk : ∀ (w : LFExt Γ' Γ ΓR) → evalAcc (upLFExt w) ≈̇ η'[ evalCtx Γ ] ∘ evalWk (LFExtTo⊆ w)
+  evalAcc-pres-wk : ∀ (w : LFExt Γ' Γ ΓR) → evalAcc (upLFExt w) ≈̇ η'[ evalCtx Γ ] ∘ evalWk (LFExtToWk w)
   evalAcc-pres-wk {Γ'} {Γ} nil = let open EqReasoning (Sub'-setoid Γ' (Γ 🔒)) in begin
     evalAcc (upLFExt nil[ Γ ])
       ≡⟨⟩
@@ -236,7 +236,7 @@ abstract
       ≈˘⟨ ∘-pres-≈̇-right η' (evalWk-pres-id Γ) ⟩
     η'[ evalCtx Γ ] ∘ evalWk idWk[ Γ ]
       ≡⟨⟩
-    η'[ evalCtx Γ ] ∘ evalWk (LFExtTo⊆ nil[ Γ ])
+    η'[ evalCtx Γ ] ∘ evalWk (LFExtToWk nil[ Γ ])
       ∎
   evalAcc-pres-wk {Γ' `, a} {Γ} (ext {a = a} w) = let open EqReasoning (Sub'-setoid (Γ' `, a) (Γ 🔒)) in begin
     evalAcc (upLFExt (ext[ a ] w))
@@ -245,13 +245,13 @@ abstract
       ≡⟨⟩
     evalAcc (upLFExt w) ∘ π₁'[ evalTy a ]
       ≈⟨ ∘-pres-≈̇-left (evalAcc-pres-wk w) π₁' ⟩
-    (η'[ evalCtx Γ ] ∘ evalWk (LFExtTo⊆ w)) ∘ π₁'[ evalTy a ]
-      ≈⟨ ∘-assoc η' (evalWk (LFExtTo⊆ w)) π₁' ⟩
-    η'[ evalCtx Γ ] ∘ evalWk (LFExtTo⊆ w) ∘ π₁'[ evalTy a ]
+    (η'[ evalCtx Γ ] ∘ evalWk (LFExtToWk w)) ∘ π₁'[ evalTy a ]
+      ≈⟨ ∘-assoc η' (evalWk (LFExtToWk w)) π₁' ⟩
+    η'[ evalCtx Γ ] ∘ evalWk (LFExtToWk w) ∘ π₁'[ evalTy a ]
       ≡⟨⟩
-    η'[ evalCtx Γ ] ∘ evalWk (drop[ a ] (LFExtTo⊆ w))
+    η'[ evalCtx Γ ] ∘ evalWk (drop[ a ] (LFExtToWk w))
       ≡⟨⟩
-    η'[ evalCtx Γ ] ∘ evalWk (LFExtTo⊆ (ext[ a ] w))
+    η'[ evalCtx Γ ] ∘ evalWk (LFExtToWk (ext[ a ] w))
       ∎
 
 module _ {ΓL : Ctx} where
@@ -561,23 +561,23 @@ abstract
       ≈⟨ unbox'-pres-≈̇-right (evalTm t) (evalAcc-pres-∘ (upLFExt w) e) ⟩
     unbox' (evalTm t) (μ'[ evalCtx ΓLL ] ∘ ✦'-map (evalAcc (upLFExt w)) ∘ evalAcc e)
       ≈⟨ unbox'-pres-≈̇-right (evalTm t) (∘-pres-≈̇-right μ' (∘-pres-≈̇-left (✦'-map-pres-≈̇ (evalAcc-pres-wk w)) (evalAcc e))) ⟩
-    unbox' (evalTm t) (μ'[ evalCtx ΓLL ] ∘ ✦'-map (η'[ evalCtx ΓLL ] ∘ evalWk (LFExtTo⊆ w)) ∘ evalAcc e)
-      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (∘-pres-≈̇-right μ' (∘-pres-≈̇-left (✦'-map-pres-∘ η' (evalWk (LFExtTo⊆ w))) (evalAcc e))) ⟩
-    unbox' (evalTm t) (μ'[ evalCtx ΓLL ] ∘ (✦'-map η'[ evalCtx ΓLL ] ∘ ✦'-map (evalWk (LFExtTo⊆ w))) ∘ evalAcc e)
-      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (∘-pres-≈̇-right μ' (∘-assoc (✦'-map η') (✦'-map (evalWk (LFExtTo⊆ w))) (evalAcc e))) ⟩
-    unbox' (evalTm t) (μ'[ evalCtx ΓLL ] ∘ ✦'-map η'[ evalCtx ΓLL ] ∘ ✦'-map (evalWk (LFExtTo⊆ w)) ∘ evalAcc e)
-      ≈˘⟨ unbox'-pres-≈̇-right (evalTm t) (∘-assoc μ' (✦'-map η') (✦'-map (evalWk (LFExtTo⊆ w)) ∘ evalAcc e)) ⟩
-    unbox' (evalTm t) ((μ'[ evalCtx ΓLL ] ∘ ✦'-map η'[ evalCtx ΓLL ]) ∘ ✦'-map (evalWk (LFExtTo⊆ w)) ∘ evalAcc e)
-      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (∘-pres-≈̇-left η'-unit-right[ evalCtx ΓLL ] (✦'-map (evalWk (LFExtTo⊆ w)) ∘ evalAcc e)) ⟩
-    unbox' (evalTm t) (id'[ ✦' evalCtx ΓLL ] ∘ ✦'-map (evalWk (LFExtTo⊆ w)) ∘ evalAcc e)
-      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (id'-unit-left (✦' evalCtx ΓLL) (✦'-map (evalWk (LFExtTo⊆ w)) ∘ evalAcc e)) ⟩
-    unbox' (evalTm t) (✦'-map (evalWk (LFExtTo⊆ w)) ∘ evalAcc e)
-      ≈˘⟨ unbox'-nat-dom (evalTm t) (evalWk (LFExtTo⊆ w)) (evalAcc e) ⟩
-    unbox' (evalTm t [ evalWk (LFExtTo⊆ w) ]') (evalAcc e)
-      ≈˘⟨ unbox'-pres-≈̇-left (evalTm-pres-∘' (LFExtTo⊆ w) t) (evalAcc e) ⟩
-    unbox' (evalTm (wkTm (LFExtTo⊆ w) t)) (evalAcc e)
+    unbox' (evalTm t) (μ'[ evalCtx ΓLL ] ∘ ✦'-map (η'[ evalCtx ΓLL ] ∘ evalWk (LFExtToWk w)) ∘ evalAcc e)
+      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (∘-pres-≈̇-right μ' (∘-pres-≈̇-left (✦'-map-pres-∘ η' (evalWk (LFExtToWk w))) (evalAcc e))) ⟩
+    unbox' (evalTm t) (μ'[ evalCtx ΓLL ] ∘ (✦'-map η'[ evalCtx ΓLL ] ∘ ✦'-map (evalWk (LFExtToWk w))) ∘ evalAcc e)
+      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (∘-pres-≈̇-right μ' (∘-assoc (✦'-map η') (✦'-map (evalWk (LFExtToWk w))) (evalAcc e))) ⟩
+    unbox' (evalTm t) (μ'[ evalCtx ΓLL ] ∘ ✦'-map η'[ evalCtx ΓLL ] ∘ ✦'-map (evalWk (LFExtToWk w)) ∘ evalAcc e)
+      ≈˘⟨ unbox'-pres-≈̇-right (evalTm t) (∘-assoc μ' (✦'-map η') (✦'-map (evalWk (LFExtToWk w)) ∘ evalAcc e)) ⟩
+    unbox' (evalTm t) ((μ'[ evalCtx ΓLL ] ∘ ✦'-map η'[ evalCtx ΓLL ]) ∘ ✦'-map (evalWk (LFExtToWk w)) ∘ evalAcc e)
+      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (∘-pres-≈̇-left η'-unit-right[ evalCtx ΓLL ] (✦'-map (evalWk (LFExtToWk w)) ∘ evalAcc e)) ⟩
+    unbox' (evalTm t) (id'[ ✦' evalCtx ΓLL ] ∘ ✦'-map (evalWk (LFExtToWk w)) ∘ evalAcc e)
+      ≈⟨ unbox'-pres-≈̇-right (evalTm t) (id'-unit-left (✦' evalCtx ΓLL) (✦'-map (evalWk (LFExtToWk w)) ∘ evalAcc e)) ⟩
+    unbox' (evalTm t) (✦'-map (evalWk (LFExtToWk w)) ∘ evalAcc e)
+      ≈˘⟨ unbox'-nat-dom (evalTm t) (evalWk (LFExtToWk w)) (evalAcc e) ⟩
+    unbox' (evalTm t [ evalWk (LFExtToWk w) ]') (evalAcc e)
+      ≈˘⟨ unbox'-pres-≈̇-left (evalTm-pres-∘' (LFExtToWk w) t) (evalAcc e) ⟩
+    unbox' (evalTm (wkTm (LFExtToWk w) t)) (evalAcc e)
       ≡⟨⟩
-    evalTm (unbox (wkTm (LFExtTo⊆ w) t) e)
+    evalTm (unbox (wkTm (LFExtToWk w) t) e)
       ∎
 
 module _ {Γ : Ctx} {a : Ty} where

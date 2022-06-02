@@ -145,7 +145,7 @@ private
     → Rt t x
     → Rt (unbox t e) (unbox' x e)
   unboxPresRt {t = t} {box x} e (u , uRx , r) =
-    Rt-prepend (multi (cong-unbox* r) (one red-box)) (invRt (LFExtTo⊆ e) uRx)
+    Rt-prepend (multi (cong-unbox* r) (one red-box)) (invRt (LFExtToWk e) uRx)
 
 -- The Fundamental theorem, for terms
 

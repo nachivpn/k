@@ -1,5 +1,9 @@
-{-# OPTIONS --safe --with-K #-}
-module Context (Ty : Set) where
+{-# OPTIONS --safe --without-K #-}
+
+open import Relation.Binary.Definitions           using (Decidable)
+open import Relation.Binary.PropositionalEquality using (_≡_)
+
+module Context (Ty : Set) (Ty-Decidable : Decidable (_≡_ {A = Ty})) where
 
 private
   variable
@@ -12,6 +16,8 @@ infixl 5 _,,_
 open import Data.Empty   using (⊥ ; ⊥-elim)
 open import Data.Product using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂ ; proj₂)
 open import Data.Unit    using (⊤ ; tt)
+
+open import Relation.Nullary using (_because_ ; yes ; no)
 
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; _≢_ ; refl ; sym ; trans ; subst ; subst₂ ; cong ; cong₂)
@@ -63,6 +69,24 @@ _,,_ : Ctx → Ctx → Ctx
 🔒→ (Γ `, x) = 🔒→ Γ `, x
 🔒→ (Γ 🔒)    = []
 
+Ctx-Decidable : Decidable (_≡_ {A = Ctx})
+Ctx-Decidable []       []       = yes refl
+Ctx-Decidable []       (Γ `, a) = no  λ ()
+Ctx-Decidable []       (Γ 🔒)    = no  λ ()
+Ctx-Decidable (Γ `, a) []       = no  λ ()
+Ctx-Decidable (Γ `, a) (Δ `, b) with Ctx-Decidable Γ Δ | Ty-Decidable a b
+... | yes Γ≡Δ  | yes a≡b        = yes (cong₂ _`,_ Γ≡Δ a≡b)
+... | yes Γ≡Δ  | no  ¬a≡b       = no  λ { refl → ¬a≡b refl }
+... | no  ¬Γ≡Δ | yes a≡b        = no  λ { refl → ¬Γ≡Δ refl }
+... | no  ¬Γ≡Δ | no  ¬a≡b       = no  λ { refl → ¬a≡b refl }
+Ctx-Decidable (Γ `, a) (Δ 🔒)    = no  λ ()
+Ctx-Decidable (Γ 🔒)   []       = no  λ ()
+Ctx-Decidable (Γ 🔒)   (Δ `, a) = no  λ ()
+Ctx-Decidable (Γ 🔒)   (Δ 🔒)     with Ctx-Decidable Γ Δ
+... | yes Γ≡Δ                   = yes (cong _🔒 Γ≡Δ)
+... | no  ¬Γ≡Δ                  = no  λ { refl → ¬Γ≡Δ refl }
+
+open Decidable⇒K Ctx-Decidable using () renaming (K to Ctx-K)
 
 -------------
 -- Weakenings
@@ -227,15 +251,38 @@ pattern ext🔒- e = ext🔒 tt e
 variable
   e e' e'' : Ext θ Γ ΓL ΓR
 
+`,-injective-left : Γ `, a ≡ Δ `, b → Γ ≡ Δ
+`,-injective-left refl = refl
+
+`,-injective-right : Γ `, a ≡ Δ `, b → a ≡ b
+`,-injective-right refl = refl
+
+🔒-injective : Γ 🔒 ≡ Δ 🔒 → Γ ≡ Δ
+🔒-injective refl = refl
+
 -- Proof of WL is irrelevant
 WLIsProp : (x x' : WL θ) → x ≡ x'
 WLIsProp {tt} tt tt = refl
 
 -- Proof of Ext is irrelevant
+private
+  ExtIsProp' : (e : Ext θ Γ ΓL ΓR) → (e' : Ext θ Γ ΓL' ΓR') → (pl : ΓL' ≡ ΓL) → (pr : ΓR' ≡ ΓR) → e ≡ subst₂ (Ext θ Γ) pl pr e'
+  ExtIsProp' nil           nil           pl   pr with Ctx-K pl
+  ... | refl with Ctx-K pr
+  ... | refl = refl
+  ExtIsProp' nil           (ext _e)      _pl  ()
+  ExtIsProp' nil           (ext🔒 _x _e) _pl  ()
+  ExtIsProp' (ext e)       nil           _pl  ()
+  ExtIsProp' (ext e)       (ext e')      refl pr with `,-injective-left pr
+  ... | refl with Ctx-K pr
+  ... | refl = cong ext (ExtIsProp' e e' refl refl)
+  ExtIsProp' (ext🔒 _x _e) nil           _pl  ()
+  ExtIsProp' (ext🔒  x  e) (ext🔒 x' e') refl pr with 🔒-injective pr
+  ... | refl with Ctx-K pr
+  ... | refl = cong₂ ext🔒 (WLIsProp x x') (ExtIsProp' e e' refl refl)
+
 ExtIsProp : (e e' : Ext θ Γ ΓL ΓR) → e ≡ e'
-ExtIsProp nil         nil         = refl
-ExtIsProp (ext e)     (ext e')    = cong ext (ExtIsProp e e')
-ExtIsProp (ext🔒 x e) (ext🔒 x' e') = cong₂ ext🔒 (WLIsProp x x') (ExtIsProp e e')
+ExtIsProp e e' = ExtIsProp' e e' refl refl
 
 -- LFExt is indeed a lock-free extension
 LFExtIs🔒-free : LFExt Γ ΓL ΓR → 🔒-free ΓR
@@ -272,15 +319,6 @@ extLUniq : Ext θ Γ' ΓL ΓR → Ext θ Γ ΓL ΓR → Γ' ≡ Γ
 extLUniq nil        nil         = refl
 extLUniq (ext e)    (ext e')    = cong (_`, _) (extLUniq e e')
 extLUniq (ext🔒 f e) (ext🔒 _ e') = cong _🔒 (extLUniq e e')
-
-`,-injective-left : Γ `, a ≡ Δ `, b → Γ ≡ Δ
-`,-injective-left refl = refl
-
-`,-injective-right : Γ `, a ≡ Δ `, b → a ≡ b
-`,-injective-right refl = refl
-
-🔒-injective : Γ 🔒 ≡ Δ 🔒 → Γ ≡ Δ
-🔒-injective refl = refl
 
 private
   open import Data.Nat
@@ -455,9 +493,17 @@ slicingLemma (drop w)  (ext e) = cong drop (slicingLemma w (ext e))
 slicingLemma (keep w)  (ext e) = cong drop (slicingLemma w e)
 slicingLemma (keep🔒 w) nil     = cong keep🔒 (trans (leftIdWk w) (sym (rightIdWk w)))
 
+private
+  sliceLeftId' : (e : LFExt Γ ΓL ΓR) → (pl : ΓL ≡ ←🔒 Γ 🔒) → (pr : ΓR ≡ 🔒→ Γ) → sliceLeft (subst₂ (LFExt Γ) pl pr e) idWk ≡ idWk
+  sliceLeftId' {Γ = _Γ 🔒}    nil     pl   pr with Ctx-K pl
+  ... | refl with Ctx-K pr
+  ... | refl = refl
+  sliceLeftId' {Γ = _Γ `, _a} (ext e) refl pr with `,-injective-left pr
+  ... | refl with Ctx-K pr
+  ... | refl = sliceLeftId' e refl refl
+
 sliceLeftId : (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → sliceLeft e idWk ≡ idWk
-sliceLeftId {Γ `, x} (ext e) = sliceLeftId e
-sliceLeftId {Γ 🔒}    nil     = refl
+sliceLeftId e = sliceLeftId' e refl refl
 
 wkLFExtPresId :  (e : LFExt Γ (←🔒 Γ 🔒) (🔒→ Γ)) → wkLFExt e idWk ≡ e
 wkLFExtPresId _ = ExtIsProp _ _

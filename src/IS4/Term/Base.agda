@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Term.Base where
 
 --
@@ -6,13 +6,13 @@ module IS4.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import Data.Product using (∃; _×_; _,_; -,_; proj₁; proj₂)
+open import Data.Product using (∃ ; _×_ ; _,_ ; -,_ ; proj₁ ; proj₂)
 
 open import Relation.Binary.PropositionalEquality using (sym ; subst)
 
-open import IK.Type    as Type using (Ty)
+open import IK.Type as Type using (Ty ; Ty-Decidable)
 
-import      Context Ty as Context
+import Context Ty Ty-Decidable as Context
 
 open Context public hiding (ext🔒)
 open Type    public

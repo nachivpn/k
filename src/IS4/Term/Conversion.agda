@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Term.Conversion where
 
 open import Data.Product using (Σ ; _,_)
@@ -16,7 +16,6 @@ open import Relation.Binary.PropositionalEquality
   using    (_≡_ ; cong ; cong₂ ; subst ; subst₂ ; module ≡-Reasoning)
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
-open import HEUtil
 open import PUtil
 
 open import IS4.Term.Base

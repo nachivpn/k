@@ -1,11 +1,12 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IK.Applications.Neutrality where
 
-open import IK.Term
-open import IK.Norm
-
 open import Data.Empty
+
 open import Relation.Binary using (Transitive)
+
+open import IK.Norm.Base
+open import IK.Term
 
 infixr 3 _⊲_
 infixr 3 _⊲ᶜ_

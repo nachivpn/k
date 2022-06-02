@@ -1,18 +1,23 @@
-{-# OPTIONS --safe --with-K #-}
-open import Context using ()
-  renaming (Ctx to ICtx ; _⊆_ to I⊆ ; Var to IVar)
+{-# OPTIONS --safe --without-K #-}
+open import Relation.Binary.Definitions           using (Decidable)
+open import Relation.Binary.PropositionalEquality using (_≡_)
 
-module IK.Term.Substitution.Base (Ty : Set)
-  (Tm    : ICtx Ty → Ty → Set)
-  (var   : ∀ {Γ a} → IVar Ty Γ a → Tm Γ a)
-  (wkTm  : ∀ {Γ' Γ a} → I⊆ Ty Γ Γ' → Tm Γ a → Tm Γ' a)
+import Context
+
+module IK.Term.Substitution.Base
+  (Ty           : Set)
+  (Ty-Decidable : Decidable (_≡_ {A = Ty}))
+  (open Context Ty Ty-Decidable using (Ctx ; Var ; _⊆_))
+  (Tm           : Ctx → Ty → Set)
+  (var          : ∀ {Γ a} → Var Γ a → Tm Γ a)
+  (wkTm         : ∀ {Γ' Γ a} → Γ ⊆ Γ' → Tm Γ a → Tm Γ' a)
   where
 
 open import Data.Product using (∃; _×_; _,_; proj₁; proj₂; -,_)
 
 open import Relation.Binary.PropositionalEquality
 
-open import Context (Ty)
+open Context Ty Ty-Decidable hiding (Ctx ; Var ; _⊆_)
 
 private
   variable

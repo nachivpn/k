@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 open import Data.Product using (∃; _,_; -,_) renaming (_×_ to _∧_; proj₁ to fst; proj₂ to snd)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
@@ -84,7 +84,9 @@ open import Relation.Binary using (IsEquivalence; Setoid)
 
 import Relation.Binary.Reasoning.Setoid as EqReasoning
 
-open import IS4.Term
+open import IS4.Term.Base
+open import IS4.Term.Conversion
+open import IS4.Term.Reduction
 
 open import Semantics.Clouston.Evaluation.IS4.Base
     Ctx' _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ ∘-pres-≈̇ ∘-assoc id'[_] id'-unit-left id'-unit-right

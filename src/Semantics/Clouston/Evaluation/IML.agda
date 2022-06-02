@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 open import Data.Product using (∃; _,_; -,_) renaming (_×_ to _∧_; proj₁ to fst; proj₂ to snd)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
@@ -59,7 +59,7 @@ import Relation.Binary.Reasoning.Setoid as EqReasoning
 
 open import IK.Type
 
-open import Context (Ty)
+open import Context Ty Ty-Decidable
 
 -- XXX: make parameters
 private

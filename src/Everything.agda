@@ -1,4 +1,7 @@
+{-# OPTIONS --safe --with-K #-}
+
 open import Relation.Binary.PropositionalEquality using (_≡_)
+
 module Everything
   (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
            → ((x : A) → f x ≡ g x) → f ≡ g)

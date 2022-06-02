@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IK.Term.NormalForm.Properties where
 
 open import Relation.Binary.PropositionalEquality

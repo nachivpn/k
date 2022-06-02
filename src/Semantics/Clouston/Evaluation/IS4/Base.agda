@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 open import Data.Product using (∃; _,_; -,_) renaming (_×_ to _∧_; proj₁ to fst; proj₂ to snd)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
@@ -54,7 +54,7 @@ module Semantics.Clouston.Evaluation.IS4.Base
   (λ'   : {P Q : Ty'} → (φ : P →̇ □' Q) → ✦' P →̇ Q)
   where
 
-open import IS4.Term
+open import IS4.Term.Base
 
 import Semantics.Clouston.Evaluation.IML
   Ctx' _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ ∘-pres-≈̇ ∘-assoc id'[_] id'-unit-left id'-unit-right

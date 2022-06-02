@@ -1,9 +1,10 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IK.Applications.Experiments where
 
 import Context as C
+
+open import IK.Norm.Base
 open import IK.Term
-open import IK.Norm
 
 open import IK.Applications.Neutrality
 

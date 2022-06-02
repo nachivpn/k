@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 open import Relation.Binary.PropositionalEquality using (_≡_)
 module IK.Norm.Properties.Completeness.HellOfSemanticLemmas
   (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}

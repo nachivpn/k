@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IK.Norm.Properties.Soundness.Trace where
 
 open import Data.Unit

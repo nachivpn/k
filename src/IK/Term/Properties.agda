@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IK.Term.Properties where
 
 -- Welcome to the hell of mind-numbing syntactic lemmas.

@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IK.Term.Base where
 
 --
@@ -6,10 +6,10 @@ module IK.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import IK.Type    as Type    using (Ty)
-import      Context Ty as Context
+open import IK.Type as Type using (Ty ; Ty-Decidable)
 
-open Context public using (Var)
+open import Context Ty Ty-Decidable as Context
+
 open Context public
 open Type    public
 
@@ -61,7 +61,7 @@ leftWkTm (app t u)   = app (leftWkTm t) (leftWkTm u)
 leftWkTm (box t)     = box (leftWkTm t)
 leftWkTm (unbox t e) = unbox (leftWkTm t) (leftWkLFExt e)
 
-open import IK.Term.Substitution Ty Tm var wkTm public
+open import IK.Term.Substitution Ty Ty-Decidable Tm var wkTm public
 
 -- apply substitution to a term
 substTm : Sub Δ Γ → Tm Γ a → Tm Δ a

@@ -24,10 +24,7 @@ import Context
 open import IK.Completeness.HellOfSemanticLemmas funext funexti
 open import IK.Completeness.Presheaf             funext funexti
 
-open import IK.Conversion
-open import IK.HellOfSyntacticLemmas
 open import IK.Norm
-open import IK.Reduction
 open import IK.Term
 
 -- soundness relation on semantic values

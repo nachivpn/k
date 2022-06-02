@@ -13,7 +13,6 @@ open import Relation.Binary.PropositionalEquality
 
 import Context
 
-open import IK.HellOfSyntacticLemmas
 open import IK.Norm
 open import IK.Term
 

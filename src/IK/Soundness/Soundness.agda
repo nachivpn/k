@@ -4,7 +4,6 @@ module IK.Soundness.Soundness where
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; cong ; cong₂ ; trans)
 
-open import IK.Conversion
 open import IK.Norm
 open import IK.Term
 

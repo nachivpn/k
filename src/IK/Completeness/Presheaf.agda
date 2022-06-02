@@ -11,7 +11,6 @@ open import Data.Product using (Σ ; _×_ ; _,_ ; proj₁ ; proj₂)
 
 open import Relation.Binary.PropositionalEquality
 
-open import IK.HellOfSyntacticLemmas
 open import IK.Norm
 open import IK.Term
 

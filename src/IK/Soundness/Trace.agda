@@ -8,9 +8,7 @@ open import Data.Product
 
 open import Relation.Binary.PropositionalEquality
 
-open import IK.HellOfSyntacticLemmas
 open import IK.Norm
-open import IK.Reduction
 open import IK.Term
 
 quotTm : Tm' Γ a → Tm Γ a

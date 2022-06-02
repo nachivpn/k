@@ -8,13 +8,15 @@ module Everything
 import Context
 import HEUtil
 
-import IK.Substitution
-import IK.Conversion
-import IK.HellOfSyntacticLemmas
-import IK.Norm
-import IK.Reduction
-import IK.Term
 import IK.Type
+
+import IK.Term
+import IK.Term.Conversion
+import IK.Term.NormalForm
+import IK.Term.Reduction
+import IK.Term.Substitution
+
+import IK.Norm
 
 import IK.Applications.Experiments
 import IK.Applications.Neutrality

@@ -1,8 +1,8 @@
 {-# OPTIONS --safe --with-K #-}
-module IK.Reduction where
+module IK.Term.Reduction where
 
-open import IK.Term
-open import IK.HellOfSyntacticLemmas
+open import IK.Term.Base
+open import IK.Term.Properties
   using (beta-wk-lemma ; keepFreshLemma ; sliceCompLemma)
 
 open import Relation.Nullary

@@ -1,8 +1,8 @@
 {-# OPTIONS --safe --with-K #-}
-module IK.Conversion where
+module IK.Term.Conversion where
 
-open import IK.Term
-open import IK.Reduction
+open import IK.Term.Base
+open import IK.Term.Reduction
   as Reduction
 
 import Data.Sum as Sum

@@ -8,7 +8,6 @@ open import Data.Product using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂)
 open import Relation.Nullary
 
 open import IK.Norm
-open import IK.Reduction
 open import IK.Soundness.Trace
 open import IK.Term
 

@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --without-K #-}
 module IK.Applications.WeakNorm where
 
 open import Data.Empty
@@ -7,7 +7,7 @@ open import Data.Product using (Σ ; _×_ ; _,_ ; ∃ ; ∃₂)
 
 open import Relation.Nullary
 
-open import IK.Norm
+open import IK.Norm.Base
 open import IK.Norm.Properties.Soundness.Trace
 
 open import IK.Term

@@ -1,5 +1,5 @@
-{-# OPTIONS --safe --with-K #-}
-module IK.Norm.Properties.Soundness.Soundness where
+{-# OPTIONS --without-K #-}
+module IK.Norm.Properties.Soundness where
 
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; cong ; cong₂ ; trans)

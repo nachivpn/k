@@ -1,5 +1,10 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Applications.Purity where
+
+open import Relation.Nullary using (_because_; yes; no)
+
+open import Relation.Binary.Definitions           using (Decidable)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong ; cong₂)
 
 data Ty : Set where
   Unit : Ty
@@ -11,7 +16,42 @@ data Ty : Set where
 variable
     a b c d : Ty
 
-open import Context (Ty) hiding (ext🔒) public
+Ty-Decidable : Decidable (_≡_ {A = Ty})
+Ty-Decidable Unit    Unit    = yes refl
+Ty-Decidable Unit    𝕔       = no  λ ()
+Ty-Decidable Unit    (a ⇒ b) = no  λ ()
+Ty-Decidable Unit    (◻ a)   = no  λ ()
+Ty-Decidable Unit    (T a)   = no  λ ()
+Ty-Decidable 𝕔       Unit    = no  λ ()
+Ty-Decidable 𝕔       𝕔       = yes refl
+Ty-Decidable 𝕔       (a ⇒ b) = no  λ ()
+Ty-Decidable 𝕔       (◻ a)   = no  λ ()
+Ty-Decidable 𝕔       (T a)   = no  λ ()
+Ty-Decidable (a ⇒ b) Unit    = no  λ ()
+Ty-Decidable (a ⇒ b) 𝕔       = no  λ ()
+Ty-Decidable (a ⇒ b) (c ⇒ d) with Ty-Decidable a c | Ty-Decidable b d
+... | yes a≡c  | yes b≡d     = yes (cong₂ _⇒_ a≡c b≡d)
+... | yes a≡c  | no  ¬b≡d    = no  λ { refl → ¬b≡d refl }
+... | no  ¬a≡c | yes b≡d     = no  λ { refl → ¬a≡c refl }
+... | no  ¬a≡c | no  ¬b≡d    = no  λ { refl → ¬a≡c refl }
+Ty-Decidable (a ⇒ b) (◻ c)   = no  λ ()
+Ty-Decidable (a ⇒ b) (T c)   = no  λ ()
+Ty-Decidable (◻ a)   Unit    = no  λ ()
+Ty-Decidable (◻ a)   𝕔       = no  λ ()
+Ty-Decidable (◻ a)   (b ⇒ c) = no  λ ()
+Ty-Decidable (◻ a)   (◻ b)   with Ty-Decidable a b
+... | yes a≡b                = yes (cong ◻_ a≡b)
+... | no  ¬a≡b               = no  λ { refl → ¬a≡b refl }
+Ty-Decidable (◻ a)   (T b)   = no  λ ()
+Ty-Decidable (T a)   Unit    = no  λ ()
+Ty-Decidable (T a)   𝕔       = no  λ ()
+Ty-Decidable (T a)   (b ⇒ c) = no  λ ()
+Ty-Decidable (T a)   (◻ b)   = no  λ ()
+Ty-Decidable (T a)   (T b)   with Ty-Decidable a b
+... | yes a≡b                = yes (cong T a≡b)
+... | no  ¬a≡b               = no  λ { refl → ¬a≡b refl }
+
+open import Context Ty Ty-Decidable hiding (ext🔒) public
 
 ------------------------------------
 -- Variables, terms and substituions

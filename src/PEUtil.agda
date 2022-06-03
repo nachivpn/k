@@ -31,3 +31,13 @@ subst-application′ : ∀ {a b₁ b₂} {A : Set a}
                     (eq : x₁ ≡ x₂) →
                     subst B₂ eq (g y) ≡ g (subst B₁ eq y)
 subst-application′ _ _ refl = refl
+
+open import Relation.Binary.Definitions using (Decidable)
+
+module Decidable⇒K {a} {A : Set a} (_≟_ : Decidable (_≡_ {A = A})) where
+  open import Axiom.UniquenessOfIdentityProofs using (module Decidable⇒UIP)
+
+  open Decidable⇒UIP _≟_ public
+
+  K : {a : A} → (p : a ≡ a) → p ≡ refl
+  K p = ≡-irrelevant p refl

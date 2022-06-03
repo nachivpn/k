@@ -12,13 +12,13 @@ open import IS4.Norm.NbE.Model
 
 open import IS4.Term hiding (factorWk)
 
-reflect         : (a : Ty) → (n : Ne  Γ a) → Ty' Γ a
+reflect         : (a : Ty) → (n : Ne  Γ a) → Tm' Γ a
 reflect-pres-≋  : ∀ (a : Ty) {n n' : Ne Γ a} (n≡n' : n ≡ n') → reflect a n ≋[ evalTy a ] reflect a n'
 reflect-natural : ∀ (a : Ty) (n : Ne Γ a) (w : Γ ⊆ Γ') → reflect a (wkNe w n) ≋[ evalTy a ] wk[ evalTy a ] w (reflect a n)
 
-reify         : (a : Ty) → (x : Ty' Γ a) → Nf  Γ a
-reify-pres-≋  : ∀ (a : Ty) {x x' : Ty' Γ a} (x≋x' : x ≋[ evalTy a ] x') → reify a x ≡ reify a x'
-reify-natural : ∀ (a : Ty) (x : Ty' Γ a) (w : Γ ⊆ Γ') → reify a (wk[ evalTy a ] w x) ≡ wkNf w (reify a x)
+reify         : (a : Ty) → (x : Tm' Γ a) → Nf  Γ a
+reify-pres-≋  : ∀ (a : Ty) {x x' : Tm' Γ a} (x≋x' : x ≋[ evalTy a ] x') → reify a x ≡ reify a x'
+reify-natural : ∀ (a : Ty) (x : Tm' Γ a) (w : Γ ⊆ Γ') → reify a (wk[ evalTy a ] w x) ≡ wkNf w (reify a x)
 
 -- interpretation of neutrals
 reflect 𝕓       n = n
@@ -89,7 +89,7 @@ reify-natural (□ a) x w = let open ≡-Reasoning in begin
   wkNf w (reify (□ a) x) ∎
 
 -- (reflected) identity substitution (one direction of the prinicipal lemma?)
-idₛ' : (Γ : Ctx) → Ctx' Γ Γ
+idₛ' : (Γ : Ctx) → Sub' Γ Γ
 idₛ' []       = tt
-idₛ' (Γ `, a) = record { elem = (wkCtx' Γ (fresh[ a ]) (idₛ' Γ) , reflect a var0) }
+idₛ' (Γ `, a) = record { elem = (wkSub' Γ (fresh[ a ]) (idₛ' Γ) , reflect a var0) }
 idₛ' (Γ 🔒)    = elem (-, newR , idₛ' Γ)

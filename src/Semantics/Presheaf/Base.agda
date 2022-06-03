@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module Semantics.Presheaf.Base
   (C       : Set)
   (_⊆_     : (Γ Γ' : C) → Set)

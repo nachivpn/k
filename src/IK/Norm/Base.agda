@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --without-K #-}
 module IK.Norm.Base where
 
 open import Data.Unit    using (⊤ ; tt)

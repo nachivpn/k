@@ -141,35 +141,30 @@ _→̇_ : (Ctx → Set) → (Ctx → Set) → Set
 _→̇_ A B = {Δ : Ctx} → A Δ → B Δ
 
 -- interpretation of types
-Ty' Tm' : (Γ : Ctx) → (a : Ty) → Set
-Ty' Γ a = evalTy a ₀ Γ
-Tm' = Ty'
+Tm' : (Γ : Ctx) → (a : Ty) → Set
+Tm' Γ a = evalTy a ₀ Γ
 
 Tm'- : Ty → Ctx → Set
 Tm'- a Γ = Tm' Γ a
 
 -- interpretation of contexts ("environments")
-Ctx' Sub' : (Γ : Ctx) → (Δ : Ctx) → Set
-Ctx' Γ Δ = evalCtx Δ ₀ Γ
-Sub' = Ctx'
+Sub' : (Γ : Ctx) → (Δ : Ctx) → Set
+Sub' Γ Δ = evalCtx Δ ₀ Γ
 
 Sub'- : Ctx → Ctx → Set
 Sub'- Δ Γ = Sub' Γ Δ
 
-Env = Ctx'
-
 variable
-  ρ ρ' ρ'' : Env Γ Δ
+  ρ ρ' ρ'' : Sub' Γ Δ
 
 -- values in the model can be weakened
-wkTy' wkTm' : (a : Ty) → (w : Γ ⊆ Γ') → (x : Ty' Γ a) → Ty' Γ' a
+wkTy' wkTm' : (a : Ty) → (w : Γ ⊆ Γ') → (x : Tm' Γ a) → Tm' Γ' a
 wkTy' a = wk[ evalTy a ]
 wkTm' = wkTy'
 
 -- environments in the model can be weakened
-wkCtx' wkSub' : (Δ : Ctx) → (w : Γ ⊆ Γ') → (ρ : Ctx' Γ Δ) → Ctx' Γ' Δ
-wkCtx' Δ = wk[ evalCtx Δ ]
-wkSub' = wkCtx'
+wkSub' : (Δ : Ctx) → (w : Γ ⊆ Γ') → (ρ : Sub' Γ Δ) → Sub' Γ' Δ
+wkSub' Δ = wk[ evalCtx Δ ]
 
 -- semantic counterpart of `unbox` from `Tm`
 unbox' : Tm' ΓL (□ a) → CExt Γ ΓL ΓR → Tm' Γ a

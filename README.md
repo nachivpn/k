@@ -17,14 +17,16 @@ repository directory:
 
 ### Assumptions
 
-The code/proofs depend on the following axioms:
-  + Uniqueness of identity proofs (Axiom K)
+The code depends on the following two axioms:
+
+  + Uniqueness of identity proofs (axiom K)
   + Function extensionality
 
-We expect that both axioms can be dispensed; function extensionality
-helps simplify the proof of soundness for the evaluation function of
-$λ_\text{IK}$, and axiom K helps in reasoning about (heterogeneous)
-equality of values of the modal accessibility relation.
+Function extensionality avoids the use of setoids in the soundness
+proof for the evaluation function of $λ_\text{IK}$, and axiom K allows
+reasoning about values of the modal accessibility relation using
+heterogeneous equality. We expect that both axioms can be dispensed
+with.
 
 ## Contents
 

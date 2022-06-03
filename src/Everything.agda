@@ -1,12 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
-
-open import Relation.Binary.PropositionalEquality using (_≡_)
-
-module Everything
-  (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
-           → ((x : A) → f x ≡ g x) → f ≡ g)
-  (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
-           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g) where
+module Everything where
 
 import Type
 import Context
@@ -21,9 +13,8 @@ import IK.Term.Substitution
 import IK.Norm
 import IK.Norm.NbE.Model
 import IK.Norm.NbE.Reification
-open import IK.Norm.Properties.Completeness.Completeness funext funexti
-import IK.Norm.Properties.Soundness.Soundness
-import IK.Norm.Properties.Soundness.Trace
+import IK.Norm.Properties.Completeness
+import IK.Norm.Properties.Soundness
 
 import IK.Applications.Experiments
 import IK.Applications.Neutrality

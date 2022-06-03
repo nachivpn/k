@@ -1,10 +1,5 @@
-{-# OPTIONS --safe --with-K #-}
-open import Relation.Binary.PropositionalEquality using (_≡_)
-module IK.Norm.Properties.Completeness.Completeness
-  (funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
-           → ((x : A) → f x ≡ g x) → f ≡ g)
-  (funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
-           → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g) where
+{-# OPTIONS --with-K #-}
+module IK.Norm.Properties.Completeness where
 
 
 --
@@ -20,9 +15,6 @@ open import Data.Product
 open import Relation.Binary.PropositionalEquality
 
 import Context
-
-open import IK.Norm.Properties.Completeness.HellOfSemanticLemmas funext funexti
-open import IK.Norm.Properties.Completeness.Presheaf             funext funexti
 
 open import IK.Norm.Base
 

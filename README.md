@@ -21,9 +21,10 @@ The code/proofs depend on the following axioms:
   + Uniqueness of identity proofs (Axiom K)
   + Function extensionality
 
-We note that function extensionality is not strictly required; it
+We expect that both axioms can be dispensed; function extensionality
 helps simplify the proof of soundness for the evaluation function of
-$λ_\text{IK}$.
+$λ_\text{IK}$, and axiom K helps in reasoning about (heterogeneous)
+equality of values of the modal accessibility relation.
 
 ## Contents
 

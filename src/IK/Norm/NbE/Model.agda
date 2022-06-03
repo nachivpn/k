@@ -3,7 +3,8 @@ module IK.Norm.NbE.Model where
 
 open import Data.Unit    using (⊤ ; tt)
 open import Data.Product using (Σ ; _×_ ; _,_)
-open import Relation.Binary.PropositionalEquality
+
+open import Relation.Binary.PropositionalEquality using (_≡_ ; subst ; refl ; sym ; trans ; cong ; cong₂)
 
 open import IK.Term
 

@@ -1,4 +1,4 @@
-{-# OPTIONS --with-K #-}
+{-# OPTIONS --without-K #-}
 module IK.Norm where
 
 open import IK.Norm.Base                    public

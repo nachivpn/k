@@ -86,7 +86,7 @@ Ctx-Decidable (Γ 🔒)   (Δ 🔒)     with Ctx-Decidable Γ Δ
 ... | yes Γ≡Δ                   = yes (cong _🔒 Γ≡Δ)
 ... | no  ¬Γ≡Δ                  = no  λ { refl → ¬Γ≡Δ refl }
 
-open Decidable⇒K Ctx-Decidable using () renaming (K to Ctx-K)
+open Decidable⇒K Ctx-Decidable using () renaming (K to Ctx-K) public
 
 -------------
 -- Weakenings

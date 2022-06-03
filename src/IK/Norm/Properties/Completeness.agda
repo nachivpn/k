@@ -1,4 +1,4 @@
-{-# OPTIONS --with-K #-}
+{-# OPTIONS --without-K #-}
 module IK.Norm.Properties.Completeness where
 
 
@@ -13,8 +13,6 @@ open import Data.Product
   using (Σ ; _×_ ; _,_ ; ∃)
 
 open import Relation.Binary.PropositionalEquality
-
-import Context
 
 open import IK.Norm.Base
 
@@ -240,9 +238,11 @@ private
                (subst Pshₛ (sym (trimSub'PresId s')) ps')
                (lock lemma1-2 e)
     where
+      lemma1-1' : ∀ (e : LFExt Γ ΓL ΓR) → (p : ΓL ≡ ←🔒 Γ 🔒) → sliceLeft nil (LFExtToWk (subst (λ ΓL → LFExt Γ ΓL ΓR) p e)) ≡ idWk
+      lemma1-1' {Γ = Γ 🔒}   nil     p    rewrite Ctx-K p = refl
+      lemma1-1' {Γ = Γ `, a} (ext e) refl                 = lemma1-1' e refl
       lemma1-1 : ∀ (e : LFExt Γ (←🔒 Γ 🔒) ΓR) → sliceLeft nil (LFExtToWk e) ≡ idWk
-      lemma1-1 {Γ Context.`, x} (Context.ext e) = lemma1-1 e
-      lemma1-1 {Γ Context.🔒} Context.nil = refl
+      lemma1-1 e = lemma1-1' e refl
       lemma1-2 : wkSub' (sliceLeft nil (LFExtToWk e)) s ≋ₛ trimSub' idWk s'
       lemma1-2 rewrite lemma1-1 e
         | trimSub'PresId s'

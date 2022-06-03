@@ -145,7 +145,7 @@ wkTm'PresId : (x : Tm' Γ a) → wkTm' idWk x ≡ x
 wkTm'PresId {a = 𝕓}     n
   = wkNfPresId n
 wkTm'PresId {a = a ⇒ b} f
-  = funexti (λ _ → funext (λ _ → cong f (leftIdWk _)))
+  = funexti' (λ _ → funext (λ _ → cong f (leftIdWk _)))
 wkTm'PresId {a = □ a}  (box x)
   = cong box (wkTm'PresId x)
 
@@ -155,7 +155,7 @@ wkTm'Pres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (x : Tm' Γ a)
 wkTm'Pres∙ {a = 𝕓}     w w' n       =
   wkNfPres∙ w w' n
 wkTm'Pres∙ {a = a ⇒ b} w w' f       =
-  funexti (λ _ → funext (λ w'' →
+  funexti' (λ _ → funext (λ w'' →
     cong f (sym (assocWk w w' w''))))
 wkTm'Pres∙ {a = □ a}  w w' (box x) =
   cong box (wkTm'Pres∙ (keep🔒 w) (keep🔒 w') x)
@@ -245,7 +245,7 @@ psh-eval (unbox t (ext e)) (s , _)  (ps , _)
 nat-eval (var x)           w s       ps
   = nat-substVar' w x s
 nat-eval (lam t)           w s       ps
-  = funexti (λ _ → funext λ _ → funext (λ _
+  = funexti' (λ _ → funext λ _ → funext (λ _
     → cong (λ z →  eval t (z , _)) (wkSub'Pres∙ _ _ _)))
 nat-eval (app t u)         w s       ps with
   (psh-eval t s ps idWk (eval u s) (psh-eval u s ps))
@@ -336,7 +336,7 @@ coh-trimSub'-wkTm : (w : Γ ⊆ Γ') (s : Sub' Δ Γ') (t : Tm Γ a)
 coh-trimSub'-wkTm w s (var x)
   = coh-trimSub'-wkVar' w s x
 coh-trimSub'-wkTm w s (lam t)
-  = funexti (λ _ → funext (λ w' → funext (λ x →
+  = funexti' (λ _ → funext (λ w' → funext (λ x →
       trans
         (coh-trimSub'-wkTm (keep w) (wkSub' w' s , x) t)
         (cong (λ z → eval t (z , x)) (nat-trimSub' w w' s)))))

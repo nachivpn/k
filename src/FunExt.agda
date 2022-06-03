@@ -1,10 +1,13 @@
 {-# OPTIONS --without-K #-}
-open import Relation.Binary.PropositionalEquality using (_≡_)
 module FunExt where
 
-postulate
-  funext  : ∀{i j}{A : Set i}{B : A → Set j}{f g : (x : A) → B x}
-           → ((x : A) → f x ≡ g x) → f ≡ g
+open import Level renaming (zero to ℓ0)
+open import Relation.Binary.PropositionalEquality using (_≡_; trans)
+open import Axiom.Extensionality.Propositional
 
-  funexti : ∀{i j}{A : Set i}{B : A → Set j}{f g : {x : A} → B x}
+postulate
+  funext  : Extensionality ℓ0 ℓ0
+
+funexti' : ∀ {A : Set} {B : A → Set} {f g : {x : A} → B x}
            → ((x : A) → f {x} ≡ g {x}) → _≡_ {A = {x : A} → B x} f g
+funexti' x = implicit-extensionality funext (x _)

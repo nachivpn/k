@@ -40,7 +40,7 @@ idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) new
 -- naturality of reflect
 nat-reflect : (w : Γ ⊆ Γ') (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)
 nat-reflect {a = 𝕓}     w n = refl
-nat-reflect {a = a ⇒ b} w n = funexti (λ _ → funext (λ _ → funext (λ _
+nat-reflect {a = a ⇒ b} w n = funexti' (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
 nat-reflect {a = □ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
 

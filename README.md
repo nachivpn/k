@@ -6,7 +6,7 @@ This repository contains the artifact accompanying the paper
 ## Dependencies
 
 - [Agda](https://agda.readthedocs.io/en/v2.6.2.1/) version 2.6.2.1
-- [Agda standard library](https://github.com/agda/agda-stdlib/) version 1.7.1
+- [Agda standard library](https://github.com/agda/agda-stdlib/) version 1.7
 
 ## Check
 

@@ -56,7 +56,7 @@ function for the calculi $λ_\text{IK}$ (`src/IK/`) and $λ_\text{IS4}$
     + `reify` and `reflect` → `src/IK/Norm/NbE/Reification.agda`
     + `quote` and identity environment `freshEnv` (***called `id_s` in the code***) → `src/IK/Norm/Base.agda` (lines 17-18) and `src/IK/Norm/NbE/Reification.agda` (lines 29-32)
     + Logical relation (Fig. 9) and fundamental theorem (Proposition 3) → lines 25-39 and 160-192 in `src/IK/Norm/Properties/Soundness/Trace.agda`, respectively
-    + Completeness and adequacy of normalization (Theorem 4) → Completeness is called `norm-complete` in lines 369-370 of `src/IK/Norm/Properties/Completeness.agda` and adecuacy is called `norm-sound` in lines 31-36 of `src/IK/Norm/Properties/Soundness/Soundness.agda`
+    + Completeness and adequacy of normalization (Theorem 4) → Completeness is called `norm-complete` in lines 369-370 of `src/IK/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 31-36 of `src/IK/Norm/Properties/Soundness/Soundness.agda`
 
 + Section 3.2 ($λ_\text{IS4}$)
 

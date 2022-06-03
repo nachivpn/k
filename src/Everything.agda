@@ -1,3 +1,4 @@
+{-# OPTIONS --with-K #-}
 module Everything where
 
 import Type
@@ -15,6 +16,7 @@ import IK.Norm.NbE.Model
 import IK.Norm.NbE.Reification
 import IK.Norm.Properties.Completeness
 import IK.Norm.Properties.Soundness
+import IK.Norm.Properties.Soundness.Trace
 
 import IK.Applications.Experiments
 import IK.Applications.Neutrality

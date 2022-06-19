@@ -238,10 +238,14 @@ nil[_] = λ {θ} Γ → nil {θ} {Γ}
 
 ext[_] = λ {θ} {Γ} {ΓL} {ΓR} a → ext {θ} {Γ} {ΓL} {ΓR} {a}
 
+-- TODO_ARTIFACT: Explain why/how this relation gives the modal
+-- accessibility relation for IK in the paper.
 -- Lock-Free Extension
 LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 
+-- TODO_ARTIFACT: Explain why/how this relation gives the modal
+-- accessibility relation for IS4 in the paper.
 -- Context Extension (potentially with locks)
 CExt : Ctx → Ctx → Ctx → Set
 CExt = Ext tt
@@ -750,6 +754,7 @@ factorExtAbsorbsUpLFExt _ _ = ExtIsProp _ _
 -- Substitutions
 ----------------
 
+-- TODO_ARTIFACT: Explain what is this and what it has to do with substitutions
 module Substitution
   (Tm          : (Γ : Ctx) → (a : Ty) → Set)
   (var         : {Γ : Ctx} → {a : Ty} → (v : Var Γ a) → Tm Γ a)

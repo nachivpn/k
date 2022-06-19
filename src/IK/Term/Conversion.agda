@@ -34,6 +34,7 @@ open EquivalenceProperties public
   using    ()
   renaming (a—↠b⇒a↔b to ⟶*-to-≈)
 
+-- TODO_ARTIFACT: Elaborate on this
 -- Convertibility is defined taking the
 -- equivalence closure of the reduction relation.
 Tm-setoid : (Γ : Ctx) → (a : Ty) → Setoid _ _

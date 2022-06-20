@@ -90,8 +90,8 @@ directory with the same name.
 
 TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well.
 
-- `Type.agda`: Syntax of types
-- `Context.agda`: Syntax of contexts, weakenings/OPEs, substitutions, and properties
+- `Type.agda`: Syntax of types (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
+- `Context.agda`: Syntax of contexts, weakenings/OPEs, substitutions, and properties (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
 - `IK/`
   + `Term.agda`*
   + `Term/`
@@ -146,7 +146,7 @@ TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well
     * `Evaluation/`
       + `IML.agda`*
       + `IML/`
-        - `Base.agda`: Clouston's evaluation function for types, contexts, variables and weakenings (shared between &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
+        - `Base.agda`: Clouston's evaluation function for types, contexts, variables and weakenings (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
 	- `Properties.agda`: Soundness of Clouston's categorical semantics of variables and weakenings
       + TODO_ARTIFACT: Add evaluation and soundness for &lambda;<sub>IK</sub>, even though we don't actually use it for constructing and proving complete the NbE model, add it for completeness and clarity of the structure?
       + `IS4.agda`*

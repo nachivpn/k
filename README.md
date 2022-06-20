@@ -86,17 +86,17 @@ repository with a brief description of each module.
 Every path that follows is under the directory `src/`.
 
 Modules marked with an asterisk * only reexport modules under the
-directory with the same name. TODO_ARTIFACT: Add another sentence
-saying that this reexporting business is part of the two general
-patterns that 1. some modules are split into a `Base` module for
-definitions and a `Properties` module for easier browsing which then
-get bundled up by reexporting, and that 2. some modules instantiate
-the parameters of a more general module and export the special
-instances. Maybe give an example of this reexporting business, one for
-each general pattern.
+directory with the same name. Modules under the directory usually
+consist of a `Base` module, which contains basic definitions, and
+(possibly) several other modules with specific content, for example a
+`Properties` module.
 
-TODO_ARTIFACT: Say in a sentences that some modules are common to
-&lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>.
+Modules marked with double asterisk ** instantiate the parameters of
+a more general module and export the special instances.
+
+Some modules are shared among the mechanizations of
+&lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>. They contain code
+that is (or is parameterized to be) calculi-independent.
 
 TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well.
 
@@ -154,12 +154,12 @@ TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well
 - `Semantics/`
   + `Clouston/`
     * `Evaluation/`
-      + `IML.agda`*
+      + `IML.agda`**
       + `IML/`
         - `Base.agda`: Clouston's evaluation function for types, contexts, variables and weakenings (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
 	- `Properties.agda`: Soundness of Clouston's categorical semantics of variables and weakenings
       + TODO_ARTIFACT: Add evaluation and soundness for &lambda;<sub>IK</sub>, even though we don't actually use it for constructing and proving complete the NbE model, add it for completeness and clarity of the structure?
-      + `IS4.agda`*
+      + `IS4.agda`**
       + `IS4/`
         - `Base.agda`: Clouston's evaluation function for &lambda;<sub>IS4</sub>
         - `Properties.agda`: Soundness of Clouston's categorical semantics of &lambda;<sub>IS4</sub>

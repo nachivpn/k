@@ -124,10 +124,6 @@ TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well
       + `Soundness.agda`: Completeness of evaluation, soundness of normalization
       + `Soundness/`
         - `Trace.agda`: Logical relation and its fundamental theorem for soundness of normalization
-  + `Applications/`
-    * `Experiments.agda`: TODO_ARTIFACT: Should this be here? Should this be in the artifact?
-    * `Neutrality.agda`: TODO_ARTIFACT: Should this be here? Should this be in the artifact?
-    * `WeakNorm.agda`: TODO_ARTIFACT: Should this be here? Should this be in the artifact?
 - `IS4/`
   + `Term.agda`*
   + `Term/`

@@ -34,9 +34,15 @@ open EquivalenceProperties public
   using    ()
   renaming (a—↠b⇒a↔b to ⟶*-to-≈)
 
--- TODO_ARTIFACT: Elaborate on this
--- Convertibility is defined taking the
--- equivalence closure of the reduction relation.
+-- Convertibility is defined by taking the equivalence closure of the
+-- reduction relation `_⟶_`, i.e. two terms `t` and `u` are
+-- convertible (written `t ≈ u`) if and only if there is a sequence of
+-- terms `sᵢ` for i = 0,…,n such that 1. `s₀ = t`, 2. `sₙ = u`, and
+-- 3. `sᵢ ⟶ sᵢ₊₁` or `sᵢ₊₁ ⟶ sᵢ` for all i.
+--
+-- Note that `_⟶_` is already a congruence, i.e. `u ⟶ v` implies `t[u]
+-- ⟶ t[v]`, and being a congruence preserved by closing under
+-- reflexivity, symmetry and transitivity.
 Tm-setoid : (Γ : Ctx) → (a : Ty) → Setoid _ _
 Tm-setoid Γ a = setoid (_⟶_ {Γ} {a})
 

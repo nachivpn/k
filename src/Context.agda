@@ -750,9 +750,9 @@ factorWkAbsorbsUpLFExt (ext e) (keep w) = factorWkAbsorbsUpLFExt e w
 factorExtAbsorbsUpLFExt : (e : LFExt Γ ΓL ΓR) (w : Γ ⊆ Γ') → subst₂ (CExt _) (lCtxAbsorbsUpLFExt e w) (rCtxAbsorbsUpLFExt e w) (upLFExt (factorExt e w)) ≡ factorExt (upLFExt e) w
 factorExtAbsorbsUpLFExt _ _ = ExtIsProp _ _
 
-----------------
--- Substitutions
-----------------
+-------------------------------------------------------------------------------------
+-- Substitutions (parameterized by terms `Tm` and modal accessibility relation `Acc`)
+-------------------------------------------------------------------------------------
 
 -- TODO_ARTIFACT: Explain what is this and what it has to do with substitutions
 module Substitution

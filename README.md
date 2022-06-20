@@ -96,10 +96,6 @@ TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well
   + `Term.agda`*
   + `Term/`
     * `Base.agda`: Syntax of terms, actions of weakening and substitution
-    * `Substitution.agda`*
-    * `Substitution/` (TODO_ARTIFACT: Check why this seems to duplicate the code for substitutions in `Context.agda`.)
-      + `Base.agda`: Substitutions
-      + `Properties.agda`: Properties of the action of substitution on terms
     * `Properties.agda`: Properties of the actions of weakening and substitution on terms
     * `Reduction.agda`: Reduction relation on terms
     * `Conversion.agda`: Conversion relation on terms

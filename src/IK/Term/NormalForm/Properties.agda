@@ -1,7 +1,7 @@
 {-# OPTIONS --safe --without-K #-}
 module IK.Term.NormalForm.Properties where
 
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; trans ; cong ; cong₂)
 
 open import IK.Term.Base
 

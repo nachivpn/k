@@ -6,14 +6,14 @@ module IK.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
+open import Data.Product using (Σ ; ∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
+
 open import Type as Type using (Ty ; Ty-Decidable)
 
 open import Context Ty Ty-Decidable as Context
 
 open Context public
 open Type    public
-
-infixr 20 _∙ₛ_
 
 -------------------------------------
 -- Variables, terms and substitutions
@@ -61,7 +61,32 @@ leftWkTm (app t u)   = app (leftWkTm t) (leftWkTm u)
 leftWkTm (box t)     = box (leftWkTm t)
 leftWkTm (unbox t e) = unbox (leftWkTm t) (leftWkLFExt e)
 
-open import IK.Term.Substitution Ty Ty-Decidable Tm var wkTm public
+-- extension that "generates a new context frame"
+new : LFExt (Γ 🔒) (Γ 🔒) [] -- Γ R Γ 🔒
+new = nil
+
+new[_] = λ Γ → new {Γ}
+
+open Substitution Tm var wkTm (λ Γ ΓL ΓR → LFExt Γ (ΓL 🔒) ΓR) new (λ {Δ' = Δ'} _e _w → ←🔒 Δ') sliceLeft (λ {Δ' = Δ'} _e _w → 🔒→ Δ') wkLFExt public
+  renaming (module Composition to SubstitutionComposition)
+
+-- "Left" context of factoring with a substitution (see factorSubₛ and factorExtₛ)
+lCtxₛ : (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → Ctx
+lCtxₛ nil     (lock {ΔL = ΔL} s e) = ΔL
+lCtxₛ (ext e) (s `, t)             = lCtxₛ e s
+
+factorSubₛ : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → Sub (lCtxₛ e s) ΓL
+factorSubₛ nil     (lock s e) = s
+factorSubₛ (ext e) (s `, t)   = factorSubₛ e s
+
+-- "Right" context of factoring with a substitution (see factorExtₛ)
+rCtxₛ : (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → Ctx
+rCtxₛ nil     (lock {ΔR = ΔR} s e) = ΔR
+rCtxₛ (ext e) (s `, t)             = rCtxₛ e s
+
+factorExtₛ : ∀ (e : LFExt Γ (ΓL 🔒) ΓR) (s : Sub Δ Γ) → LFExt Δ (lCtxₛ e s 🔒) (rCtxₛ e s)
+factorExtₛ nil     (lock s e) = e
+factorExtₛ (ext e) (s `, _)   = factorExtₛ e s
 
 -- apply substitution to a term
 substTm : Sub Δ Γ → Tm Γ a → Tm Δ a
@@ -71,8 +96,4 @@ substTm s (app t u)   = app (substTm s t) (substTm s u)
 substTm s (box t)     = box (substTm (keep🔒ₛ s) t)
 substTm s (unbox t e) = unbox (substTm (factorSubₛ e s) t) (factorExtₛ e s)
 
--- substitution composition
-_∙ₛ_ : Sub Δ Γ → Sub Δ' Δ → Sub Δ' Γ
-[]        ∙ₛ s = []
-(s' `, t) ∙ₛ s = s' ∙ₛ s `, substTm s t
-lock s' e ∙ₛ s = lock (s' ∙ₛ factorSubₛ e s) (factorExtₛ e s)
+open SubstitutionComposition substTm lCtxₛ factorSubₛ rCtxₛ factorExtₛ public

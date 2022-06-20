@@ -98,8 +98,6 @@ Some modules are shared among the mechanizations of
 &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>. They contain code
 that is (or is parameterized to be) calculi-independent.
 
-TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well.
-
 - `Type.agda`: Syntax of types (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
 - `Context.agda`: Syntax of contexts, weakenings/OPEs, substitutions, and properties (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
 - `IK/`

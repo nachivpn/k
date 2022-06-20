@@ -143,8 +143,8 @@ that is (or is parameterized to be) calculi-independent.
       + `Completeness.agda`: Completeness of normalization (by soundness of possible-worlds semantics)
       + `Soundness.agda`: Logical relation and its fundamental theorem for soundness of normalization
   + `Applications/`
-    * `Purity.agda`: TODO_ARTIFACT: Add description.
-    * `IS4Plus.agda`: TODO_ARTIFACT: Add description.
+    * `Purity.agda`: Normalization function for &lambda;<sub>IS4</sub>+Moggi and some properties
+    * `IS4Plus.agda`: Normalization function for &lambda;<sub>IK</sub>+Bool and some properties
 - `Semantics/`
   + `Clouston/`
     * `Evaluation/`

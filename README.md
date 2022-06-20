@@ -86,7 +86,17 @@ repository with a brief description of each module.
 Every path that follows is under the directory `src/`.
 
 Modules marked with an asterisk * only reexport modules under the
-directory with the same name.
+directory with the same name. TODO_ARTIFACT: Add another sentence
+saying that this reexporting business is part of the two general
+patterns that 1. some modules are split into a `Base` module for
+definitions and a `Properties` module for easier browsing which then
+get bundled up by reexporting, and that 2. some modules instantiate
+the parameters of a more general module and export the special
+instances. Maybe give an example of this reexporting business, one for
+each general pattern.
+
+TODO_ARTIFACT: Say in a sentences that some modules are common to
+&lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>.
 
 TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well.
 

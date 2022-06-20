@@ -47,9 +47,9 @@ open PresheafNecessity        public
 import Semantics.Clouston.Evaluation.IML
   Psh _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ ∘-pres-≈̇ ∘-assoc id'[_] id'-unit-left id'-unit-right
   []' unit' []'-eta _×'_ ⟨_,_⟩' ⟨,⟩'-pres-≈̇ π₁'[_] π₂'[_] ×'-beta-left ×'-beta-right ×'-eta ⟨,⟩'-nat
-  _⇒'_
-  ✦'_ ✦'-map_ ✦'-map-pres-≈̇ ✦'-map-pres-id'
-  □'_
+  _⇒'_ lam' lam'-pres-≈̇ app' app'-pres-≈̇ ⇒'-beta ⇒'-eta lam'-nat app'-nat
+  ✦'_ ✦'-map_ ✦'-map-pres-≈̇ ✦'-map-pres-id' ✦'-map-pres-∘
+  □'_ □'-map_ box' box'-pres-≈̇ λ' λ'-pres-≈̇ □'-beta □'-eta box'-nat-dom λ'-nat-dom
   as CloustonEvaluationIML
 
 module Eval (N : Psh) where

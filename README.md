@@ -70,8 +70,8 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
     + Equational theory (Fig. 12) → `src/IS4/Term/Conversion.agda`
 
   - Section 3.2.2
-    + Evaluation function → `src/Semantics/Clouston/Evaluation/IS4.agda`
-    + Soundness of evaluation (Theorem 6) → lines 586-589 in `src/Semantics/Clouston/Evaluation/IS4/Properties.agda`
+    + Evaluation function → lines 74-93 in `src/Semantics/Clouston/Evaluation/IML/Base.agda` and lines 61-81 in `src/Semantics/Clouston/Evaluation/IS4/Base.agda` (instantiated by `src/Semantics/Presheaf/Evaluation/IS4.agda`)
+    + Soundness of evaluation (Theorem 6) → line 523 in `src/Semantics/Clouston/Evaluation/IS4/Properties.agda` (instantiated by `src/Semantics/Presheaf/Evaluation/IS4/Properties.agda`)
 
   - Section 2.2.3
     + Normal and neutral forms → datatypes `Nf` and `Ne` in `src/IS4/Term/NormalForm/Base.agda`
@@ -144,11 +144,15 @@ TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well
 - `Semantics/`
   + `Clouston/`
     * `Evaluation/`
-      + `IML.agda`: Clouston's evaluation function for &lambda;<sub>IK</sub> (TODO_ARTIFACT: Split up and add soundness, even though we don't actually use it for constructing and proving complete the NbE model for &lambda;<sub>IK</sub>, add it for completeness and clarity of the structure.)
+      + `IML.agda`*
+      + `IML/`
+        - `Base.agda`: Clouston's evaluation function for types, contexts, variables and weakenings (shared between &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
+	- `Properties.agda`: Soundness of Clouston's categorical semantics of variables and weakenings
+      + TODO_ARTIFACT: Add evaluation and soundness for &lambda;<sub>IK</sub>, even though we don't actually use it for constructing and proving complete the NbE model, add it for completeness and clarity of the structure?
       + `IS4.agda`*
       + `IS4/`
-        - `Base.agda`: Clouston's evaluation function &lambda;<sub>IS4</sub>
-        - `Properties.agda`: Soundness of Clouston's categorical semantics
+        - `Base.agda`: Clouston's evaluation function for &lambda;<sub>IS4</sub>
+        - `Properties.agda`: Soundness of Clouston's categorical semantics of &lambda;<sub>IS4</sub>
   + `Presheaf/`
     * `Base.agda`: Basic categorical structure of possible-worlds semantics (the interpretation of types, contexts, terms, substitutions, and action of substitution)
     * `CartesianClosure.agda`: Cartesian closure structure of possible-worlds semantics (the interpretation of context extension, product types, and function types)
@@ -157,7 +161,8 @@ TODO_ARTIFACT: Give a description of/a summary of what is in each folder as well
       + `IML.agda`: Evaluation function for &lambda;<sub>IK</sub> and its soundness (by instantiation of Clouston's categorical semantics with the categorical structure of possible-worlds semantics)
       + `IS4.agda`: Evaluation function for &lambda;<sub>IS4</sub> and its soundness (by instantiation of Clouston's categorical semantics with the categorical structure of possible-worlds semantics)
 - `FunExt.agda`: Function extensionality axiom
+- `HEUtil.agda`: Utilities for working with heterogeneous equality
+- `EUtil.agda`: Utilities for working with negation
 - `PUtil.agda`: Utilities for working with sigma types
 - `PEUtil.agda`: Utilities for working with propositional equality
-- `HEUtil.agda`: Utilities for working with heterogeneous equality
 - `Everything.agda`: Imports main modules for easy typechecking of the artifact

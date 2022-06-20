@@ -46,14 +46,14 @@ open PresheafNecessity        public
 open PresheafNecessityIS4     public
 
 import Semantics.Clouston.Evaluation.IS4.Base
-    Psh _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ ∘-pres-≈̇ ∘-assoc id'[_] id'-unit-left id'-unit-right
-    []' unit' []'-eta _×'_ ⟨_,_⟩' ⟨,⟩'-pres-≈̇ π₁'[_] π₂'[_] ×'-beta-left ×'-beta-right ×'-eta ⟨,⟩'-nat
+    Psh _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ id'[_]
+    []' unit' _×'_ ⟨_,_⟩' π₁'[_] π₂'[_]
     _⇒'_ lam' app'
-    ✦'_ ✦'-map_ ✦'-map-pres-≈̇ ✦'-map-pres-id' η'[_] μ'[_]
+    ✦'_ ✦'-map_ μ'[_] η'[_]
     □'_ box' λ'
   as CloustonEvaluationIS4Base
 
-open CloustonEvaluationIS4Base public
+open CloustonEvaluationIS4Base public using (module Eval)
 
 module EvalProperties (N : Psh) where
   import Semantics.Clouston.Evaluation.IS4.Properties

@@ -89,85 +89,22 @@ open import IS4.Term.Conversion
 open import IS4.Term.Reduction
 
 open import Semantics.Clouston.Evaluation.IS4.Base
-    Ctx' _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ ∘-pres-≈̇ ∘-assoc id'[_] id'-unit-left id'-unit-right
-    []' unit' []'-eta _×'_ ⟨_,_⟩' ⟨,⟩'-pres-≈̇ π₁'[_] π₂'[_] ×'-beta-left ×'-beta-right ×'-eta ⟨,⟩'-nat
+    Ctx' _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ id'[_]
+    []' unit' _×'_ ⟨_,_⟩' π₁'[_] π₂'[_]
     _⇒'_ lam' app'
-    ✦'_ ✦'-map_ ✦'-map-pres-≈̇ ✦'-map-pres-id' η'[_] μ'[_]
+    ✦'_ ✦'-map_ μ'[_] η'[_]
     □'_ box' λ'
   renaming (module Eval to CloustonEvaluationIS4BaseEval)
 
 open CloustonEvaluationIS4BaseEval N
 
-private
-  ≈̇-equiv : ∀ (P Q : Ctx') → IsEquivalence (_≈̇_ {P} {Q})
-  ≈̇-equiv  P Q = record { refl = ≈̇-refl {P} {Q} ; sym = ≈̇-sym {P} {Q} ; trans = ≈̇-trans {P} {Q} }
-
-  →̇-setoid : (P Q : Ctx') → Setoid 0ℓ 0ℓ
-  →̇-setoid P Q = record { Carrier = P →̇ Q ; _≈_ = _≈̇_ ; isEquivalence = ≈̇-equiv P Q }
-
-  ∘-pres-≈̇-left : ∀ {P Q R : Ctx'} {ψ ψ' : Q →̇ R} (ψ≈̇ψ' : ψ ≈̇ ψ') (φ : P →̇ Q) → ψ ∘ φ ≈̇ ψ' ∘ φ
-  ∘-pres-≈̇-left ψ≈̇ψ' φ = ∘-pres-≈̇ ψ≈̇ψ' (≈̇-refl {φ = φ})
-
-  ∘-pres-≈̇-right : ∀ {P Q R : Ctx'} (ψ : Q →̇ R) {φ φ' : P →̇ Q} (φ≈̇φ' : φ ≈̇ φ') → ψ ∘ φ ≈̇ ψ ∘ φ'
-  ∘-pres-≈̇-right ψ φ≈̇φ' = ∘-pres-≈̇ (≈̇-refl {φ = ψ}) φ≈̇φ'
-
-  id' = λ {P} → id'[ P ]
-
-  π₁'       = λ {P} {Q} → π₁'[_] {P} Q
-  π₁'[_][_] = λ P Q → π₁'[_] {P} Q
-
-  π₂'       = λ {P} {Q} → π₂'[_] P {Q}
-  π₂'[_][_] = λ P Q → π₂'[_] P {Q}
-
-  abstract
-    ⟨,⟩'-pres-≈̇-left : ∀ {R P Q : Ctx'} {φ φ' : R →̇ P} (φ≈̇φ' : φ ≈̇ φ') (ψ : R →̇ Q) → ⟨ φ , ψ ⟩' ≈̇ ⟨ φ' , ψ ⟩'
-    ⟨,⟩'-pres-≈̇-left ψ≈̇ψ' φ = ⟨,⟩'-pres-≈̇ ψ≈̇ψ' (≈̇-refl {φ = φ})
-
-    ⟨,⟩'-pres-≈̇-right : ∀ {R P Q : Ctx'} (φ : R →̇ P) {ψ ψ' : R →̇ Q} (ψ≈̇ψ' : ψ ≈̇ ψ') → ⟨ φ , ψ ⟩' ≈̇ ⟨ φ , ψ' ⟩'
-    ⟨,⟩'-pres-≈̇-right ψ φ≈̇φ' = ⟨,⟩'-pres-≈̇ (≈̇-refl {φ = ψ}) φ≈̇φ'
-
-    ×'-map-pres-≈̇ : {P Q P' Q' : Ctx'} {φ φ' : P →̇ P'} (φ≈̇φ' : φ ≈̇ φ') {ψ ψ' : Q →̇ Q'} (ψ≈̇ψ' : ψ ≈̇ ψ') → φ ×'-map ψ ≈̇ φ' ×'-map ψ'
-    ×'-map-pres-≈̇ {φ = φ} {φ'} φ≈̇φ' {ψ} {ψ'} ψ≈̇ψ' = let open EqReasoning (→̇-setoid _ _) in begin
-      φ ×'-map ψ                ≡⟨⟩
-      ⟨ φ  ∘ π₁' , ψ  ∘ π₂' ⟩'  ≈⟨ ⟨,⟩'-pres-≈̇ (∘-pres-≈̇-left φ≈̇φ' π₁') (∘-pres-≈̇-left ψ≈̇ψ' π₂') ⟩
-      ⟨ φ' ∘ π₁' , ψ' ∘ π₂' ⟩'  ∎
-
-    ×'-map-pres-≈̇-left : {P Q P' : Ctx'} {φ φ' : P →̇ P'} (φ≈̇φ' : φ ≈̇ φ') (ψ : Q →̇ Q) → φ ×'-map ψ ≈̇ φ' ×'-map ψ
-    ×'-map-pres-≈̇-left = λ φ≈̇φ' ψ → ×'-map-pres-≈̇ φ≈̇φ' (≈̇-refl {φ = ψ})
-
-    ×'-map-pres-≈̇-right : {P Q Q' : Ctx'} (φ : P →̇ P) {ψ ψ' : Q →̇ Q'} (ψ≈̇ψ' : ψ ≈̇ ψ') → φ ×'-map ψ ≈̇ φ ×'-map ψ'
-    ×'-map-pres-≈̇-right = λ φ ψ≈̇ψ' → ×'-map-pres-≈̇ (≈̇-refl {φ = φ}) ψ≈̇ψ'
-
-  unbox' : {R P Q : Ty'} → (φ : P →̇ □' Q) → (ψ : R →̇ ✦' P) → R →̇ Q
-  unbox' φ ψ = λ' φ ∘ ψ
-
-  η' = λ {P} → η'[ P ]
-
-  μ' = λ {P} → μ'[ P ]
-
-  abstract
-    app'-pres-≈̇-left : ∀ {R : Ctx'} {P Q : Ty'} {φ φ' : R →̇ P ⇒' Q} (φ≈̇φ' : φ ≈̇ φ') (ψ : R →̇ P) → app' φ ψ ≈̇ app' φ' ψ
-    app'-pres-≈̇-left φ≈̇φ' ψ = app'-pres-≈̇ φ≈̇φ' (≈̇-refl {φ = ψ})
-
-    app'-pres-≈̇-right : ∀ {R : Ctx'} {P Q : Ty'} (φ : R →̇ P ⇒' Q) {ψ ψ' : R →̇ P} (ψ≈̇ψ' : ψ ≈̇ ψ') → app' φ ψ ≈̇ app' φ ψ'
-    app'-pres-≈̇-right φ ψ≈̇ψ' = app'-pres-≈̇ (≈̇-refl {φ = φ}) ψ≈̇ψ'
-
-  abstract
-    unbox'-pres-≈̇ : ∀ {R P : Ctx'} {Q : Ty'} {φ φ' : P →̇ □' Q} (φ≈̇φ' : φ ≈̇ φ') {ψ ψ' : R →̇ ✦' P} (ψ≈̇ψ' : ψ ≈̇ ψ') → unbox' φ ψ ≈̇ unbox' φ' ψ'
-    unbox'-pres-≈̇ φ≈̇φ' ψ≈̇ψ' = ∘-pres-≈̇ (λ'-pres-≈̇ φ≈̇φ') ψ≈̇ψ'
-
-    unbox'-pres-≈̇-left : ∀ {R P : Ctx'} {Q : Ty'} {φ φ' : P →̇ □' Q} (φ≈̇φ' : φ ≈̇ φ') (ψ : R →̇ ✦' P) → unbox' φ ψ ≈̇ unbox' φ' ψ
-    unbox'-pres-≈̇-left φ≈̇φ' ψ = unbox'-pres-≈̇ φ≈̇φ' (≈̇-refl {φ = ψ})
-
-    unbox'-pres-≈̇-right : ∀ {R P : Ctx'} {Q : Ty'} (φ : P →̇ □' Q) {ψ ψ' : R →̇ ✦' P} (ψ≈̇ψ' : ψ ≈̇ ψ') → unbox' φ ψ ≈̇ unbox' φ ψ'
-    unbox'-pres-≈̇-right φ ψ≈̇ψ' = unbox'-pres-≈̇ (≈̇-refl {φ = φ}) ψ≈̇ψ'
-
-    unbox'-nat-dom : ∀ {R P' P : Ctx'} {Q : Ty'} (φ : P →̇ □' Q) (φ' : P' →̇ P) (ψ : R →̇ ✦' P') → unbox' (φ ∘ φ') ψ ≈̇ unbox' φ (✦'-map φ' ∘ ψ)
-    unbox'-nat-dom {R} {P'} {P} {Q} φ φ' ψ = let open EqReasoning (→̇-setoid R Q) in begin
-      unbox' (φ ∘ φ') ψ       ≡⟨⟩
-      λ' (φ ∘ φ')        ∘ ψ  ≈⟨ ∘-pres-≈̇-left (λ'-nat-dom φ φ') ψ ⟩
-      (λ' φ ∘ ✦'-map φ') ∘ ψ  ≈⟨ ∘-assoc (λ' φ) (✦'-map φ') ψ ⟩
-      λ' φ ∘ ✦'-map φ' ∘ ψ    ∎
+open import Semantics.Clouston.Evaluation.IML.Properties
+    Ctx' _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ ∘-pres-≈̇ ∘-assoc id'[_] id'-unit-left id'-unit-right
+    []' unit' []'-eta _×'_ ⟨_,_⟩' ⟨,⟩'-pres-≈̇ π₁'[_] π₂'[_] ×'-beta-left ×'-beta-right ×'-eta ⟨,⟩'-nat
+    _⇒'_ lam'  lam'-pres-≈̇ app' app'-pres-≈̇ ⇒'-beta ⇒'-eta lam'-nat app'-nat
+    ✦'_ ✦'-map_ ✦'-map-pres-≈̇ ✦'-map-pres-id' ✦'-map-pres-∘
+    □'_ □'-map_ box' box'-pres-≈̇ λ' λ'-pres-≈̇ □'-beta □'-eta box'-nat-dom λ'-nat-dom
+    N
 
 abstract
   evalAcc-pres-id : ∀ (Γ : Ctx) → evalAcc new[ Γ ] ≈̇ id'[ ✦' evalCtx Γ ]

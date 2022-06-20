@@ -3,7 +3,6 @@ module Everything where
 
 import Type
 import Context
-import HEUtil
 
 import IK.Term
 import IK.Term.Conversion
@@ -26,15 +25,6 @@ import IS4.Term.Conversion
 import IS4.Term.NormalForm
 import IS4.Term.Reduction
 
-import IS4.Norm
-import IS4.Norm.NbE.Model
-import IS4.Norm.NbE.Reification
-import IS4.Norm.Properties.Completeness
-import IS4.Norm.Properties.Soundness
-
-import IS4.Applications.IS4Plus
-import IS4.Applications.Purity
-
 import Semantics.Clouston.Evaluation.IML
 import Semantics.Clouston.Evaluation.IS4
 
@@ -43,3 +33,12 @@ import Semantics.Presheaf.CartesianClosure
 import Semantics.Presheaf.Evaluation.IML
 import Semantics.Presheaf.Evaluation.IS4
 import Semantics.Presheaf.Necessity
+
+import IS4.Norm
+import IS4.Norm.NbE.Model
+import IS4.Norm.NbE.Reification
+import IS4.Norm.Properties.Completeness
+import IS4.Norm.Properties.Soundness
+
+import IS4.Applications.IS4Plus
+import IS4.Applications.Purity

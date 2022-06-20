@@ -3,7 +3,6 @@ module Everything where
 
 import Type
 import Context
-import HEUtil
 
 import IK.Term
 import IK.Term.Conversion

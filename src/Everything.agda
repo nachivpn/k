@@ -9,7 +9,6 @@ import IK.Term
 import IK.Term.Conversion
 import IK.Term.NormalForm
 import IK.Term.Reduction
-import IK.Term.Substitution
 
 import IK.Norm
 import IK.Norm.NbE.Model

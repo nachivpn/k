@@ -229,6 +229,12 @@ fresh-keep = cong drop (trans˘ (leftIdWk _) (rightIdWk _))
 -- Context extension
 --------------------
 
+-- Context extension is a (parameterized) three place relation that
+-- relates contexts Γ, ΓL, and ΓR exactly when Γ = ΓL ,, ΓR. This
+-- might be read as Γ is context ΓL extended to the right with ΓR,
+-- where _,,_ is context concatenation.
+-- If the parameter θ is instantiated with tt, then ΓR can contain
+-- 🔒s, otherwise it can not.
 data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
   nil  : Ext θ Γ Γ []
   ext  : (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ `, a) ΓL (ΓR `, a)
@@ -238,15 +244,17 @@ nil[_] = λ {θ} Γ → nil {θ} {Γ}
 
 ext[_] = λ {θ} {Γ} {ΓL} {ΓR} a → ext {θ} {Γ} {ΓL} {ΓR} {a}
 
--- TODO_ARTIFACT: Explain why/how this relation gives the modal
--- accessibility relation for IK in the paper.
--- Lock-Free Extension
+-- The modal accesibility relation for IK (see Fig. 4), Δ ◃ Γ, is
+-- defined by Δ ◃ Γ = ∃ ΔR. Ext ff Γ (Δ 🔒) ΔR. Since ΔR can not
+-- contain 🔒s the parameter θ = ff.
+-- This is called Lock-Free Extension (without locks)
 LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 
--- TODO_ARTIFACT: Explain why/how this relation gives the modal
--- accessibility relation for IS4 in the paper.
--- Context Extension (potentially with locks)
+-- The modal accesibility relation for IS4 (see Fig. 10), Δ ◃ Γ, is
+-- defined by Δ ◃ Γ = ∃ ΔR. Ext tt Γ Δ ΔR. Since ΔR can
+-- contain 🔒s, the parameter θ = tt.
+-- This is called Context Extension (potentially with locks)
 CExt : Ctx → Ctx → Ctx → Set
 CExt = Ext tt
 

@@ -229,6 +229,21 @@ fresh-keep = cong drop (trans˘ (leftIdWk _) (rightIdWk _))
 -- Context extension
 --------------------
 
+-- The three-place relation Ext θ relates contexts Γ, ΓL, and ΓR
+-- exactly when Γ = ΓL ,, ΓR (cf. lemmas extIs,, and ,,IsExt
+-- below). In other words, Ext θ is the graph of context concatenation
+-- _,,_. The relation Ext θ Γ ΓL ΓR may be read as "Γ is ΓL extended
+-- to the right with ΓR".
+--
+-- The flag θ specifies whether the context ΓR we are extending with
+-- may contain locks 🔒 (if set to tt) or not (if set to ff).
+--
+-- Ext is used below to define lock-free and arbitrary context
+-- extensions LFExt and CExt, respectively, in a uniform way. The
+-- relations LFExt and CExt in turn are used to define the modal
+-- accessibility premises of the unbox term formers for λ_IK (see data
+-- Tm in IK.Term.Base) and λ_IS4 (see data Tm in IS4.Term.Base),
+-- respectively, in a uniform way.
 data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
   nil  : Ext θ Γ Γ []
   ext  : (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ `, a) ΓL (ΓR `, a)
@@ -238,11 +253,19 @@ nil[_] = λ {θ} Γ → nil {θ} {Γ}
 
 ext[_] = λ {θ} {Γ} {ΓL} {ΓR} a → ext {θ} {Γ} {ΓL} {ΓR} {a}
 
--- Lock-Free Extension
+-- Lock-free context extension (w/o locks, Ext flag set to ff)
+--
+-- The modal accessibility relation _◁_ for λ_IK defined in Figure 4
+-- in the paper can equivalently be defined by Δ ◁ Γ = ∃ ΔR. LFExt Γ
+-- (Δ 🔒) ΔR.
 LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 
--- Context Extension (potentially with locks)
+-- Arbitrary context extension (possibly w/ locks, Ext flag set to tt)
+--
+-- The modal accessibility relation _◁_ for λ_IS4 defined in Figure 10
+-- in the paper can equivalently be defined by Δ ◁ Γ = ∃ ΔR. CExt Γ Δ
+-- ΔR.
 CExt : Ctx → Ctx → Ctx → Set
 CExt = Ext tt
 

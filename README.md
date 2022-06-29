@@ -73,7 +73,7 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
     + Evaluation function → lines 74-93 in `src/Semantics/Clouston/Evaluation/IML/Base.agda` and lines 61-81 in `src/Semantics/Clouston/Evaluation/IS4/Base.agda` (instantiated by `src/Semantics/Presheaf/Evaluation/IS4.agda`)
     + Soundness of evaluation (Theorem 6) → line 523 in `src/Semantics/Clouston/Evaluation/IS4/Properties.agda` (instantiated by `src/Semantics/Presheaf/Evaluation/IS4/Properties.agda`)
 
-  - Section 2.2.3
+  - Section 3.2.3
     + Normal and neutral forms → datatypes `Nf` and `Ne` in `src/IS4/Term/NormalForm/Base.agda`
     + `reify` and `reflect` → `src/IS4/Norm/NbE/Reification.agda`
     + Completeness and adequacy of normalization (Theorem 7) → Completeness is called `norm-complete` in `src/IS4/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 297-298 of `src/IS4/Norm/Properties/Soundness.agda`

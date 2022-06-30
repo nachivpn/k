@@ -11,8 +11,8 @@ open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong ; c
 data Ty : Set where
   Unit : Ty
   𝕔    : Ty
-  _⇒_ : Ty → Ty → Ty
-  ◻_  : Ty → Ty
+  _⇒_  : Ty → Ty → Ty
+  ◻_   : Ty → Ty
   Bool : Ty
 
 variable
@@ -116,13 +116,13 @@ data Ne where
   unbox : Ne ΓL (◻ a) → CExt Γ ΓL ΓR → Ne Γ a
 
 data Nf where
-  up𝕔 : Ne Γ 𝕔 → Nf Γ 𝕔
-  lam : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
-  box : Nf (Γ #) a → Nf Γ (◻ a)
-  true : Nf Γ Bool
+  up    : Ne Γ 𝕔 → Nf Γ 𝕔
+  lam   : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
+  box   : Nf (Γ #) a → Nf Γ (◻ a)
+  true  : Nf Γ Bool
   false : Nf Γ Bool
-  ifte : CExt Γ ΓL ΓR → Ne ΓL Bool → Nf Γ a → Nf Γ a → Nf Γ a
-  unit : Nf Γ Unit
+  ifte  : CExt Γ ΓL ΓR → Ne ΓL Bool → Nf Γ a → Nf Γ a → Nf Γ a
+  unit  : Nf Γ Unit
 
 -- embedding into terms
 
@@ -133,30 +133,30 @@ embNe (var x)     = var x
 embNe (app m n)   = app (embNe m) (embNf n)
 embNe (unbox n x) = unbox (embNe n) x
 
-embNf (up𝕔 x) = embNe x
-embNf (lam n) = lam (embNf n)
-embNf (box n) = box (embNf n)
-embNf true = true
-embNf false = false
+embNf (up  x)          = embNe x
+embNf (lam n)          = lam (embNf n)
+embNf (box n)          = box (embNf n)
+embNf true             = true
+embNf false            = false
 embNf (ifte x x₁ n n₁) = ifte x true (embNf n) (embNf n₁)
-embNf unit = unit
+embNf unit             = unit
 
 -- weakening lemmas
 
 wkNe : Γ ⊆ Γ' → Ne Γ a → Ne Γ' a
 wkNf : Γ ⊆ Γ' → Nf Γ a → Nf Γ' a
 
-wkNe w (var x)      = var (wkVar w x)
-wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
-wkNe w (unbox n e)  = unbox (wkNe (factorWk e w) n) (factorExt e w)
+wkNe w (var   x)   = var (wkVar w x)
+wkNe w (app   m n) = app (wkNe w m) (wkNf w n)
+wkNe w (unbox n e) = unbox (wkNe (factorWk e w) n) (factorExt e w)
 
-wkNf w (up𝕔 x) = up𝕔 (wkNe w x)
-wkNf w (lam n) = lam (wkNf (keep w) n)
-wkNf w (box n) = box (wkNf (keep# w) n)
-wkNf w true = true
-wkNf w false = false
+wkNf w (up  x)         = up  (wkNe w x)
+wkNf w (lam n)         = lam (wkNf (keep w) n)
+wkNf w (box n)         = box (wkNf (keep# w) n)
+wkNf w true            = true
+wkNf w false           = false
 wkNf w (ifte e m n n₁) = ifte (factorExt e w) (wkNe (factorWk e w) m) (wkNf w n) (wkNf w n₁)
-wkNf w unit = unit
+wkNf w unit            = unit
 
 NF NE : Ty → Ctx → Set
 NF a Γ = Nf Γ a
@@ -289,7 +289,7 @@ reify   : Tm'- a →̇ NF a
 reflect : NE a  →̇ Tm'- a
 
 reify {Unit}  x = unit
-reify {𝕔}     x = collect (mapCov (λ _ n → up𝕔 n) idWk x)
+reify {𝕔}     x = collect (mapCov (λ _ n → up n) idWk x)
 reify {a ⇒ b} x = lam (reify {b} (x (drop idWk) (reflect {a} (var zero))))
 reify {◻ a}   x = box (reify (x idWk (ext#- nil)))
 reify {Bool}  x = true

@@ -50,7 +50,7 @@ neBetaShort (unbox (app n m) _)    (exp-box , p)      = p
 neBetaShort (unbox (unbox n e) _)  (exp-fun , p)      = p
 neBetaShort (unbox (unbox n e) _)  (exp-box , p)      = p
 
-nfBetaShort (up𝕓 x)                (r , p)            = neBetaShort x (r , p)
+nfBetaShort (up  x)                (r , p)            = neBetaShort x (r , p)
 nfBetaShort (lam n)                (cong-lam r , p)   = nfBetaShort n (r , p)
 nfBetaShort (box n)                (cong-box r , p)   = nfBetaShort n (r , p)
 
@@ -78,7 +78,7 @@ EtaLong : Tm Γ a → Set
 EtaLong {Γ} {a} t = {t' : Tm Γ a} → ¬ Σ (t ⟶ t') (EtaRule t)
 
 -- Note: not all neutrals are eta-long, only ones of base type
-neEtaLong : (n : Ne Γ 𝕓) → EtaLong (embNe n)
+neEtaLong : (n : Ne Γ ι) → EtaLong (embNe n)
 nfEtaLong : (n : Nf Γ a) → EtaLong (embNf n)
 
 neEtaLong (app (var _) m)       (cong-app2 r , p)  = nfEtaLong m (r , p)
@@ -88,7 +88,7 @@ neEtaLong (unbox (var _) _)     (cong-unbox r , p) = p
 neEtaLong (unbox (app _ _) _)   (cong-unbox r , p) = p
 neEtaLong (unbox (unbox _ _) _) (cong-unbox r , p) = p
 
-nfEtaLong (up𝕓 x) (r , p)          = neEtaLong x (r , p)
+nfEtaLong (up  x) (r , p)          = neEtaLong x (r , p)
 nfEtaLong (lam _) (exp-fun , p)    = p
 nfEtaLong (lam n) (cong-lam r , p) = nfEtaLong n (r , p)
 nfEtaLong (box _) (exp-box , p)    = p

@@ -23,7 +23,7 @@ quotTm x = embNf (reify x)
 -----------------------
 
 Rt : {a : Ty} {Γ : Ctx} → (t : Tm Γ a) → (x : Tm' Γ a) → Set
-Rt {𝕓}         t x =
+Rt {ι}         t x =
   t ⟶* quotTm x
 Rt {a ⇒ b} {Γ} t f =
   {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
@@ -47,7 +47,7 @@ Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
   → t ⟶* u
   → Rt u x
   → Rt t x
-Rt-prepend {a = 𝕓} r uRx
+Rt-prepend {a = ι} r uRx
   = multi r uRx
 Rt-prepend {a = a ⇒ b} r uRx
   = λ w uRy → Rt-prepend (cong-app1* (invRed* w r)) (uRx w uRy)
@@ -68,14 +68,14 @@ Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
 Rt-reflect : (n : Ne Γ a)
   → Rt (embNe n) (reflect n)
 
-Rt-build {a = 𝕓}                 r
+Rt-build {a = ι}                 r
   = r
 Rt-build {a = a ⇒ b}             tRx
   = ⟶-multi exp-fun (cong-lam* (Rt-build (tRx _ (Rt-reflect (var zero)))))
 Rt-build {a = □ a}   {x = box x} (u , uR- , r)
   = multi r (cong-box* (Rt-build uR-))
 
-Rt-reflect {a = 𝕓}     n
+Rt-reflect {a = ι}     n
   = ⟶*-refl
 Rt-reflect {a = a ⇒ b} n
   = λ e y → Rt-prepend (cong-app≡* (nat-embNe _ _) (Rt-build y)) (Rt-reflect _ )
@@ -87,7 +87,7 @@ invRt : {t : Tm Γ a} {x : Tm' Γ a}
   → (w : Γ ⊆ Δ)
   → Rt t x
   → Rt (wkTm w t) (wkTm' w x)
-invRt {a = 𝕓}  {x = x}       w tRx =
+invRt {a = ι}  {x = x}       w tRx =
   multi-≡ (invRed* _ tRx) (nat-embNf _ (reify x))
 invRt {a = a ⇒ b}            w tRx =
   λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) (tRx (w ∙ w') y)

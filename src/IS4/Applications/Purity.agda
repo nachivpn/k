@@ -9,9 +9,9 @@ open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong ; c
 data Ty : Set where
   Unit : Ty
   𝕔    : Ty
-  _⇒_ : Ty → Ty → Ty
-  ◻_  : Ty → Ty
-  T   : Ty → Ty
+  _⇒_  : Ty → Ty → Ty
+  ◻_   : Ty → Ty
+  T    : Ty → Ty
 
 variable
     a b c d : Ty
@@ -183,13 +183,13 @@ data Ne where
   unbox : Ne ΓL (◻ a) → CExt Γ ΓL ΓR → Ne Γ a
 
 data Nf where
-  up𝕔    : Ne Γ 𝕔 → Nf Γ 𝕔
-  lam    : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
-  box    : Nf (Γ #) a → Nf Γ (◻ a)
-  ret    : Nf Γ a → Nf Γ (T a)
-  let-in : Ne Γ (T a) → Nf (Γ `, a) (T b) → Nf Γ (T b)
-  unit   : Nf Γ Unit
-  print  : Nf Γ 𝕔 → Nf Γ (T Unit)
+  up           : Ne Γ 𝕔 → Nf Γ 𝕔
+  lam          : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
+  box          : Nf (Γ #) a → Nf Γ (◻ a)
+  ret          : Nf Γ a → Nf Γ (T a)
+  let-in       : Ne Γ (T a) → Nf (Γ `, a) (T b) → Nf Γ (T b)
+  unit         : Nf Γ Unit
+  print        : Nf Γ 𝕔 → Nf Γ (T Unit)
   let-print-in : Ne Γ 𝕔 → Nf (Γ `, Unit) (T b) → Nf Γ (T b)
 
 -- embedding into terms
@@ -197,17 +197,17 @@ data Nf where
 embNe : Ne Γ a → Tm Γ a
 embNf : Nf Γ a → Tm Γ a
 
-embNe (var x)     = var x
-embNe (app m n)   = app (embNe m) (embNf n)
+embNe (var   x)   = var x
+embNe (app   m n) = app (embNe m) (embNf n)
 embNe (unbox n x) = unbox (embNe n) x
 
-embNf (up𝕔 x) = embNe x
-embNf (lam n) = lam (embNf n)
-embNf (box n) = box (embNf n)
-embNf (ret t) = ret (embNf t)
-embNf (let-in n t) = let-in (embNe n) (embNf t)
-embNf unit = unit
-embNf (print t) = print (embNf t)
+embNf (up  x)            = embNe x
+embNf (lam n)            = lam (embNf n)
+embNf (box n)            = box (embNf n)
+embNf (ret t)            = ret (embNf t)
+embNf (let-in n t)       = let-in (embNe n) (embNf t)
+embNf unit               = unit
+embNf (print t)          = print (embNf t)
 embNf (let-print-in x t) = let-in (print (embNe x)) (embNf t)
 
 -- weakening lemmas
@@ -215,17 +215,17 @@ embNf (let-print-in x t) = let-in (print (embNe x)) (embNf t)
 wkNe : Γ ⊆ Γ' → Ne Γ a → Ne Γ' a
 wkNf : Γ ⊆ Γ' → Nf Γ a → Nf Γ' a
 
-wkNe w (var x)      = var (wkVar w x)
-wkNe w (app m n)    = app (wkNe w m) (wkNf w n)
-wkNe w (unbox n e)  = unbox (wkNe (factorWk e w) n) (factorExt e w)
+wkNe w (var   x)   = var (wkVar w x)
+wkNe w (app   m n) = app (wkNe w m) (wkNf w n)
+wkNe w (unbox n e) = unbox (wkNe (factorWk e w) n) (factorExt e w)
 
-wkNf e (up𝕔 x) = up𝕔 (wkNe e x)
-wkNf e (lam n) = lam (wkNf (keep e) n)
-wkNf e (box n) = box (wkNf (keep# e) n)
-wkNf e (ret t) = ret (wkNf e t)
-wkNf e (let-in x t) = let-in (wkNe e x) (wkNf (keep e) t)
-wkNf e unit = unit
-wkNf e (print t) = print (wkNf e t)
+wkNf e (up  x)            = up  (wkNe e x)
+wkNf e (lam n)            = lam (wkNf (keep e) n)
+wkNf e (box n)            = box (wkNf (keep# e) n)
+wkNf e (ret t)            = ret (wkNf e t)
+wkNf e (let-in x t)       = let-in (wkNe e x) (wkNf (keep e) t)
+wkNf e unit               = unit
+wkNf e (print t)          = print (wkNf e t)
 wkNf e (let-print-in x t) = let-print-in (wkNe e x) (wkNf (keep e) t)
 
 NF NE : Ty → Ctx → Set
@@ -326,20 +326,20 @@ reify-Print : Print (Tm'- a) →̇ NF (T a)
 reify   : Tm'- a →̇ NF a
 reflect : NE a  →̇ Tm'- a
 
-reify {Unit} t = unit
-reify {𝕔} t = up𝕔 t
+reify {Unit}  t = unit
+reify {𝕔}     t = up t
 reify {a ⇒ b} t = lam (reify {b} (t (drop idWk) (reflect {a} (var zero))))
-reify {◻ a} t = box (reify (t idWk (ext#- nil)))
-reify {T a} t = reify-Print t
+reify {◻ a}   t = box (reify (t idWk (ext#- nil)))
+reify {T a}   t = reify-Print t
 
-reify-Print (η x) = ret (reify x)
-reify-Print (print x u) = let-print-in x (reify-Print u)
-reify-Print (bind x x₁) = let-in x (reify-Print x₁)
+reify-Print (η     x)    = ret (reify x)
+reify-Print (print x u)  = let-print-in x (reify-Print u)
+reify-Print (bind  x x₁) = let-in x (reify-Print x₁)
 
 reflect {Unit}  n = tt
 reflect {𝕔}     n = n
 reflect {a ⇒ b} n = λ e t → reflect {b} (app (wkNe e n) (reify t))
-reflect {◻ a}  n = λ w e → reflect (unbox (wkNe w n) e)
+reflect {◻ a}   n = λ w e → reflect (unbox (wkNe w n) e)
 reflect {T a}   n = bind n (η (reflect {a} (var zero)))
 
 -- identity substitution

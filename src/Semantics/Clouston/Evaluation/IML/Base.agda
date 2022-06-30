@@ -74,7 +74,7 @@ unbox' φ ψ = λ' φ ∘ ψ
 
 module Eval (N : Ty') where
   evalTy : (a : Ty) → Ty'
-  evalTy 𝕓       = N
+  evalTy ι       = N
   evalTy (a ⇒ b) = evalTy a ⇒' evalTy b
   evalTy (□ a)   = □' evalTy a
 

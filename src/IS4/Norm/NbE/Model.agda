@@ -87,9 +87,9 @@ open PresheafEvaluationIS4 public
   ; wk-pres-trans = λ w w' n → ≡-sym (wkNePres∙ w w' n)
   }
 
-open PresheafEvaluationIS4Eval (𝒩ℯ 𝕓)           public
+open PresheafEvaluationIS4Eval (𝒩ℯ ι)           public
   hiding (Sub' ; Tm')
-open PresheafEvaluationIS4EvalProperties (𝒩ℯ 𝕓) public
+open PresheafEvaluationIS4EvalProperties (𝒩ℯ ι) public
 
 𝒩𝒻 : (a : Ty) → Psh
 𝒩𝒻 a = record

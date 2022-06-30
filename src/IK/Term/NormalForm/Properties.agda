@@ -17,7 +17,7 @@ wkNePresId (unbox n e) with ←#IsPre# e | #→isPost# e
   (trans (cong₂ wkNe (sliceLeftId e) refl) (wkNePresId n))
   (wkLFExtPresId e)
 
-wkNfPresId (up𝕓 n) = cong up𝕓 (wkNePresId n)
+wkNfPresId (up  n) = cong up  (wkNePresId n)
 wkNfPresId (lam n) = cong lam (wkNfPresId n)
 wkNfPresId (box n) = cong box (wkNfPresId n)
 
@@ -31,7 +31,7 @@ wkNePres∙ w w' (app n m)   = cong₂ app (wkNePres∙ w w' n) (wkNfPres∙ w w
 wkNePres∙ w w' (unbox n e) = cong₂ unbox
   (trans (wkNePres∙ _ _ _) (cong₂ wkNe (sliceLeftPres∙ w' w e) refl)) (wkLFExtPres∙ w' w e)
 
-wkNfPres∙ w w' (up𝕓 n) = cong up𝕓 (wkNePres∙ w w' n)
+wkNfPres∙ w w' (up  n) = cong up  (wkNePres∙ w w' n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)
 wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep# w) (keep# w') n)
 
@@ -49,7 +49,7 @@ nat-embNe : (w : Γ ⊆ Γ') (n : Ne Γ a)
 nat-embNf : (w : Γ ⊆ Γ') (n : Nf Γ a)
   → wkTm w (embNf n) ≡ embNf (wkNf w n)
 
-nat-embNf w (up𝕓 x) = nat-embNe w x
+nat-embNf w (up  x) = nat-embNe w x
 nat-embNf w (lam n) = cong lam (nat-embNf (keep w) n)
 nat-embNf w (box n) = cong box (nat-embNf (keep# w) n)
 

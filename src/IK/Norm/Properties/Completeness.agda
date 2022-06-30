@@ -23,7 +23,7 @@ open import IK.Term
 
 -- soundness relation on semantic values
 _≋_ : Tm' Γ a → Tm' Γ a → Set
-_≋_ {Γ} {a = 𝕓}      n       m
+_≋_ {Γ} {a = ι}      n       m
   = n ≡ m
 _≋_ {Γ} {a = a ⇒ b}  f       g
   = {Γ' : Ctx} (w : Γ ⊆ Γ') → {x y : Tm' Γ' a}
@@ -48,7 +48,7 @@ data _≋ₛ_ : Sub' Γ Δ → Sub' Γ Δ → Set where
 -- ≋ is symmetric
 sym-≋ : {x y : Tm' Γ a}
       → x ≋ y → y ≋ x
-sym-≋ {a = 𝕓}     x≡y
+sym-≋ {a = ι}     x≡y
   = sym x≡y
 sym-≋ {a = a ⇒ b} x≋y
   = λ w px' py' x'≋y' → sym-≋ {a = b} (x≋y w py' px' (sym-≋ {a = a} x'≋y'))
@@ -58,7 +58,7 @@ sym-≋ {a = □ a} {box x} {box y} x≋y
 -- ≋ is transitive
 trans-≋ : {x y z : Tm' Γ a}
   → x ≋ y → y ≋ z → x ≋ z
-trans-≋ {a = 𝕓}     x≡y y≡z
+trans-≋ {a = ι}     x≡y y≡z
   = trans x≡y y≡z
 trans-≋ {a = a ⇒ b} {x} {y} {z} x≋y y≋z w {x = x'} {y = y'} px' py' x'≋y'
   = trans-≋ {a = b}
@@ -102,7 +102,7 @@ wkTm'Pres≋ : {x : Tm' Γ a} {y : Tm' Γ a}
   → (w : Γ ⊆ Δ)
   → x ≋ y
   → wkTm' w x ≋ wkTm' w y
-wkTm'Pres≋ {a = 𝕓}                           w x≡y
+wkTm'Pres≋ {a = ι}                           w x≡y
   = cong (wkNf w) x≡y
 wkTm'Pres≋ {a = a ⇒ b} {x = f} {y = g}       w f≋g
   = λ w' px py x≋y → f≋g (w ∙ w') px py x≋y
@@ -339,7 +339,7 @@ unique-reify : {x y : Tm' Γ a}
 sound-reflect : {n n' : Ne Γ a}
   → n ≡ n' → reflect n ≋ reflect n'
 
-unique-reify {a = 𝕓}      x≡y = x≡y
+unique-reify {a = ι}      x≡y = x≡y
 unique-reify {a = a ⇒ b}  x≋y = cong lam
   (unique-reify
     (x≋y fresh (psh-reflect {a = a} (var zero)) (psh-reflect {a = a} (var zero))
@@ -347,8 +347,8 @@ unique-reify {a = a ⇒ b}  x≋y = cong lam
 unique-reify {a = □ a} {box x} {box y} x≋y
   = cong box (unique-reify x≋y)
 
-sound-reflect {a = 𝕓}      n≡n'
-  = cong up𝕓 n≡n'
+sound-reflect {a = ι}      n≡n'
+  = cong up n≡n'
 sound-reflect {a = a ⇒ b}  n≡n' w px py x≋y
   = sound-reflect {a = b} (cong₂ app (cong (wkNe w) n≡n') (unique-reify x≋y))
 sound-reflect {a = □ a}    n≡n'

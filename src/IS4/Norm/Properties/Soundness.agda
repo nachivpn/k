@@ -24,7 +24,7 @@ quotTm x = embNf (reify _ x)
 -----------------------
 
 Rt : {a : Ty} {Γ : Ctx} → (t : Tm Γ a) → (x : Tm' Γ a) → Set
-Rt {𝕓}          t x =
+Rt {ι}          t x =
   t ≈ quotTm x
 Rt {a ⇒ b} {Γ}  t f =
   {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
@@ -49,7 +49,7 @@ Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
   → t ≈ u
   → Rt u x
   → Rt t x
-Rt-prepend {a = 𝕓} r uRx
+Rt-prepend {a = ι} r uRx
   = ≈-trans r uRx
 Rt-prepend {a = a ⇒ b} r uRx
   = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) ≈-refl) (uRx w uRy)
@@ -71,14 +71,14 @@ Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
 Rt-reflect : (n : Ne Γ a)
   → Rt (embNe n) (reflect a n)
 
-Rt-build {a = 𝕓}     r
+Rt-build {a = ι}     r
   = r
 Rt-build {a = a ⇒ b} tRx
   = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (Rt-build (tRx _ (Rt-reflect (var zero)))))
 Rt-build {a = □ a}  tRx
   = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (Rt-build (Rt-cast (cong₂ unbox (sym (wkTmPresId _)) refl) refl (tRx idWk new))))
 
-Rt-reflect {a = 𝕓}     n
+Rt-reflect {a = ι}     n
   = ≈-refl
 Rt-reflect {a = a ⇒ b} n
   = λ w y → Rt-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
@@ -90,7 +90,7 @@ wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}
   → (w : Γ ⊆ Δ)
   → Rt t x
   → Rt (wkTm w t) (wkTm' a w x)
-wkTmPresRt {a = 𝕓}  {x = x}       w tRx
+wkTmPresRt {a = ι}  {x = x}       w tRx
   = ≈-trans (wkTmPres≈ _ tRx) (≈-reflexive (nat-embNf _ (reify _ x)))
 wkTmPresRt {a = a ⇒ b}            w tRx
   = λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') y)

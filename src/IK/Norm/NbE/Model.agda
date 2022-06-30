@@ -30,7 +30,7 @@ data Lock (A : Ctx → Set) : Ctx → Set where
 -- interpretation of types
 
 Tm' : Ctx → Ty → Set
-Tm' Γ 𝕓       = Nf Γ 𝕓
+Tm' Γ ι       = Nf Γ ι
 Tm' Γ (a ⇒ b) = {Γ' : Ctx} → Γ ⊆ Γ' → (Tm' Γ' a → Tm' Γ' b)
 Tm' Γ (□ a)   = Box (λ Γ' → Tm' Γ' a) Γ
 
@@ -48,7 +48,7 @@ Sub'- Δ Γ = Sub' Γ Δ
 
 -- values in the model can be weakened
 wkTm' : Γ ⊆ Γ' → Tm' Γ a → Tm' Γ' a
-wkTm' {a = 𝕓}     e n       = wkNf e n
+wkTm' {a = ι}     e n       = wkNf e n
 wkTm' {a = a ⇒ b} e f       = λ e' y → f (e ∙ e') y
 wkTm' {a = □ a}   e (box x) = box (wkTm' (keep# e) x)
 
@@ -94,7 +94,7 @@ evalₛ (lock s e) γ = let (_ , γ' , e') = unlock' (LFExt' e γ) in lock (eval
 
 -- Used to ensure that the domain of interpretation is indeed presheafs
 Psh : Tm' Γ a → Set
-Psh {Γ} {𝕓}     n      = ⊤
+Psh {Γ} {ι}     n      = ⊤
 Psh {Γ} {a ⇒ b} f      = {Γ' : Ctx} (w : Γ ⊆ Γ')
   → (x : Tm' Γ' a) → Psh x
   -- naturality of presheaf exponentials
@@ -114,7 +114,7 @@ Pshₛ {Γ} {Δ #}    (lock s e) = Pshₛ s
 
 -- wkTm' preserves Psh
 wkTm'PresPsh : (w : Γ ⊆ Γ') (x : Tm' Γ a) → Psh x → Psh (wkTm' w x)
-wkTm'PresPsh {a = 𝕓}     w x       p = tt
+wkTm'PresPsh {a = ι}     w x       p = tt
 wkTm'PresPsh {a = a ⇒ b} w f       p = λ w' y q →
   -- nf gives us that f obeys naturality (ind. hyp enabled by PSh)
   -- pfx gives us that the codomain of f is a presheaf, i.e., `PSh (f _ x)`
@@ -143,7 +143,7 @@ wkSub'PresPsh {Δ = Δ #}    w (lock s e) p         =
 
 -- identity functor law of `Tm'- a`
 wkTm'PresId : (x : Tm' Γ a) → wkTm' idWk x ≡ x
-wkTm'PresId {a = 𝕓}     n
+wkTm'PresId {a = ι}     n
   = wkNfPresId n
 wkTm'PresId {a = a ⇒ b} f
   = funexti' (λ _ → funext (λ _ → cong f (leftIdWk _)))
@@ -153,7 +153,7 @@ wkTm'PresId {a = □ a}  (box x)
 -- composition functor law of `Tm'- a`
 wkTm'Pres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (x : Tm' Γ a)
   → wkTm' w' (wkTm' w x) ≡ wkTm' (w ∙ w') x
-wkTm'Pres∙ {a = 𝕓}     w w' n       =
+wkTm'Pres∙ {a = ι}     w w' n       =
   wkNfPres∙ w w' n
 wkTm'Pres∙ {a = a ⇒ b} w w' f       =
   funexti' (λ _ → funext (λ w'' →

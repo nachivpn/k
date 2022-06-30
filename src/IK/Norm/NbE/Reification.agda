@@ -16,12 +16,12 @@ reify   : Tm' Γ a → Nf Γ a
 reflect : Ne Γ a  → Tm' Γ a
 
 -- interpretation of neutrals
-reflect {a = 𝕓} n     = up𝕓 n
+reflect {a = ι}     n = up n
 reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
-reflect {a = □ a} n   = box (reflect (unbox n new))
+reflect {a = □ a}   n = box (reflect (unbox n new))
 
 -- reify values to normal forms
-reify {a = 𝕓}     x       = x
+reify {a = ι}     x       = x
 reify {a = a ⇒ b} x       = lam (reify (x (drop idWk) (reflect (var zero))))
 reify {a = □ a}   (box x) = box (reify x)
 
@@ -40,7 +40,7 @@ idₛ' {Γ #}    = lock (idₛ' {Γ}) new
 
 -- naturality of reflect
 nat-reflect : (w : Γ ⊆ Γ') (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)
-nat-reflect {a = 𝕓}     w n = refl
+nat-reflect {a = ι}     w n = refl
 nat-reflect {a = a ⇒ b} w n = funexti' (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
 nat-reflect {a = □ a}   w n = cong box (nat-reflect (keep# w) (unbox n nil))
@@ -51,7 +51,7 @@ psh-reflect : (n : Ne Γ a) → Psh (reflect n)
 nat-reify : (w : Γ ⊆ Γ') (x : Tm' Γ a) → Psh x → reify (wkTm' w x) ≡ wkNf w (reify x)
 
 -- psh-reflect
-psh-reflect {a = 𝕓}     n = tt
+psh-reflect {a = ι}     n = tt
 psh-reflect {a = a ⇒ b} n = λ w x px
   → (λ w' → trans
        (cong reflect
@@ -61,7 +61,7 @@ psh-reflect {a = a ⇒ b} n = λ w x px
 psh-reflect {a = □ a}  n = psh-reflect (unbox n nil)
 
 -- nat-reify
-nat-reify {a = 𝕓}         w x   px
+nat-reify {a = ι}         w x   px
   = refl
 nat-reify {Γ} {a = a ⇒ b} w f   pf
   = let (nf , pfx) = pf fresh (reflect (var zero)) (psh-reflect {Γ = _ `, a} (var zero))

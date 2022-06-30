@@ -17,7 +17,7 @@ open import Relation.Binary.PropositionalEquality
 sfPrefix : ¬ (a ⊲ᶜ Γ) → Ext θ Γ ΓL ΓR → ¬ (a ⊲ᶜ ΓL)
 sfPrefix noA nil        = noA
 sfPrefix noA (ext e)    = sfPrefix (λ z → noA (there z)) e
-sfPrefix noA (ext🔒 x e) = sfPrefix (λ z → noA (there🔒 z)) e
+sfPrefix noA (ext# x e) = sfPrefix (λ z → noA (there# z)) e
 
 -- if 𝕓 is not a subformula of Γ, then any normal form
 -- of the type `Nf Γ (𝕓 ⇒ 𝕓)` must be the identity function
@@ -28,18 +28,18 @@ uniqIdFun noB (lam (up𝕓 (app m n)))    with neutrality m
 ... | there p                               =
   ⊥-elim (noB (⊲-lift (sbr⇒ ⊲-refl) p))
 uniqIdFun noB (lam (up𝕓 (unbox n (ext e)))) =
-  ⊥-elim (sfPrefix noB e (⊲-lift (sb□ ⊲-refl) (there🔒 (neutrality n))))
+  ⊥-elim (sfPrefix noB e (⊲-lift (sb□ ⊲-refl) (there# (neutrality n))))
 
--- if there are no boxed-formulas in `Γ`, then there are no neutrals in `Γ 🔒`
-noLeftPeek : ({x : Ty} → ¬ (□ x ⊲ᶜ Γ)) → ¬ (Ne (Γ 🔒) a)
+-- if there are no boxed-formulas in `Γ`, then there are no neutrals in `Γ #`
+noLeftPeek : ({x : Ty} → ¬ (□ x ⊲ᶜ Γ)) → ¬ (Ne (Γ #) a)
 noLeftPeek f (app n x)     = noLeftPeek f n
 noLeftPeek f (unbox n nil) = f (neutrality n)
 
 -- strengthening relation
 data _⋗_  : Ctx → Ctx → Set where
-  add🔒  : [] ⋗ [🔒]
+  add#  : [] ⋗ [#]
   keep  : Γ ⋗ Δ → (Γ `, a) ⋗ (Δ `, a)
-  keep🔒 : Γ ⋗ Δ → (Γ 🔒) ⋗ (Δ 🔒)
+  keep# : Γ ⋗ Δ → (Γ #) ⋗ (Δ #)
 
 -- strengthening is the identity on variables
 strenVar : Γ' ⋗ Γ → Var Γ a → Var Γ' a
@@ -51,19 +51,19 @@ strenNf : Γ' ⋗ Γ → Nf Γ a → Nf Γ' a
 
 strenNe r          (var x)           = var (strenVar r x)
 strenNe r          (app n x)         = app (strenNe r n) (strenNf r x)
-strenNe add🔒       (unbox n nil)     = ⊥-elim (noClosedNe n)
-strenNe (keep🔒 r)  (unbox n nil)     = unbox (strenNe r n) nil
+strenNe add#       (unbox n nil)     = ⊥-elim (noClosedNe n)
+strenNe (keep# r)  (unbox n nil)     = unbox (strenNe r n) nil
 strenNe (keep r)   (unbox n (ext x)) = wkNe fresh (strenNe r (unbox n x))
 
 strenNf r (up𝕓 x) = up𝕓 (strenNe r x)
 strenNf r (lam n) = lam (strenNf (keep r) n)
-strenNf r (box n) = box (strenNf (keep🔒 r) n)
+strenNf r (box n) = box (strenNf (keep# r) n)
 
 -- NOTE:
 -- direct induction to show strengthing for terms fails;
 -- consider a `t : Tm [] (□ a)` and defining
 -- `strenTm : Γ' ⋗ Γ → Tm Γ a → Tm Γ' a`,
--- what should `strenTm add🔒 (unbox t nil) : Tm [] a` be?
+-- what should `strenTm add# (unbox t nil) : Tm [] a` be?
 
 strenTm : Γ' ⋗ Γ → Tm Γ a → Tm Γ' a
 strenTm r t = embNf (strenNf r (norm t))
@@ -77,7 +77,7 @@ module _ where
   -- forth t = {!!}
 
   back : Tm [] (□ a) → Tm [] a
-  back t = embNf (strenNf add🔒 (norm (unbox t nil)))
+  back t = embNf (strenNf add# (norm (unbox t nil)))
 
 noFreeUnbox : ¬ (Nf [] (□ 𝕓 ⇒ 𝕓))
 noFreeUnbox (lam (up𝕓 (var (C.su ()))))
@@ -87,8 +87,8 @@ noFreeUnbox (lam (up𝕓 (unbox x (C.ext ()))))
 
 noFreeBox : ¬ (Nf [] (𝕓 ⇒ □ 𝕓))
 noFreeBox (lam (box (up𝕓 (app n _)))) with neutrality n
-... | there🔒 (here ())
-... | there🔒 (there ())
+... | there# (here ())
+... | there# (there ())
 noFreeBox (lam (box (up𝕓 (unbox (var (C.su ())) C.nil))))
 noFreeBox (lam (box (up𝕓 (unbox (app n _) C.nil)))) with neutrality n
 ... | here ()

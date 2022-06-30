@@ -24,7 +24,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
   exp-fun : (t : Tm Γ (a ⇒ b))
     → t ⟶ lam (app (wkTm fresh t) (var ze))
 
-  red-box : (t : Tm (ΓL 🔒) a) (e : CExt Γ ΓL ΓR)
+  red-box : (t : Tm (ΓL #) a) (e : CExt Γ ΓL ΓR)
     → unbox (box t) e ⟶ substTm (lock idₛ e) t
 
   exp-box : (t : Tm Γ (□ a))
@@ -42,7 +42,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → u ⟶ u'
     → app t u ⟶ app t u'
 
-  cong-box : {t t' : Tm (Γ 🔒) a}
+  cong-box : {t t' : Tm (Γ #) a}
     → t ⟶ t'
     → box t ⟶ box t'
 
@@ -78,7 +78,7 @@ cong-app : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → app t u ⟶* app t' u'
 cong-app t⟶t' u⟶u' = cong-app1 t⟶t' ◅ cong-app2 u⟶u' ◅ ε
 
-cong-box* : {t t' : Tm (Γ 🔒) a}
+cong-box* : {t t' : Tm (Γ #) a}
   → t ⟶* t'
   → box t ⟶* box t'
 cong-box* = cong-⟶-to-cong-⟶* cong-box

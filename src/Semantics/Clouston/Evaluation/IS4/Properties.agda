@@ -113,7 +113,7 @@ abstract
 module _ {Δ Γ : Ctx} where
   abstract
     evalAcc-pres-∘ : ∀ (e : CExt Δ Γ Γ') (e' : CExt Θ Δ Δ') → evalAcc (extRAssoc e e') ≈̇ μ'[ evalCtx Γ ] ∘ ✦'-map (evalAcc e) ∘ evalAcc e'
-    evalAcc-pres-∘ {Θ = Δ} e nil = let open EqReasoning (Sub'-setoid Δ (Γ 🔒)) in begin
+    evalAcc-pres-∘ {Θ = Δ} e nil = let open EqReasoning (Sub'-setoid Δ (Γ #)) in begin
       evalAcc (extRAssoc e (nil {Γ = Δ}))
         ≡⟨⟩
       evalAcc e
@@ -126,7 +126,7 @@ module _ {Δ Γ : Ctx} where
         ≈˘⟨ ∘-pres-≈̇-right μ'[ evalCtx Γ ] (η'-nat (evalAcc e)) ⟩
       μ'[ evalCtx Γ ] ∘ ✦'-map (evalAcc e) ∘ evalAcc (nil {Γ = Δ})
         ∎
-    evalAcc-pres-∘ {Θ = Θ `, a} e (ext {a = a} e') = let open EqReasoning (Sub'-setoid (Θ `, a) (Γ 🔒)) in begin
+    evalAcc-pres-∘ {Θ = Θ `, a} e (ext {a = a} e') = let open EqReasoning (Sub'-setoid (Θ `, a) (Γ #)) in begin
       evalAcc (extRAssoc e (ext[ a ] e'))
         ≡⟨⟩
       evalAcc (ext[ a ] (extRAssoc e e'))
@@ -139,10 +139,10 @@ module _ {Δ Γ : Ctx} where
         ≈⟨ ∘-pres-≈̇-right μ'[ evalCtx Γ ] (∘-assoc (✦'-map (evalAcc e)) (evalAcc e') π₁'[ evalCtx Θ ][ evalTy a ]) ⟩
       μ'[ evalCtx Γ ] ∘ ✦'-map (evalAcc e) ∘ evalAcc (ext[ a ] e')
         ∎
-    evalAcc-pres-∘ {Θ = Θ 🔒} e (ext🔒- e') = let open EqReasoning (Sub'-setoid (Θ 🔒) (Γ 🔒)) in begin
-      evalAcc (extRAssoc e (ext🔒- e'))
+    evalAcc-pres-∘ {Θ = Θ #} e (ext#- e') = let open EqReasoning (Sub'-setoid (Θ #) (Γ #)) in begin
+      evalAcc (extRAssoc e (ext#- e'))
         ≡⟨⟩
-      evalAcc (ext🔒- (extRAssoc e e'))
+      evalAcc (ext#- (extRAssoc e e'))
         ≡⟨⟩
       μ'[ evalCtx Γ ] ∘ ✦'-map (evalAcc (extRAssoc e e'))
         ≈⟨ ∘-pres-≈̇-right μ'[ evalCtx Γ ] (✦'-map-pres-≈̇ (evalAcc-pres-∘ e e')) ⟩
@@ -160,12 +160,12 @@ module _ {Δ Γ : Ctx} where
         ≈˘⟨ ∘-pres-≈̇-right μ' (∘-pres-≈̇-left (μ'-nat (evalAcc e)) (✦'-map (evalAcc e'))) ⟩
       μ'[ evalCtx Γ ] ∘ (✦'-map (evalAcc e) ∘ μ'[ evalCtx Δ ]) ∘ ✦'-map (evalAcc e')
         ≈⟨ ∘-pres-≈̇-right μ' (∘-assoc (✦'-map evalAcc e) μ' (✦'-map (evalAcc e'))) ⟩
-      μ'[ evalCtx Γ ] ∘ ✦'-map (evalAcc e) ∘ evalAcc (ext🔒- e')
+      μ'[ evalCtx Γ ] ∘ ✦'-map (evalAcc e) ∘ evalAcc (ext#- e')
         ∎
 
 abstract
   evalAcc-pres-wk : ∀ (w : LFExt Γ' Γ ΓR) → evalAcc (upLFExt w) ≈̇ η'[ evalCtx Γ ] ∘ evalWk (LFExtToWk w)
-  evalAcc-pres-wk {Γ'} {Γ} nil = let open EqReasoning (Sub'-setoid Γ' (Γ 🔒)) in begin
+  evalAcc-pres-wk {Γ'} {Γ} nil = let open EqReasoning (Sub'-setoid Γ' (Γ #)) in begin
     evalAcc (upLFExt nil[ Γ ])
       ≡⟨⟩
     η'[ evalCtx Γ ]
@@ -176,7 +176,7 @@ abstract
       ≡⟨⟩
     η'[ evalCtx Γ ] ∘ evalWk (LFExtToWk nil[ Γ ])
       ∎
-  evalAcc-pres-wk {Γ' `, a} {Γ} (ext {a = a} w) = let open EqReasoning (Sub'-setoid (Γ' `, a) (Γ 🔒)) in begin
+  evalAcc-pres-wk {Γ' `, a} {Γ} (ext {a = a} w) = let open EqReasoning (Sub'-setoid (Γ' `, a) (Γ #)) in begin
     evalAcc (upLFExt (ext[ a ] w))
       ≡⟨⟩
     evalAcc (ext[ a ] (upLFExt w))
@@ -196,7 +196,7 @@ module _ {ΓL : Ctx} where
   abstract
     acc-nat' : ∀ (e : CExt Γ ΓL ΓR) (w : Γ ⊆ Δ) → evalAcc e ∘ evalWk w ≈̇ ✦'-map (evalWk (factorWk e w)) ∘ evalAcc (factorExt e w) -- XXX: rename and split up
     acc-nat' nil w = ≈̇-sym (η'-nat _)
-    acc-nat' (ext {a = a} e) (keep {Δ = Δ} {a} w) = let open EqReasoning (Sub'-setoid (Δ `, a) (ΓL 🔒)) in begin
+    acc-nat' (ext {a = a} e) (keep {Δ = Δ} {a} w) = let open EqReasoning (Sub'-setoid (Δ `, a) (ΓL #)) in begin
       evalAcc (ext[ a ] e) ∘ evalWk (keep[ a ] w)
         ≈⟨ ∘-assoc (evalAcc e) π₁' (evalWk (keep[ a ] w)) ⟩
       evalAcc e ∘ π₁'[ evalTy a ] ∘ evalWk (keep[ a ] w)
@@ -209,7 +209,7 @@ module _ {ΓL : Ctx} where
         ≈⟨ ∘-assoc (✦'-map (evalWk (factorWk e w))) (evalAcc (factorExt e w)) π₁'[ evalTy a ] ⟩
       ✦'-map (evalWk (factorWk (ext[ a ] e) (keep[ a ] w))) ∘ evalAcc (factorExt (ext[ a ] e) (keep[ a ] w))
         ∎
-    acc-nat' e@(ext {a = a} _) (drop {Δ = Δ} {b} w) = let open EqReasoning (Sub'-setoid (Δ `, b) (ΓL 🔒)) in begin
+    acc-nat' e@(ext {a = a} _) (drop {Δ = Δ} {b} w) = let open EqReasoning (Sub'-setoid (Δ `, b) (ΓL #)) in begin
       evalAcc e ∘ evalWk (drop[ b ] w)
         ≈˘⟨ ∘-assoc (evalAcc e) (evalWk w) π₁'[ evalTy b ] ⟩
       (evalAcc e ∘ evalWk w) ∘ π₁'[ evalTy b ]
@@ -218,8 +218,8 @@ module _ {ΓL : Ctx} where
         ≈⟨ ∘-assoc (✦'-map (evalWk (factorWk e w))) (evalAcc (factorExt e w)) π₁'[ evalTy b ] ⟩
       ✦'-map (evalWk (factorWk e (drop[ b ] w))) ∘ evalAcc (factorExt e (drop[ b ] w))
         ∎
-    acc-nat' (ext🔒- e) (keep🔒 {Δ = Δ} w) = let open EqReasoning (Sub'-setoid (Δ 🔒) (ΓL 🔒)) in begin
-      evalAcc (ext🔒- e) ∘ evalWk (keep🔒 w)
+    acc-nat' (ext#- e) (keep# {Δ = Δ} w) = let open EqReasoning (Sub'-setoid (Δ #) (ΓL #)) in begin
+      evalAcc (ext#- e) ∘ evalWk (keep# w)
         ≈⟨ ∘-assoc μ' (✦'-map (evalAcc e)) (✦'-map (evalWk w)) ⟩
       μ' ∘ ✦'-map (evalAcc e) ∘ ✦'-map (evalWk w)
         ≈˘⟨ ∘-pres-≈̇-right μ' (✦'-map-pres-∘ (evalAcc e) (evalWk w)) ⟩
@@ -233,9 +233,9 @@ module _ {ΓL : Ctx} where
         ≈˘⟨ ∘-pres-≈̇-left (μ'-nat (evalWk (factorWk e w))) (✦'-map (evalAcc (factorExt e w))) ⟩
       (✦'-map (evalWk (factorWk e w)) ∘ μ') ∘ ✦'-map (evalAcc (factorExt e w))
         ≈⟨ ∘-assoc (✦'-map (evalWk (factorWk e w))) μ' (✦'-map (evalAcc (factorExt e w))) ⟩
-      ✦'-map (evalWk (factorWk (ext🔒- e) (keep🔒 w))) ∘ evalAcc (factorExt (ext🔒- e) (keep🔒 w))
+      ✦'-map (evalWk (factorWk (ext#- e) (keep# w))) ∘ evalAcc (factorExt (ext#- e) (keep# w))
         ∎
-    acc-nat' e@(ext🔒- _) (drop {Δ = Δ} {a} w) = let open EqReasoning (Sub'-setoid (Δ `, a) (ΓL 🔒)) in begin
+    acc-nat' e@(ext#- _) (drop {Δ = Δ} {a} w) = let open EqReasoning (Sub'-setoid (Δ `, a) (ΓL #)) in begin
       evalAcc e ∘ evalWk (drop[ a ] w)
         ≈˘⟨ ∘-assoc (evalAcc e) (evalWk w) π₁'[ evalTy a ] ⟩
       (evalAcc e ∘ evalWk w) ∘ π₁'[ evalTy a ]
@@ -249,7 +249,7 @@ module _ {ΓL : Ctx} where
   abstract
      acc-nat : ∀ (e : CExt Γ ΓL ΓR) (σ : Sub Δ Γ) → evalAcc e ∘ evalSub σ ≈̇ ✦'-map (evalSub (factorSubₛ e σ)) ∘ evalAcc (factorExtₛ e σ) -- XXX: rename and split up
      acc-nat nil σ = ≈̇-sym (η'-nat (evalSub σ))
-     acc-nat {Δ = Δ} (ext {a = a} e) (σ `, t) = let open EqReasoning (Sub'-setoid Δ (ΓL 🔒)) in begin
+     acc-nat {Δ = Δ} (ext {a = a} e) (σ `, t) = let open EqReasoning (Sub'-setoid Δ (ΓL #)) in begin
        evalAcc (ext[ a ] e) ∘ (evalSub (σ `, t))
          ≡⟨⟩
        (evalAcc e ∘ π₁'[ evalTy a ]) ∘ ⟨ evalSub σ , evalTm t ⟩'
@@ -262,8 +262,8 @@ module _ {ΓL : Ctx} where
          ≡⟨⟩
        ✦'-map (evalSub (factorSubₛ (ext[ a ] e) (σ `, t))) ∘ evalAcc (factorExtₛ (ext[ a ] e) (σ `, t))
          ∎
-     acc-nat {Δ = Δ} (ext🔒- e) (lock σ e') = let open EqReasoning (Sub'-setoid Δ (ΓL 🔒)) in begin
-       evalAcc (ext🔒- e) ∘ evalSub (lock σ e')
+     acc-nat {Δ = Δ} (ext#- e) (lock σ e') = let open EqReasoning (Sub'-setoid Δ (ΓL #)) in begin
+       evalAcc (ext#- e) ∘ evalSub (lock σ e')
          ≡⟨⟩
        (μ' ∘ ✦'-map (evalAcc e)) ∘ ✦'-map (evalSub σ) ∘ evalAcc e'
          ≈⟨ ∘-assoc μ' (✦'-map (evalAcc e)) (✦'-map (evalSub σ) ∘ evalAcc e') ⟩
@@ -285,7 +285,7 @@ module _ {ΓL : Ctx} where
          ≈⟨ ∘-assoc (✦'-map (evalSub (factorSubₛ e σ))) μ' (✦'-map (evalAcc (factorExtₛ e σ)) ∘ evalAcc e') ⟩
        ✦'-map (evalSub (factorSubₛ e σ)) ∘ μ' ∘ ✦'-map (evalAcc (factorExtₛ e σ)) ∘ evalAcc e'
          ≈˘⟨ ∘-pres-≈̇-right (✦'-map (evalSub (factorSubₛ e σ))) (evalAcc-pres-∘ (factorExtₛ e σ) e') ⟩
-       ✦'-map (evalSub (factorSubₛ (ext🔒- e) (lock σ e'))) ∘ evalAcc (extRAssoc (factorExtₛ e σ) e')
+       ✦'-map (evalSub (factorSubₛ (ext#- e) (lock σ e'))) ∘ evalAcc (extRAssoc (factorExtₛ e σ) e')
          ∎
 
 abstract
@@ -307,8 +307,8 @@ abstract
       ∎
   evalTm-pres-∘' {Δ = Δ} {a} w (box t) = let open EqReasoning (Tm'-setoid Δ a) in begin
     evalTm (wkTm w (box t))
-      ≈⟨ box'-pres-≈̇ (evalTm-pres-∘' (keep🔒 w) t) ⟩
-    box' (evalTm t ∘ evalWk (keep🔒 w))
+      ≈⟨ box'-pres-≈̇ (evalTm-pres-∘' (keep# w) t) ⟩
+    box' (evalTm t ∘ evalWk (keep# w))
       ≈⟨ box'-nat-dom (evalTm t) (evalWk w) ⟩
     evalTm (box t) [ evalWk w ]'
       ∎
@@ -362,9 +362,9 @@ abstract
     evalSub σ ×'-map id'[ evalTy a ]  ∎
 
 abstract
-  evalSub-pres-lock-map : ∀ (σ : Sub Δ Γ) → evalSub (keep🔒ₛ σ) ≈̇ ✦'-map (evalSub σ)
-  evalSub-pres-lock-map {Δ} {Γ} σ = let open EqReasoning (Sub'-setoid (Δ 🔒) (Γ 🔒)) in begin
-    evalSub (keep🔒ₛ σ)                        ≈⟨ ∘-pres-≈̇-right (✦'-map (evalSub σ)) (evalAcc-pres-id Δ) ⟩
+  evalSub-pres-lock-map : ∀ (σ : Sub Δ Γ) → evalSub (keep#ₛ σ) ≈̇ ✦'-map (evalSub σ)
+  evalSub-pres-lock-map {Δ} {Γ} σ = let open EqReasoning (Sub'-setoid (Δ #) (Γ #)) in begin
+    evalSub (keep#ₛ σ)                        ≈⟨ ∘-pres-≈̇-right (✦'-map (evalSub σ)) (evalAcc-pres-id Δ) ⟩
     ✦'-map (evalSub σ) ∘ id'[ ✦' evalCtx Δ ]  ≈⟨ id'-unit-right (✦' evalCtx Δ) (✦'-map (evalSub σ)) ⟩
     ✦'-map (evalSub σ)                        ∎
 
@@ -379,10 +379,10 @@ abstract
     evalSub (embWk (keep[ a ] w))                ≈⟨ evalSub-pres-×-map-id (embWk w) a ⟩
     evalSub (embWk w) ×'-map id'[ evalTy a ]     ≈⟨ ×'-map-pres-≈̇-left (evalSub-pres-wk w) id' ⟩
     evalWk (keep[ a ] w)                         ∎
-  evalSub-pres-wk {Γ} (keep🔒 {Δ = Γ'} w) = let open EqReasoning (Sub'-setoid (Γ' 🔒) Γ) in begin
-    evalSub (embWk (keep🔒 w))                  ≈⟨ evalSub-pres-lock-map (embWk w) ⟩
-    ✦'-map (evalSub (embWk w))                  ≈⟨ ✦'-map-pres-≈̇ (evalSub-pres-wk w) ⟩
-    evalWk (keep🔒 w)                           ∎
+  evalSub-pres-wk {Γ} (keep# {Δ = Γ'} w) = let open EqReasoning (Sub'-setoid (Γ' #) Γ) in begin
+    evalSub (embWk (keep# w))                    ≈⟨ evalSub-pres-lock-map (embWk w) ⟩
+    ✦'-map (evalSub (embWk w))                   ≈⟨ ✦'-map-pres-≈̇ (evalSub-pres-wk w) ⟩
+    evalWk (keep# w)                             ∎
 
 abstract
   evalSub-pres-id : ∀ (Γ : Ctx) → evalSub idₛ[ Γ ] ≈̇ id'
@@ -427,7 +427,7 @@ abstract
   evalTm-pres-∘ {a = a} {Δ} (box t) σ = let open EqReasoning (Tm'-setoid Δ a) in begin
     evalTm (substTm σ (box t))
       ≈⟨ box'-pres-≈̇ (evalTm-pres-∘ t (lock σ new)) ⟩
-    box' (evalTm t [ evalSub (keep🔒ₛ σ) ]')
+    box' (evalTm t [ evalSub (keep#ₛ σ) ]')
       ≈⟨ box'-pres-≈̇ (∘-pres-≈̇-right (evalTm t) (evalSub-pres-lock-map σ)) ⟩
     box' (evalTm t [ ✦'-map (evalSub σ) ]')
       ≈⟨ box'-nat-dom (evalTm t) (evalSub σ) ⟩

@@ -51,7 +51,7 @@ Ty-Decidable (◻ a)   (◻ b)   with Ty-Decidable a b
 ... | yes a≡b                = yes (cong ◻_ a≡b)
 ... | no  ¬a≡b               = no  λ { refl → ¬a≡b refl }
 
-open import Context Ty Ty-Decidable hiding (ext🔒) public
+open import Context Ty Ty-Decidable hiding (ext#) public
 
 ------------------------------------
 -- Variables, terms and substituions
@@ -71,7 +71,7 @@ data Tm : Ctx → Ty → Set where
          ---------------------
        → Tm Γ b
 
-  box   : Tm (Γ 🔒) a
+  box   : Tm (Γ #) a
         ------------
         → Tm Γ (◻ a)
 
@@ -94,7 +94,7 @@ wkTm : Γ ⊆ Γ' → Tm Γ a → Tm Γ' a
 wkTm w (var x)     = var (wkVar w x)
 wkTm w (lam t)     = lam (wkTm (keep w) t)
 wkTm w (app t u)   = app (wkTm w t) (wkTm w u)
-wkTm w (box t)     = box (wkTm (keep🔒 w) t)
+wkTm w (box t)     = box (wkTm (keep# w) t)
 wkTm w (unbox t e) = unbox (wkTm (factorWk e w) t) (factorExt e w)
 wkTm w unit = unit
 wkTm w true = true
@@ -118,7 +118,7 @@ data Ne where
 data Nf where
   up𝕔 : Ne Γ 𝕔 → Nf Γ 𝕔
   lam : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
-  box : Nf (Γ 🔒) a → Nf Γ (◻ a)
+  box : Nf (Γ #) a → Nf Γ (◻ a)
   true : Nf Γ Bool
   false : Nf Γ Bool
   ifte : CExt Γ ΓL ΓR → Ne ΓL Bool → Nf Γ a → Nf Γ a → Nf Γ a
@@ -152,7 +152,7 @@ wkNe w (unbox n e)  = unbox (wkNe (factorWk e w) n) (factorExt e w)
 
 wkNf w (up𝕔 x) = up𝕔 (wkNe w x)
 wkNf w (lam n) = lam (wkNf (keep w) n)
-wkNf w (box n) = box (wkNf (keep🔒 w) n)
+wkNf w (box n) = box (wkNf (keep# w) n)
 wkNf w true = true
 wkNf w false = false
 wkNf w (ifte e m n n₁) = ifte (factorExt e w) (wkNe (factorWk e w) m) (wkNf w n) (wkNf w n₁)
@@ -233,7 +233,7 @@ Tm'- Bool    = Cov (λ _ → Bool')
 Sub'- : Ctx → (Ctx → Set)
 Sub'- []       = ⊤'
 Sub'- (Γ `, a) = Sub'- Γ ×' Tm'- a
-Sub'- (Γ 🔒)    = Lock (Sub'- Γ)
+Sub'- (Γ #)    = Lock (Sub'- Γ)
 
 -- values in the model can be weakened
 wkTm'- : Γ ⊆ Γ' → Tm'- a Γ → Tm'- a Γ'
@@ -247,7 +247,7 @@ wkTm'- {a = Bool}  w m  = wkCov (λ _ z → z) w m
 wkSub'- : Γ ⊆ Γ' → Sub'- Δ Γ → Sub'- Δ Γ'
 wkSub'- {Δ = []}     w tt          = tt
 wkSub'- {Δ = Δ `, a} w (s , x)     = wkSub'- {Δ = Δ} w s , wkTm'- {a = a} w x
-wkSub'- {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub'- {Δ = Δ} (factorWk e w) s) (factorExt e w)
+wkSub'- {Δ = Δ #}    w (lock s e)  = lock (wkSub'- {Δ = Δ} (factorWk e w) s) (factorExt e w)
 
 -- semantic counterpart of `unbox` from `Tm`
 unbox' : Box (Tm'- a) ΓL → CExt Γ ΓL ΓR → Tm'- a Γ
@@ -291,33 +291,33 @@ reflect : NE a  →̇ Tm'- a
 reify {Unit}  x = unit
 reify {𝕔}     x = collect (mapCov (λ _ n → up𝕔 n) idWk x)
 reify {a ⇒ b} x = lam (reify {b} (x (drop idWk) (reflect {a} (var ze))))
-reify {◻ a}  x = box (reify (x idWk (ext🔒- nil)))
+reify {◻ a}   x = box (reify (x idWk (ext#- nil)))
 reify {Bool}  x = true
 
 reflect {Unit}  n = tt
 reflect {𝕔}     n = ret n
 reflect {a ⇒ b} n = λ e t → reflect {b} (app (wkNe e n) (reify t))
-reflect {◻ a}  n = λ w e → reflect (unbox (wkNe w n) e)
+reflect {◻ a}   n = λ w e → reflect (unbox (wkNe w n) e)
 reflect {Bool}  n = ifte' nil n (ret true) (ret false)
 
 -- identity substitution
 idₛ' : Sub'- Γ Γ
 idₛ' {[]}     = tt
 idₛ' {Γ `, a} = wkSub'- {Δ = Γ} (drop idWk) (idₛ' {Γ = Γ}) , reflect {a} (var ze)
-idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) (ext🔒- nil)
+idₛ' {Γ #}    = lock (idₛ' {Γ}) (ext#- nil)
 
 -- interpretation of variables
 substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
 substVar' ze     (_ , x) = x
 substVar' (su x) (γ , _) = substVar' x γ
 
-unlock' : Sub'- (Γ 🔒) Δ → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub'- Γ ΔL × CExt Δ ΔL ΔR }
+unlock' : Sub'- (Γ #) Δ → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub'- Γ ΔL × CExt Δ ΔL ΔR }
 unlock' (lock γ e) = _ , γ , e
 
-CExt' : CExt Γ ΓL ΓR → Sub'- Γ →̇ Sub'- (ΓL 🔒)
+CExt' : CExt Γ ΓL ΓR → Sub'- Γ →̇ Sub'- (ΓL #)
 CExt' nil       γ                         = lock γ nil
 CExt' (ext e)   (γ , _)                   = CExt' e γ
-CExt' {Γ = Γ} {ΓL} {ΓR} (ext🔒- e) (lock γ e') with unlock' {Γ = ΓL} (CExt' e γ) .snd
+CExt' {Γ = Γ} {ΓL} {ΓR} (ext#- e) (lock γ e') with unlock' {Γ = ΓL} (CExt' e γ) .snd
 ... | (γ' , e'') = lock γ' (extRAssoc e'' e')
 
 eval-ifte : CExt Γ ΓL ΓR → Cov (λ _ → Bool') ΓL → Cov A Γ → Cov A Γ → Cov A Γ
@@ -339,16 +339,16 @@ eval {a = a} (unbox t nil)         s
   = unbox' {a = a} (eval t s) nil
 eval (unbox t (ext e))             (s , _)
   = eval (unbox t e) s
-eval (unbox t (ext🔒- e))           (lock s nil)
+eval (unbox t (ext#- e))           (lock s nil)
   = eval (unbox t e) s
-eval {a = a} (unbox t (ext🔒- e))   (lock s (ext {a = b} e'))
-  = wkTm'- {_} {_} {a} (fresh {a = b}) (eval (unbox t (ext🔒- e)) (lock s e'))
-eval {a = a} (unbox t (ext🔒- nil)) (lock s (ext🔒- e'))
-  = unbox' {a} (eval t s) (ext🔒- e')
-eval (unbox t (ext🔒- (ext e)))     (lock (s , _) (ext🔒- e'))
-  = eval (unbox t (ext🔒- e)) (lock s (ext🔒- e'))
-eval (unbox t (ext🔒- (ext🔒- e)))   (lock (lock s e'') (ext🔒- e'))
-  = eval (unbox t (ext🔒- e)) (lock s (ext🔒- (extRAssoc e'' e')))
+eval {a = a} (unbox t (ext#- e))   (lock s (ext {a = b} e'))
+  = wkTm'- {_} {_} {a} (fresh {a = b}) (eval (unbox t (ext#- e)) (lock s e'))
+eval {a = a} (unbox t (ext#- nil)) (lock s (ext#- e'))
+  = unbox' {a} (eval t s) (ext#- e')
+eval (unbox t (ext#- (ext e)))     (lock (s , _) (ext#- e'))
+  = eval (unbox t (ext#- e)) (lock s (ext#- e'))
+eval (unbox t (ext#- (ext#- e)))   (lock (lock s e'') (ext#- e'))
+  = eval (unbox t (ext#- e)) (lock s (ext#- (extRAssoc e'' e')))
 eval unit                          s
   = tt
 eval true                          s

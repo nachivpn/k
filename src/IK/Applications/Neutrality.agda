@@ -20,7 +20,7 @@ data _⊲_ : Ty → Ty → Set where
 data _⊲ᶜ_   : (a : Ty) → (Γ : Ctx) → Set where
   here    :  a ⊲ b  → a ⊲ᶜ (Γ `, b)
   there   :  a ⊲ᶜ Γ → a ⊲ᶜ (Γ `, b)
-  there🔒  :  a ⊲ᶜ Γ → a ⊲ᶜ Γ 🔒
+  there#  :  a ⊲ᶜ Γ → a ⊲ᶜ Γ #
 
 noClosedNe : Ne [] a → ⊥
 noClosedNe (app n x) = noClosedNe n
@@ -37,10 +37,10 @@ neutrVar (su x) = there (neutrVar x)
 ⊲-lift : a ⊲ b → b ⊲ᶜ Γ → a ⊲ᶜ Γ
 ⊲-lift p (here x)   = here (⊲-trans p x)
 ⊲-lift p (there q)  = there (⊲-lift p q)
-⊲-lift p (there🔒 q) = there🔒 (⊲-lift p q)
+⊲-lift p (there# q) = there# (⊲-lift p q)
 
 neutrality : Ne Γ a → a ⊲ᶜ Γ
 neutrality (var x)           = neutrVar x
 neutrality (app n x)         = ⊲-lift (sbr⇒ ⊲-refl) (neutrality n)
-neutrality (unbox n nil)     = there🔒 (⊲-lift (sb□ ⊲-refl) (neutrality n))
+neutrality (unbox n nil)     = there# (⊲-lift (sb□ ⊲-refl) (neutrality n))
 neutrality (unbox n (ext e)) = there (neutrality (unbox n e))

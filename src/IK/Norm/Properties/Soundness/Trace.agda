@@ -36,7 +36,7 @@ data Rs : Sub Γ Δ → Sub' Γ Δ → Set where
   _`,_ : {s : Sub Γ Δ} {s' : Sub' Γ Δ} {t : Tm Γ a} {x : Tm' Γ a}
        → Rs s s' → Rt t x → Rs (s `, t)  (s' , x)
   lock : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-    → Rs s s' → (e : LFExt Δ' (Δ 🔒) (ΔR)) → Rs (lock s e) (lock s' e)
+    → Rs s s' → (e : LFExt Δ' (Δ #) (ΔR)) → Rs (lock s e) (lock s' e)
 
 ----------------------------
 -- Standard LR properties --
@@ -92,7 +92,7 @@ invRt {a = 𝕓}  {x = x}       w tRx =
 invRt {a = a ⇒ b}            w tRx =
   λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) (tRx (w ∙ w') y)
 invRt {a = □ a} {x = box x}  e (u , uRx , r) =
-  wkTm (keep🔒 e) u , invRt (keep🔒 e) uRx , invRed* e r
+  wkTm (keep# e) u , invRt (keep# e) uRx , invRed* e r
 
 -- Rs is invariant under weakening
 invRs : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
@@ -103,14 +103,14 @@ invRs {Γ = []}     {s = []}      {tt}     w sRs'          =
   []
 invRs {Γ = Γ `, _} {s = s `, t} {s' , x} w (sRs' `, tRx)  =
   invRs {Γ = Γ} w sRs' `, invRt w tRx
-invRs {Γ = Γ 🔒} {s = lock s e} {lock s' .e} w (lock x .e) =
+invRs {Γ = Γ #} {s = lock s e} {lock s' .e} w (lock x .e) =
   lock (invRs (sliceLeft e w) x) (wkLFExt e w)
 
 -- syntactic identity is related to semantic identity
 idRs : Rs {Γ} idₛ idₛ'
 idRs {[]}     = []
 idRs {Γ `, x} = invRs fresh idRs `, Rt-reflect (var ze)
-idRs {Γ 🔒}    = lock idRs nil
+idRs {Γ #}    = lock idRs nil
 
 -----------------------------
 -- The Fundamental Theorem --
@@ -144,7 +144,7 @@ private
           (trans (coh-trimSub-wkSub s idₛ w) (rightIdSub _)))))))
 
   unboxPresRt : {t : Tm Γ (□ a)} {x : Box (Tm'- a) Γ}
-    → (e : LFExt Γ' (Γ 🔒) ΓR)
+    → (e : LFExt Γ' (Γ #) ΓR)
     → Rt t x
     → Rt (unbox t e) (unbox' x e)
   unboxPresRt {t = t} {box x} e (u , uRx , r) =

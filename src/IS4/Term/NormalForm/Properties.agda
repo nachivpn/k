@@ -26,7 +26,7 @@ nat-embNf : (w : Γ ⊆ Γ') (n : Nf Γ a)
 
 nat-embNf w (up𝕓 x) = nat-embNe w x
 nat-embNf w (lam n) = cong lam (nat-embNf (keep w) n)
-nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
+nat-embNf w (box n) = cong box (nat-embNf (keep# w) n)
 
 nat-embNe w (var x)     = ≡-refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
@@ -92,4 +92,4 @@ wkNePres∙ {Γ'' = Γ''} w w' (unbox {ΓL = ΓL} {a = a} n e) = let open ≡-Re
 
 wkNfPres∙ w w' (up𝕓 n) = cong up𝕓 (wkNePres∙ w w' n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)
-wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep🔒 w) (keep🔒 w') n)
+wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep# w) (keep# w') n)

@@ -20,12 +20,12 @@ _→̇_ A B = {Δ : Ctx} → A Δ → B Δ
 
 -- semantic counterpart of `box` from `Tm`
 data Box (A : Ctx → Set) : Ctx → Set where
-  box : A (Γ 🔒) → Box A Γ
+  box : A (Γ #) → Box A Γ
 
 -- semantic counterpart of `lock` from `Sub`
 data Lock (A : Ctx → Set) : Ctx → Set where
-  lock : A ΓL → LFExt Γ (ΓL 🔒) ΓR  → Lock A Γ
-  -- equivalently, `lock : 🔒-free Γ' → A Γ → Lock A (Γ 🔒 ,, Γ')`
+  lock : A ΓL → LFExt Γ (ΓL #) ΓR  → Lock A Γ
+  -- equivalently, `lock : #-free Γ' → A Γ → Lock A (Γ # ,, Γ')`
 
 -- interpretation of types
 
@@ -41,7 +41,7 @@ Tm'- a Γ = Tm' Γ a
 Sub' : Ctx → Ctx → Set
 Sub' Δ []       = ⊤
 Sub' Δ (Γ `, a) = Sub' Δ Γ × Tm' Δ a
-Sub' Δ (Γ 🔒)    = Lock (λ Γ' → Sub' Γ' Γ) Δ
+Sub' Δ (Γ #)    = Lock (λ Γ' → Sub' Γ' Γ) Δ
 
 Sub'- : Ctx → Ctx → Set
 Sub'- Δ Γ = Sub' Γ Δ
@@ -50,19 +50,19 @@ Sub'- Δ Γ = Sub' Γ Δ
 wkTm' : Γ ⊆ Γ' → Tm' Γ a → Tm' Γ' a
 wkTm' {a = 𝕓}     e n       = wkNf e n
 wkTm' {a = a ⇒ b} e f       = λ e' y → f (e ∙ e') y
-wkTm' {a = □ a}   e (box x) = box (wkTm' (keep🔒 e) x)
+wkTm' {a = □ a}   e (box x) = box (wkTm' (keep# e) x)
 
 -- substitutions in the model can be weakened
 wkSub' : Γ ⊆ Γ' → Sub' Γ Δ → Sub' Γ' Δ
 wkSub' {Δ = []}     w tt          = tt
 wkSub' {Δ = Δ `, a} w (s , x)     = wkSub' w s , wkTm' w x
-wkSub' {Δ = Δ 🔒}    w (lock s e)  = lock (wkSub' (sliceLeft e w) s) (wkLFExt e w)
+wkSub' {Δ = Δ #}    w (lock s e)  = lock (wkSub' (sliceLeft e w) s) (wkLFExt e w)
 
 -- semantic counterpart of `unbox` from `Tm`
-unbox' : Box (λ Δ → Tm' Δ a) ΓL → LFExt Γ (ΓL 🔒) ΓR → Tm' Γ a
+unbox' : Box (λ Δ → Tm' Δ a) ΓL → LFExt Γ (ΓL #) ΓR → Tm' Γ a
 unbox' (box x) e = wkTm' (LFExtToWk e) x
 
-unlock' : Sub' Δ (Γ 🔒) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × LFExt Δ (ΔL 🔒) ΔR }
+unlock' : Sub' Δ (Γ #) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × LFExt Δ (ΔL #) ΔR }
 unlock' (lock γ e) = _ , γ , e
 
 -- interpretation of variables
@@ -70,7 +70,7 @@ substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
 substVar' ze     (_ , x) = x
 substVar' (su x) (γ , _) = substVar' x γ
 
-LFExt' : LFExt Γ (ΓL 🔒) ΓR → Sub'- Γ →̇ Sub'- (ΓL 🔒)
+LFExt' : LFExt Γ (ΓL #) ΓR → Sub'- Γ →̇ Sub'- (ΓL #)
 LFExt' nil     γ       = γ          -- = id
 LFExt' (ext e) (γ , _) = LFExt' e γ -- = LFExt' e ∘ π₁
 
@@ -106,7 +106,7 @@ Psh {Γ} {□ a} (box x) = Psh x
 Pshₛ : Sub' Γ Δ → Set
 Pshₛ {Γ} {[]}     s          = ⊤
 Pshₛ {Γ} {Δ `, a} (s , x)    = Pshₛ s × Psh x
-Pshₛ {Γ} {Δ 🔒}    (lock s e) = Pshₛ s
+Pshₛ {Γ} {Δ #}    (lock s e) = Pshₛ s
 
 -----------------------------------
 -- Psh(ₛ) is preserved by weakening
@@ -122,7 +122,7 @@ wkTm'PresPsh {a = a ⇒ b} w f       p = λ w' y q →
   in (λ {Γ⁰} w'' →
     subst (λ z → f z _ ≡ wkTm' _ _) (assocWk w w' w'') (nf w''))
     , pfx
-wkTm'PresPsh {a = □ a}  w (box x) p = wkTm'PresPsh (keep🔒 w) x p
+wkTm'PresPsh {a = □ a}  w (box x) p = wkTm'PresPsh (keep# w) x p
 
 -- wkSub' preserves Pshₛ
 wkSub'PresPsh : (w : Γ ⊆ Γ') (s : Sub' Γ Δ) → Pshₛ s → Pshₛ (wkSub' w s)
@@ -130,7 +130,7 @@ wkSub'PresPsh {Δ = []}     w s          p         =
   tt
 wkSub'PresPsh {Δ = Δ `, a} w (s , x)    (ps , px) =
   wkSub'PresPsh w s ps , wkTm'PresPsh w x px
-wkSub'PresPsh {Δ = Δ 🔒}    w (lock s e) p         =
+wkSub'PresPsh {Δ = Δ #}    w (lock s e) p         =
   wkSub'PresPsh (sliceLeft e w) s p
 
 -------------------------
@@ -159,7 +159,7 @@ wkTm'Pres∙ {a = a ⇒ b} w w' f       =
   funexti' (λ _ → funext (λ w'' →
     cong f (sym (assocWk w w' w''))))
 wkTm'Pres∙ {a = □ a}  w w' (box x) =
-  cong box (wkTm'Pres∙ (keep🔒 w) (keep🔒 w') x)
+  cong box (wkTm'Pres∙ (keep# w) (keep# w') x)
 
 --------------------------
 -- `Sub'- Δ` is a presheaf
@@ -173,7 +173,7 @@ wkTm'Pres∙ {a = □ a}  w w' (box x) =
 wkSub'PresId : (s : Sub' Γ Δ) → wkSub' idWk s ≡ s
 wkSub'PresId {Δ = []}     tt         = refl
 wkSub'PresId {Δ = Δ `, a} (s , x)    = cong₂ _,_ (wkSub'PresId s) (wkTm'PresId x)
-wkSub'PresId {Δ = Δ 🔒}    (lock s e) with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
+wkSub'PresId {Δ = Δ #}    (lock s e) with ←#IsPre# e | #→isPost# e
 ... | refl | refl = cong₂ lock
   (trans (cong₂ wkSub' (sliceLeftId e) refl) (wkSub'PresId s))
   (wkLFExtPresId e)
@@ -183,7 +183,7 @@ wkSub'Pres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (s : Sub' Γ Δ)
   → wkSub' w' (wkSub' w s) ≡ wkSub' (w ∙ w') s
 wkSub'Pres∙ {Δ = []}     w w' tt         = refl
 wkSub'Pres∙ {Δ = Δ `, a} w w' (s , x)    = cong₂ _,_ (wkSub'Pres∙ w w' s) (wkTm'Pres∙ w w' x)
-wkSub'Pres∙ {Δ = Δ 🔒}    w w' (lock s e) = cong₂ lock
+wkSub'Pres∙ {Δ = Δ #}    w w' (lock s e) = cong₂ lock
   (trans  (wkSub'Pres∙ _ _ s) (cong₂ wkSub' (sliceLeftPres∙ w' w e) refl))
   (wkLFExtPres∙ w' w e)
 
@@ -258,12 +258,12 @@ nat-eval (app t u)         w s       ps with
       (trans (rightIdWk w) (sym (leftIdWk w))))
     (g  w)
 nat-eval (box t)           w s       ps
-  = cong box (nat-eval t (keep🔒 w) (lock s nil) ps)
+  = cong box (nat-eval t (keep# w) (lock s nil) ps)
 nat-eval (unbox t nil)     w (lock s e) ps = trans
   (cong (λ z → unbox' z (wkLFExt e w)) (nat-eval t (sliceLeft e w) s ps))
   (gsLemma w e (eval t s))
   where
-  gsLemma : (w : Δ ⊆ Δ') (e : LFExt Δ (ΓL 🔒) ΓR) (x : Tm' ΓL (□ a))
+  gsLemma : (w : Δ ⊆ Δ') (e : LFExt Δ (ΓL #) ΓR) (x : Tm' ΓL (□ a))
     → unbox' (wkTm' (sliceLeft e w) x) (wkLFExt e w) ≡ wkTm' w (unbox' x e)
   gsLemma w e (box x) = trans (wkTm'Pres∙ _ _ _)
     (sym (trans
@@ -307,7 +307,7 @@ trimSub' : Γ ⊆ Γ' → Sub'- Γ' →̇ Sub'- Γ
 trimSub' base      tt         = tt
 trimSub' (drop w)  (s , _)    = trimSub' w s
 trimSub' (keep w)  (s , x)    = trimSub' w s , x
-trimSub' (keep🔒 w) (lock s e) = lock (trimSub' w s) e
+trimSub' (keep# w) (lock s e) = lock (trimSub' w s) e
 
 -- naturality of trimSub'
 nat-trimSub' : (w' : Δ' ⊆ Δ) (w : Γ ⊆ Γ') (s : Sub' Γ Δ)
@@ -315,13 +315,13 @@ nat-trimSub' : (w' : Δ' ⊆ Δ) (w : Γ ⊆ Γ') (s : Sub' Γ Δ)
 nat-trimSub' base       w s          = refl
 nat-trimSub' (drop w')  w (s , _)    = nat-trimSub' w' w s
 nat-trimSub' (keep w')  w (s , x)    = cong₂ _,_ (nat-trimSub' w' w s) refl
-nat-trimSub' (keep🔒 w') w (lock s e) = cong₂ lock (nat-trimSub' w' (sliceLeft e w) s) refl
+nat-trimSub' (keep# w') w (lock s e) = cong₂ lock (nat-trimSub' w' (sliceLeft e w) s) refl
 
 -- trimSub' preserves identity
 trimSub'PresId : (s : Sub' Γ Δ) → trimSub' idWk s ≡ s
 trimSub'PresId {Δ = []}     tt         = refl
 trimSub'PresId {Δ = Δ `, _} (s , _)    = cong₂ _,_ (trimSub'PresId s) refl
-trimSub'PresId {Δ = Δ 🔒}    (lock s e) = cong₂ lock (trimSub'PresId s) refl
+trimSub'PresId {Δ = Δ #}    (lock s e) = cong₂ lock (trimSub'PresId s) refl
 
 -- semantic counterpart of coh-trimSub-wkVar in Substitution.agda
 coh-trimSub'-wkVar' : (w : Γ ⊆ Γ') (s : Sub' Δ Γ') (x : Var Γ a)
@@ -346,10 +346,10 @@ coh-trimSub'-wkTm w s (app t u)
       (cong (λ f → f idWk (eval (wkTm w u) s)) (coh-trimSub'-wkTm w s t))
       (cong (eval t (trimSub' w s) idWk) (coh-trimSub'-wkTm w s u))
 coh-trimSub'-wkTm w s (box t)
-  = cong box (coh-trimSub'-wkTm (keep🔒 w) (lock s nil) t)
+  = cong box (coh-trimSub'-wkTm (keep# w) (lock s nil) t)
 coh-trimSub'-wkTm (drop w) (s , _) (unbox t e)
   = coh-trimSub'-wkTm w s (unbox t e)
-coh-trimSub'-wkTm (keep🔒 w) (lock s e) (unbox t nil)
+coh-trimSub'-wkTm (keep# w) (lock s e) (unbox t nil)
   = cong₂ unbox' (coh-trimSub'-wkTm w s t) refl
 coh-trimSub'-wkTm (keep w) (s , _) (unbox t (ext e))
   = coh-trimSub'-wkTm w s (unbox t e)
@@ -365,7 +365,7 @@ coh-trimSub'-wkSub (drop w) (lock s e) (s' , _)
   = coh-trimSub'-wkSub w (lock s e) s'
 coh-trimSub'-wkSub (keep w) (lock s (ext e)) (s' , _)
   = coh-trimSub'-wkSub w (lock s e) s'
-coh-trimSub'-wkSub (keep🔒 w) (lock s nil) (lock s' e')
+coh-trimSub'-wkSub (keep# w) (lock s nil) (lock s' e')
   = cong₂ lock (coh-trimSub'-wkSub w s s') refl
 
 -- evalₛ preserves identity
@@ -380,5 +380,5 @@ evalₛPresId {Δ = Δ `, _} (s' , x)
               (cong (evalₛ idₛ) (trimSub'PresId s'))
               (evalₛPresId s')))
           refl
-evalₛPresId {Δ = Δ 🔒} (lock s' e)
+evalₛPresId {Δ = Δ #} (lock s' e)
   = cong₂ lock (evalₛPresId s') refl

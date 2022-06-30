@@ -106,14 +106,14 @@ wkSubPresRs {Γ = []}     {s = []}      {tt}     w sRs'
   = []
 wkSubPresRs {Γ = Γ `, _} {s = s `, t} {elem (s' , x)} w (sRs' `, tRx)
   = wkSubPresRs {Γ = Γ} w sRs' `, wkTmPresRt w tRx
-wkSubPresRs {Γ = Γ 🔒} {s = lock s e} {elem (ΓL , (ΓR , .e) , s')} w (lock x .e)
+wkSubPresRs {Γ = Γ #} {s = lock s e} {elem (ΓL , (ΓR , .e) , s')} w (lock x .e)
   = lock (wkSubPresRs (factorWk e w) x) (factorExt e w)
 
 -- syntactic identity is related to semantic identity
 idRs : Rs {Γ} idₛ (idₛ' Γ)
 idRs {[]}     = []
 idRs {Γ `, x} = wkSubPresRs fresh idRs `, Rt-reflect (var ze)
-idRs {Γ 🔒}    = lock idRs new
+idRs {Γ #}    = lock idRs new
 
 -----------------------------
 -- The Fundamental Theorem --
@@ -168,19 +168,19 @@ Fund {Γ} t f = ∀ {Δ} {s : Sub Δ Γ} {s' : Sub' Δ Γ}
 lCtxₛ'∼lCtxₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ} → Rs s s' → lCtxₛ' e s' ≡ lCtxₛ e s
 lCtxₛ'∼lCtxₛ nil       sRs'          = refl
 lCtxₛ'∼lCtxₛ (ext e)   (sRs' `, _)   = lCtxₛ'∼lCtxₛ e sRs'
-lCtxₛ'∼lCtxₛ (ext🔒- e) (lock sRs' _) = lCtxₛ'∼lCtxₛ e sRs'
+lCtxₛ'∼lCtxₛ (ext#- e) (lock sRs' _) = lCtxₛ'∼lCtxₛ e sRs'
 
 rCtxₛ'∼rCtxₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ} → Rs s s' →  rCtxₛ' e s' ≡ rCtxₛ e s
 rCtxₛ'∼rCtxₛ nil       sRs'          = refl
 rCtxₛ'∼rCtxₛ (ext e)   (sRs' `, x)   = rCtxₛ'∼rCtxₛ e sRs'
-rCtxₛ'∼rCtxₛ (ext🔒- e) (lock sRs' _) = cong (_,, _) (rCtxₛ'∼rCtxₛ e sRs')
+rCtxₛ'∼rCtxₛ (ext#- e) (lock sRs' _) = cong (_,, _) (rCtxₛ'∼rCtxₛ e sRs')
 
 factorSubPresRs : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ}
     → (sRs' : Rs s s')
     → Rs (factorSubₛ e s) (subst (λ ΔL → Sub' ΔL ΓL) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
-factorSubPresRs nil       sRs'           = sRs'
-factorSubPresRs (ext e)   (sRs' `, _)    = factorSubPresRs e sRs'
-factorSubPresRs (ext🔒- e) (lock sRs' _) = factorSubPresRs e sRs'
+factorSubPresRs nil       sRs'          = sRs'
+factorSubPresRs (ext e)   (sRs' `, _)   = factorSubPresRs e sRs'
+factorSubPresRs (ext#- e) (lock sRs' _) = factorSubPresRs e sRs'
 
 factorExtₛ'∼factorExtₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ}
   → (sRs' : Rs s s')
@@ -214,13 +214,13 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
   unbox-box-reduces = begin
     unbox (wkTm w (substTm s (box t))) e
       ≡⟨⟩
-    unbox (box (wkTm (keep🔒 w) (substTm (lock s new) t))) e
+    unbox (box (wkTm (keep# w) (substTm (lock s new) t))) e
       ≈⟨ ⟶-to-≈ (red-box _ _) ⟩
-    substTm (lock idₛ e) (wkTm (keep🔒 w) (substTm (lock s new) t))
+    substTm (lock idₛ e) (wkTm (keep# w) (substTm (lock s new) t))
       ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
-    substTm (lock idₛ e) (substTm (wkSub (keep🔒 w) (lock s new)) t)
+    substTm (lock idₛ e) (substTm (wkSub (keep# w) (lock s new)) t)
       ≡⟨ substTmPres∙ _ _ t ⟩
-    substTm ((wkSub (keep🔒 w) (lock s new)) ∙ₛ (lock idₛ e) ) t
+    substTm ((wkSub (keep# w) (lock s new)) ∙ₛ (lock idₛ e) ) t
       ≡⟨⟩
     substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
       ≈⟨ substTmPres≈ t lockLemma ⟩

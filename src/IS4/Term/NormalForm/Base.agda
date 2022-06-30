@@ -18,13 +18,13 @@ data Ne where
 data Nf where
   up𝕓 : Ne Γ 𝕓 → Nf Γ 𝕓
   lam : Nf (Γ `, a) b → Nf Γ (a ⇒ b)
-  box : Nf (Γ 🔒) a → Nf Γ (□ a)
+  box : Nf (Γ #) a → Nf Γ (□ a)
 
 -- normal forms of substitutions (simply "do everything pointwise")
 data Nfₛ : Ctx → Ctx → Set where
   []   : Nfₛ Γ []
   _`,_ : Nfₛ Γ Δ → Nf Γ a → Nfₛ Γ (Δ `, a)
-  lock : Nfₛ ΔL Γ → CExt Δ ΔL ΔR → Nfₛ Δ (Γ 🔒)
+  lock : Nfₛ ΔL Γ → CExt Δ ΔL ΔR → Nfₛ Δ (Γ #)
 
 Nfₛ- : Ctx → Ctx → Set
 Nfₛ- Δ Γ = Nfₛ Γ Δ
@@ -59,4 +59,4 @@ wkNe w (unbox n e)  = unbox (wkNe (factorWk e w) n) (factorExt e w)
 
 wkNf e (up𝕓 x) = up𝕓 (wkNe e x)
 wkNf e (lam n) = lam (wkNf (keep e) n)
-wkNf e (box n) = box (wkNf (keep🔒 e) n)
+wkNf e (box n) = box (wkNf (keep# e) n)

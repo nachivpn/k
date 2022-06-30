@@ -20,10 +20,10 @@ _R_ = λ Γ Δ → ∃ λ Γ' → CExt Δ Γ Γ'
 variable
   r r' r'' : Γ R Δ
 
-pattern nilR      = _ , nil
-pattern extR e    = _ , ext e
-pattern ext🔒R e = _ , ext🔒- e
-pattern newR      = _ , ext🔒- nil
+pattern nilR    = _ , nil
+pattern extR  e = _ , ext e
+pattern ext#R e = _ , ext#- e
+pattern newR    = _ , ext#- nil
 
 private
   R-refl : Reflexive _R_
@@ -170,14 +170,14 @@ wkSub' Δ = wk[ evalCtx Δ ]
 unbox' : Tm' ΓL (□ a) → CExt Γ ΓL ΓR → Tm' Γ a
 unbox' (elem bx _bx-nat) e = bx idWk (-, e)
 
-unlock' : Sub' Δ (Γ 🔒) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × CExt Δ ΔL ΔR }
+unlock' : Sub' Δ (Γ #) → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub' ΔL Γ × CExt Δ ΔL ΔR }
 unlock' (elem (ΔL , (ΔR , e), s)) = (ΔL , ΔR) , (s , e)
 
 -- interpretation of variables
 substVar' : Var Γ a → Sub'- Γ →̇ Tm'- a
 substVar' v = evalVar v .apply
 
-CExt' : CExt Γ ΓL ΓR → Sub'- Γ →̇ Sub'- (ΓL 🔒)
+CExt' : CExt Γ ΓL ΓR → Sub'- Γ →̇ Sub'- (ΓL #)
 CExt' e = evalAcc e .apply
 
 module _ (e : CExt Γ ΓL ΓR) (s : Sub' Δ Γ) (let elem (ΔL , (ΔR , e') , s') = evalAcc e .apply s) where

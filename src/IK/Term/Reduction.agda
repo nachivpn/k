@@ -35,7 +35,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
   exp-fun : {t : Tm Γ (a ⇒ b)}
     → t ⟶ lam (app (wkTm fresh t) (var ze))
 
-  red-box : {t : Tm (ΓL 🔒) a} {e : LFExt Γ (ΓL 🔒) ΓR}
+  red-box : {t : Tm (ΓL #) a} {e : LFExt Γ (ΓL #) ΓR}
     → unbox (box t) e ⟶ wkTm (LFExtToWk e) t
 
   exp-box : {t : Tm Γ (□ a)}
@@ -53,11 +53,11 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → u ⟶ u'
     → app t u ⟶ app t u'
 
-  cong-box : {t t' : Tm (Γ 🔒) a}
+  cong-box : {t t' : Tm (Γ #) a}
     → t ⟶ t'
     → box t ⟶ box t'
 
-  cong-unbox : {t t' : Tm ΓL (□ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
+  cong-unbox : {t t' : Tm ΓL (□ a)} {e : LFExt Γ (ΓL #) ΓR}
     → t ⟶ t'
     → unbox t e ⟶ unbox t' e
 
@@ -86,12 +86,12 @@ cong-app : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → app t u ⟶* app t' u'
 cong-app t⟶t' u⟶u' = cong-app1 t⟶t' ◅ cong-app2 u⟶u' ◅ ε
 
-cong-box* : {t t' : Tm (Γ 🔒) a}
+cong-box* : {t t' : Tm (Γ #) a}
   → t ⟶* t'
   → box t ⟶* box t'
 cong-box* = cong-⟶-to-cong-⟶* cong-box
 
-cong-unbox* : {t t' : Tm ΓL (□ a)} {e : LFExt Γ (ΓL 🔒) ΓR}
+cong-unbox* : {t t' : Tm ΓL (□ a)} {e : LFExt Γ (ΓL #) ΓR}
   → t ⟶* t'
   → unbox t e ⟶* unbox t' e
 cong-unbox* = cong-⟶-to-cong-⟶* cong-unbox
@@ -131,7 +131,7 @@ invRed w exp-box
 invRed w (cong-lam r)
   = cong-lam* (invRed (keep w) r)
 invRed w (cong-box r)
-  = cong-box* (invRed (keep🔒 w) r)
+  = cong-box* (invRed (keep# w) r)
 invRed w (cong-unbox r)
   = cong-unbox* (invRed (sliceLeft _ w) r)
 invRed w (cong-app1 r)

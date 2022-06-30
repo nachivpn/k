@@ -12,7 +12,7 @@ wkNfPresId : (n : Nf Γ a) → wkNf idWk n ≡ n
 
 wkNePresId (var x)     = cong var (wkVarPresId x)
 wkNePresId (app n m)   = cong₂ app (wkNePresId n) (wkNfPresId m)
-wkNePresId (unbox n e) with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
+wkNePresId (unbox n e) with ←#IsPre# e | #→isPost# e
 ... | refl | refl = cong₂ unbox
   (trans (cong₂ wkNe (sliceLeftId e) refl) (wkNePresId n))
   (wkLFExtPresId e)
@@ -33,7 +33,7 @@ wkNePres∙ w w' (unbox n e) = cong₂ unbox
 
 wkNfPres∙ w w' (up𝕓 n) = cong up𝕓 (wkNePres∙ w w' n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)
-wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep🔒 w) (keep🔒 w') n)
+wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep# w) (keep# w') n)
 
 ------------------------
 -- Naturality conditions
@@ -51,7 +51,7 @@ nat-embNf : (w : Γ ⊆ Γ') (n : Nf Γ a)
 
 nat-embNf w (up𝕓 x) = nat-embNe w x
 nat-embNf w (lam n) = cong lam (nat-embNf (keep w) n)
-nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
+nat-embNf w (box n) = cong box (nat-embNf (keep# w) n)
 
 nat-embNe w (var x)     = refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)

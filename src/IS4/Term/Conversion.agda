@@ -75,7 +75,7 @@ red-fun≈ t u = ⟶-to-≈ (Reduction.red-fun t u)
 exp-fun≈ : (t : Tm Γ (a ⇒ b)) → t ≈ lam (app (wkTm fresh t) (var ze))
 exp-fun≈ t = ⟶-to-≈ (Reduction.exp-fun t)
 
-red-box≈ : (t : Tm (ΓL 🔒) a) (e : CExt Γ ΓL ΓR) → unbox (box t) e ≈ substTm (lock idₛ e) t
+red-box≈ : (t : Tm (ΓL #) a) (e : CExt Γ ΓL ΓR) → unbox (box t) e ≈ substTm (lock idₛ e) t
 red-box≈ t e = ⟶-to-≈ (Reduction.red-box t e)
 
 exp-box≈ : (t : Tm Γ (□ a)) → t ≈ box (unbox t new)

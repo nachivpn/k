@@ -38,8 +38,8 @@ data _≋ₛ_ : Sub' Γ Δ → Sub' Γ Δ → Set where
   _`,_ : {s : Sub' Γ Δ} {s' : Sub' Γ Δ} {x : Tm' Γ a} {y : Tm' Γ a}
        → s ≋ₛ s' → x ≋ y → (s , x) ≋ₛ (s' , y)
   lock : {s : Sub' Γ Δ} {s' : Sub' Γ Δ}
-       → s ≋ₛ s' → (e : LFExt Γ' (Γ 🔒) (ΓR))
-       → _≋ₛ_ {Γ = Γ'} {Δ = Δ 🔒} (lock s e)  (lock s' e)
+       → s ≋ₛ s' → (e : LFExt Γ' (Γ #) (ΓR))
+       → _≋ₛ_ {Γ = Γ'} {Δ = Δ #} (lock s e)  (lock s' e)
 
 ------------------------
 -- Properties of ≋ and ≋ₛ
@@ -79,17 +79,17 @@ sym-≋ₛ {Δ = []}     s≋s'
   = s≋s'
 sym-≋ₛ {Δ = Δ `, a} (s≋s' `, x≋y)
   = sym-≋ₛ s≋s' `, sym-≋ {a = a} x≋y
-sym-≋ₛ {Δ = Δ 🔒} (lock s≋s' e)
+sym-≋ₛ {Δ = Δ #} (lock s≋s' e)
   = lock (sym-≋ₛ s≋s') e
 
 -- ≋ₛ is transitive
 trans-≋ₛ : {s s' s'' : Sub' Γ Δ}
     → s ≋ₛ s' → s' ≋ₛ s'' → s ≋ₛ s''
-trans-≋ₛ {Δ = []} s≋s' s'≋s''
+trans-≋ₛ {Δ = []}     s≋s'           s'≋s''
   = []
 trans-≋ₛ {Δ = Δ `, a} (s≋s' `, x≋x') (s'≋s'' `, x'≋x'')
   = trans-≋ₛ s≋s' s'≋s'' `, trans-≋ {a = a} x≋x' x'≋x''
-trans-≋ₛ {Δ = Δ 🔒}    (lock s≋s' e) (lock s'≋s'' e)
+trans-≋ₛ {Δ = Δ #}    (lock s≋s' e)  (lock s'≋s'' e)
   = lock (trans-≋ₛ s≋s' s'≋s'') e
 
 -- WTH should this thing be called?
@@ -107,7 +107,7 @@ wkTm'Pres≋ {a = 𝕓}                           w x≡y
 wkTm'Pres≋ {a = a ⇒ b} {x = f} {y = g}       w f≋g
   = λ w' px py x≋y → f≋g (w ∙ w') px py x≋y
 wkTm'Pres≋ {a = □ a} {x = box x} {y = box y} w x≋y
-  = wkTm'Pres≋ {a = a} (keep🔒 w) x≋y
+  = wkTm'Pres≋ {a = a} (keep# w) x≋y
 
 -- wkSub' preserves the relation _≋_
 wkSub'Pres≋ : {s s' : Sub' Γ Δ}
@@ -136,7 +136,7 @@ private
     = substVar'Pres≋ x s≋s'
 
   unbox'Pres≋ : {x y : Box (Tm'- a) Γ}
-    → (e : LFExt Γ' (Γ 🔒) ΓR)
+    → (e : LFExt Γ' (Γ #) ΓR)
     → x ≋ y
     → unbox' x e ≋ unbox' y e
   unbox'Pres≋ {a = a} {x = box x} {y = box y} e x≋y
@@ -224,12 +224,12 @@ coh-substTm-evalₛ (unbox t nil) (lock s₀ nil) {s = lock s e} {s' = lock s' e
   = unbox'Pres≋ {x = eval t (evalₛ s₀ s')} e' (coh-substTm-evalₛ t s₀ ps ps' s≋s')
 
 private
-  lemma1 : {t : Tm (ΓL 🔒) a} (e : LFExt Γ (ΓL 🔒) ΓR) {s s' : Sub' Δ Γ}
+  lemma1 : {t : Tm (ΓL #) a} (e : LFExt Γ (ΓL #) ΓR) {s s' : Sub' Δ Γ}
     → Pshₛ s → Pshₛ s'
     → s ≋ₛ s'
     → eval (unbox (box t) e) s ≋ eval t (trimSub' (LFExtToWk e) s')
   lemma1 {t = t} nil {s = lock s e} {s' = lock s' e} ps ps' (lock s≋s' e)
-    with ←🔒IsPre🔒 e | 🔒→isPost🔒 e
+    with ←#IsPre# e | #→isPost# e
   ... | refl | refl
     rewrite sym (nat-eval t (LFExtToWk e) (lock s nil) ps)
       | ExtIsProp (wkLFExt nil (LFExtToWk e)) e
@@ -238,10 +238,10 @@ private
                (subst Pshₛ (sym (trimSub'PresId s')) ps')
                (lock lemma1-2 e)
     where
-      lemma1-1' : ∀ (e : LFExt Γ ΓL ΓR) → (p : ΓL ≡ ←🔒 Γ 🔒) → sliceLeft nil (LFExtToWk (subst (λ ΓL → LFExt Γ ΓL ΓR) p e)) ≡ idWk
-      lemma1-1' {Γ = Γ 🔒}   nil     p    rewrite Ctx-K p = refl
+      lemma1-1' : ∀ (e : LFExt Γ ΓL ΓR) → (p : ΓL ≡ ←# Γ #) → sliceLeft nil (LFExtToWk (subst (λ ΓL → LFExt Γ ΓL ΓR) p e)) ≡ idWk
+      lemma1-1' {Γ = Γ #}    nil     p    rewrite Ctx-K p = refl
       lemma1-1' {Γ = Γ `, a} (ext e) refl                 = lemma1-1' e refl
-      lemma1-1 : ∀ (e : LFExt Γ (←🔒 Γ 🔒) ΓR) → sliceLeft nil (LFExtToWk e) ≡ idWk
+      lemma1-1 : ∀ (e : LFExt Γ (←# Γ #) ΓR) → sliceLeft nil (LFExtToWk e) ≡ idWk
       lemma1-1 e = lemma1-1' e refl
       lemma1-2 : wkSub' (sliceLeft nil (LFExtToWk e)) s ≋ₛ trimSub' idWk s'
       lemma1-2 rewrite lemma1-1 e
@@ -361,7 +361,7 @@ sound-reflect {a = □ a}    n≡n'
 idₛ'≋idₛ' : {Γ : Ctx} → idₛ' {Γ} ≋ₛ idₛ'
 idₛ'≋idₛ' {[]}     = []
 idₛ'≋idₛ' {Γ `, a} = (wkSub'Pres≋ fresh (idₛ'≋idₛ' {Γ})) `, (sound-reflect {a = a} refl)
-idₛ'≋idₛ' {Γ 🔒}    = lock idₛ'≋idₛ' nil
+idₛ'≋idₛ' {Γ #}    = lock idₛ'≋idₛ' nil
 
 norm-complete-red* : {t t' : Tm Γ a} → t ⟶* t' → norm t ≡ norm t'
 norm-complete-red* {Γ = Γ} r = unique-reify (eval-sound-red* r (psh-idₛ' {Γ}) (psh-idₛ' {Γ}) idₛ'≋idₛ')

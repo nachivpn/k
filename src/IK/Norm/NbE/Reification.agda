@@ -29,7 +29,7 @@ reify {a = □ a}   (box x) = box (reify x)
 idₛ' : Sub' Γ Γ
 idₛ' {[]}     = tt
 idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , reflect (var ze)
-idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) new
+idₛ' {Γ #}    = lock (idₛ' {Γ}) new
 
 ------------------------------------------------
 -- reflect and reify are natural transformations
@@ -43,7 +43,7 @@ nat-reflect : (w : Γ ⊆ Γ') (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w 
 nat-reflect {a = 𝕓}     w n = refl
 nat-reflect {a = a ⇒ b} w n = funexti' (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
-nat-reflect {a = □ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
+nat-reflect {a = □ a}   w n = cong box (nat-reflect (keep# w) (unbox n nil))
 
 -- image of reflect is in Psh
 psh-reflect : (n : Ne Γ a) → Psh (reflect n)
@@ -75,10 +75,10 @@ nat-reify {Γ} {a = a ⇒ b} w f   pf
           (nf (keep w))))
       (nat-reify (keep w) (f fresh (reflect (var ze))) pfx))
 nat-reify {a = □ a} w  (box x) px
-  = cong box (nat-reify (keep🔒 w) x px)
+  = cong box (nat-reify (keep# w) x px)
 
 -- idₛ' is in Pshₛ
 psh-idₛ' : Pshₛ (idₛ' {Γ})
 psh-idₛ' {[]}     = tt
 psh-idₛ' {Γ `, a} = wkSub'PresPsh fresh (idₛ' {Γ}) (psh-idₛ' {Γ}) , psh-reflect {Γ `, a} (var ze)
-psh-idₛ' {Γ 🔒}    = psh-idₛ' {Γ}
+psh-idₛ' {Γ #}    = psh-idₛ' {Γ}

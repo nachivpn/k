@@ -40,6 +40,7 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 |------------------------------------------------|-------------------------------------------|--------------------------------|
 | Lock context operator                          | `_,🔒`                                     | `_#`                          |
 | Type of weakenings/order-preserving embeddings | `_≤_`                                     | `_⊆_`                          |
+| Modal accessibility relations                  | `_◁IK_`, `_◁IS4_`                         | `LFExt`, `CExt` (ternary)      |
 | Context extensions                             | `var`, `lock`                             | `ext`, `ext#`                  |
 | Judgements                                     | `_⊢Var_`, `_⊢_`, `_⊢ₛ_`, `_⊢Ne_`, `_⊢Nf_` | `Var`, `Tm`, `Sub`, `Ne`, `Nf` |
 | Equational theory                              | `_∼_`                                     | `_≈_`                          |

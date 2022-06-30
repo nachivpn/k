@@ -130,9 +130,9 @@ private
   substVar'Pres≋ : (x : Var Γ a) {s s' : Sub' Δ Γ}
     → s ≋ₛ s'
     → substVar' x s ≋ substVar' x s'
-  substVar'Pres≋ ze     {s = _ , x} {s' = _ , y}  (_ `, x≋y)
+  substVar'Pres≋ zero     {s = _ , x} {s' = _ , y}  (_ `, x≋y)
     = x≋y
-  substVar'Pres≋ (su x) {s = s , _} {s' = s' , _} (s≋s' `, _)
+  substVar'Pres≋ (succ x) {s = s , _} {s' = s' , _} (s≋s' `, _)
     = substVar'Pres≋ x s≋s'
 
   unbox'Pres≋ : {x y : Box (Tm'- a) Γ}
@@ -181,9 +181,9 @@ fundₛ (lock s₀ nil) {s = lock s e} {s' = lock s' e} ps ps' (lock s≋s' e)
 
 coh-substVar-evalₛ : (x : Var Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → substVar' x (evalₛ s₀ s') ≋ eval (substVar s₀ x) s'
-coh-substVar-evalₛ ze     (_ `, t) {s} {s'} ps ps' s≋s'
+coh-substVar-evalₛ zero     (_ `, t) {s} {s'} ps ps' s≋s'
   = pseudo-refl-≋ {x = eval t s'} (sym-≋ {x = eval t s} (fund t ps ps' s≋s'))
-coh-substVar-evalₛ (su x) (s₀ `, _) ps ps' s≋s'
+coh-substVar-evalₛ (succ x) (s₀ `, _) ps ps' s≋s'
   = coh-substVar-evalₛ x s₀ ps ps' s≋s'
 
 coh-substTm-evalₛ : (t : Tm Γ a) (s₀ : Sub Δ Γ) {s s' : Sub' Δ' Δ}
@@ -192,7 +192,7 @@ coh-substTm-evalₛ (var x)     s₀ ps ps' s≋s'
   = coh-substVar-evalₛ x s₀ ps ps' s≋s'
 coh-substTm-evalₛ (lam t)     s₀ {s} {s'} ps ps' s≋s' w {x = x} {y} px py x≋y
   rewrite sym (nat-evalₛ w s₀ s' ps')
-  = trans-≋ {z =  eval (substTm (wkSub fresh s₀ `, var ze) t) (wkSub' w s' , y)}
+  = trans-≋ {z =  eval (substTm (wkSub fresh s₀ `, var zero) t) (wkSub' w s' , y)}
       ((subst (λ z → _ ≋ eval t (z , y))
         (trans
           (cong (evalₛ s₀) (sym (trimSub'PresId _)))
@@ -342,7 +342,7 @@ sound-reflect : {n n' : Ne Γ a}
 unique-reify {a = 𝕓}      x≡y = x≡y
 unique-reify {a = a ⇒ b}  x≋y = cong lam
   (unique-reify
-    (x≋y fresh (psh-reflect {a = a} (var ze)) (psh-reflect {a = a} (var ze))
+    (x≋y fresh (psh-reflect {a = a} (var zero)) (psh-reflect {a = a} (var zero))
     (sound-reflect {a = a} refl)))
 unique-reify {a = □ a} {box x} {box y} x≋y
   = cong box (unique-reify x≋y)

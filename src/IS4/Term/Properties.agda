@@ -159,13 +159,13 @@ factorSubₛIdWk                (ext#- e)        = factorSubₛIdWk e
 -- NOTE: these are only the laws that follow directly from the structure of substitutions
 coh-trimSub-wkVar : (x : Var Γ a) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
   → substVar (trimSub w s) x ≡ substVar s (wkVar w x)
-coh-trimSub-wkVar ze (s `, x) (drop w)
-  = coh-trimSub-wkVar ze s w
-coh-trimSub-wkVar ze (s `, x) (keep w)
+coh-trimSub-wkVar zero (s `, x) (drop w)
+  = coh-trimSub-wkVar zero s w
+coh-trimSub-wkVar zero (s `, x) (keep w)
   = ≡-refl
-coh-trimSub-wkVar (su x) (s `, x₁) (drop w)
-  = coh-trimSub-wkVar (su x) s w
-coh-trimSub-wkVar (su x) (s `, x₁) (keep w)
+coh-trimSub-wkVar (succ x) (s `, x₁) (drop w)
+  = coh-trimSub-wkVar (succ x) s w
+coh-trimSub-wkVar (succ x) (s `, x₁) (keep w)
   = coh-trimSub-wkVar x s w
 
 -- `trimSub` preserves the identity
@@ -177,8 +177,8 @@ trimSubPresId (lock s x) = cong₂ lock (trimSubPresId s) ≡-refl
 -- naturality of substVar
 nat-substVar : (x : Var Γ a) (s : Sub Δ Γ) (w : Δ ⊆ Δ')
   → substVar (wkSub w s) x ≡ wkTm w (substVar s x)
-nat-substVar ze     (s `, t) w = ≡-refl
-nat-substVar (su x) (s `, t) w = nat-substVar x s w
+nat-substVar zero     (s `, t) w = ≡-refl
+nat-substVar (succ x) (s `, t) w = nat-substVar x s w
 
 -- naturality of trimSub
 nat-trimSub : (s : Sub Γ Δ) (w : Δ' ⊆ Δ) (w' : Γ ⊆ Γ')
@@ -194,7 +194,7 @@ trimSubId base      = ≡-refl
 trimSubId (drop w)  = ≡-trans
   (≡-sym (nat-trimSub idₛ w fresh))
   (cong (wkSub fresh) (trimSubId w))
-trimSubId (keep w)  = cong (_`, var ze) (≡-trans
+trimSubId (keep w)  = cong (_`, var zero) (≡-trans
   (≡-sym (nat-trimSub idₛ w fresh))
   (cong (wkSub fresh) (trimSubId w)))
 trimSubId (keep# w) = cong₂ lock (trimSubId w) ≡-refl
@@ -346,7 +346,7 @@ nat-substTm (var x)           s          w
   = nat-substVar x s w
 nat-substTm (lam {Γ} {a} t)   s          w
   = cong lam
-    (≡-trans (cong (λ s → substTm (s `, var ze) t) wkSubFreshLemma)
+    (≡-trans (cong (λ s → substTm (s `, var zero) t) wkSubFreshLemma)
     (nat-substTm t (keepₛ s) (keep w)))
 nat-substTm (app t u)         s          w
   = cong₂ app (nat-substTm t s w) (nat-substTm u s w)
@@ -420,7 +420,7 @@ coh-trimSub-wkTm (var x) s w
   = coh-trimSub-wkVar x s w
 coh-trimSub-wkTm (lam t) s w
   = cong lam (≡-trans
-    (cong (λ p → substTm (p `, var ze) t) (nat-trimSub s w fresh))
+    (cong (λ p → substTm (p `, var zero) t) (nat-trimSub s w fresh))
     (coh-trimSub-wkTm t (keepₛ s) (keep w)))
 coh-trimSub-wkTm (app t u) s w
   = cong₂ app (coh-trimSub-wkTm t s w) (coh-trimSub-wkTm u s w)
@@ -562,16 +562,16 @@ factorExtPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
 factorExtPres∙ₛ _ _ _ = ExtIsProp _ _
 
 substVarPresId : (x : Var Γ a) → substVar idₛ x ≡ var x
-substVarPresId ze = ≡-refl
-substVarPresId (su x) = ≡-trans (nat-substVar x idₛ fresh) (≡-trans
+substVarPresId zero     = ≡-refl
+substVarPresId (succ x) = ≡-trans (nat-substVar x idₛ fresh) (≡-trans
   (cong (wkTm fresh) (substVarPresId x))
   (cong var (wkIncr x)))
 
 -- parallel substitution (substVar) preserves substitution composition
 substVarPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (x : Var Γ a)
   → substTm s' (substVar s x) ≡ substVar (s ∙ₛ s') x
-substVarPres∙ (s `, x) s' ze      = ≡-refl
-substVarPres∙ (s `, x) s' (su x₁) = substVarPres∙ s s' x₁
+substVarPres∙ (s `, x) s' zero      = ≡-refl
+substVarPres∙ (s `, x) s' (succ x₁) = substVarPres∙ s s' x₁
 
 private
   dropKeepLemma : (s' : Sub Δ' Δ) (s : Sub Γ Δ')
@@ -586,7 +586,7 @@ substTmPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (t : Tm Γ a)
 substTmPres∙ s s' (var v) = substVarPres∙ s s' v
 substTmPres∙ s s' (lam t) = cong lam
     (≡-trans (substTmPres∙ _ _ t)
-    (cong ((λ s → substTm (s `, var ze) t)) (≡-sym (dropKeepLemma s s'))))
+    (cong ((λ s → substTm (s `, var zero) t)) (≡-sym (dropKeepLemma s s'))))
 substTmPres∙ s s' (app t t₁) = cong₂ app (substTmPres∙ s s' t) (substTmPres∙ s s' t₁)
 substTmPres∙ s s' (box t) = cong box (substTmPres∙ _ _ t)
 substTmPres∙ {Δ = Δ} {a = a} s s' (unbox t e) = let open ≡-Reasoning in begin
@@ -682,7 +682,7 @@ wkSubId base      = ≡-refl
 wkSubId (drop w)  = ≡-trans
   (cong (λ w' → wkSub (drop w') idₛ) (≡-sym (rightIdWk w)))
   (auxLemma w)
-wkSubId (keep w)  = cong (_`, var ze) (≡-trans
+wkSubId (keep w)  = cong (_`, var zero) (≡-trans
   (wkSubPres∙ fresh (keep w) idₛ)
   (≡-trans
     (cong₂ wkSub (cong drop (≡-trans (leftIdWk _) (≡-sym (rightIdWk _)))) ≡-refl)
@@ -1020,10 +1020,10 @@ rightIdSub (lock s e) = fact-lock≈ s e
     open SetoidReasoning (Sub-setoid Γ (Δ #))
 
 substVarPres⟶ : (v : Var Γ a) → σ ⟶ₛ σ' → substVar σ v ≈ substVar σ' v
-substVarPres⟶ ze     (cong-`,⟶ₛ1 s⟶s') = ≈-refl
-substVarPres⟶ ze     (cong-`,⟶ₛ2 t≈t') = t≈t'
-substVarPres⟶ (su v) (cong-`,⟶ₛ1 s⟶s') = substVarPres⟶ v s⟶s'
-substVarPres⟶ (su v) (cong-`,⟶ₛ2 t≈t') = ≈-refl
+substVarPres⟶ zero     (cong-`,⟶ₛ1 s⟶s') = ≈-refl
+substVarPres⟶ zero     (cong-`,⟶ₛ2 t≈t') = t≈t'
+substVarPres⟶ (succ v) (cong-`,⟶ₛ1 s⟶s') = substVarPres⟶ v s⟶s'
+substVarPres⟶ (succ v) (cong-`,⟶ₛ2 t≈t') = ≈-refl
 
 -- XXX: fold
 substVarPres≈ : (v : Var Γ a) → σ ≈ₛ σ' → substVar σ v ≈ substVar σ' v

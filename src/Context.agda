@@ -160,43 +160,43 @@ WL ff = ⊥
 ------------
 
 data Var : Ctx → Ty → Set where
-  ze : Var (Γ `, a) a
-  su : (v : Var Γ a) → Var (Γ `, b) a
+  zero : Var (Γ `, a) a
+  succ : (v : Var Γ a) → Var (Γ `, b) a
 
-pattern v0 = ze
-pattern v1 = su v0
-pattern v2 = su v1
+pattern v0 = zero
+pattern v1 = succ v0
+pattern v2 = succ v1
 
 wkVar : Γ ⊆ Γ' → Var Γ a → Var Γ' a
-wkVar (drop e) v      = su (wkVar e v)
-wkVar (keep e) ze     = ze
-wkVar (keep e) (su v) = su (wkVar e v)
+wkVar (drop e) v        = succ (wkVar e v)
+wkVar (keep e) zero     = zero
+wkVar (keep e) (succ v) = succ (wkVar e v)
 
 -- OBS: in general, Γ ⊈ Δ ,, Γ
 leftWkVar : (v : Var Γ a) → Var (Δ ,, Γ) a
-leftWkVar ze     = ze
-leftWkVar (su v) = su (leftWkVar v)
+leftWkVar zero     = zero
+leftWkVar (succ v) = succ (leftWkVar v)
 
 wkVarPresId : (x : Var Γ a) → wkVar idWk x ≡ x
-wkVarPresId ze = refl
-wkVarPresId (su x) = cong su (wkVarPresId x)
+wkVarPresId zero     = refl
+wkVarPresId (succ x) = cong succ (wkVarPresId x)
 
 -- weakening a variable index increments
-wkIncr : (x : Var Γ a) → wkVar fresh[ b ] x ≡ su x
-wkIncr ze = refl
-wkIncr (su x) = cong su (cong su (wkVarPresId x))
+wkIncr : (x : Var Γ a) → wkVar fresh[ b ] x ≡ succ x
+wkIncr zero     = refl
+wkIncr (succ x) = cong succ (cong succ (wkVarPresId x))
 
 -- weakening of variables (a functor map) preserves weakening composition
 wkVarPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (x : Var Γ a)
   → wkVar w' (wkVar w x) ≡ wkVar (w ∙ w') x
-wkVarPres∙ (drop w) (drop w') ze     = cong su (wkVarPres∙ (drop w) w' ze)
-wkVarPres∙ (drop w) (keep w') ze     = cong su (wkVarPres∙ w w' ze)
-wkVarPres∙ (keep w) (drop w') ze     = cong su (wkVarPres∙ (keep w) w' ze)
-wkVarPres∙ (keep w) (keep w') ze     = refl
-wkVarPres∙ (drop w) (drop w') (su x) = cong su (wkVarPres∙ (drop w) w' (su x))
-wkVarPres∙ (drop w) (keep w') (su x) = cong su (wkVarPres∙ w w' (su x))
-wkVarPres∙ (keep w) (drop w') (su x) = cong su (wkVarPres∙ (keep w) w' (su x))
-wkVarPres∙ (keep w) (keep w') (su x) = cong su (wkVarPres∙ w w' x)
+wkVarPres∙ (drop w) (drop w') zero     = cong succ (wkVarPres∙ (drop w) w' zero)
+wkVarPres∙ (drop w) (keep w') zero     = cong succ (wkVarPres∙ w w' zero)
+wkVarPres∙ (keep w) (drop w') zero     = cong succ (wkVarPres∙ (keep w) w' zero)
+wkVarPres∙ (keep w) (keep w') zero     = refl
+wkVarPres∙ (drop w) (drop w') (succ x) = cong succ (wkVarPres∙ (drop w) w' (succ x))
+wkVarPres∙ (drop w) (keep w') (succ x) = cong succ (wkVarPres∙ w w' (succ x))
+wkVarPres∙ (keep w) (drop w') (succ x) = cong succ (wkVarPres∙ (keep w) w' (succ x))
+wkVarPres∙ (keep w) (keep w') (succ x) = cong succ (wkVarPres∙ w w' x)
 
 -- weakening composition obeys the left identity law
 leftIdWk : (w : Γ' ⊆ Γ) → idWk ∙ w ≡ w
@@ -807,8 +807,8 @@ module Substitution
 
   -- apply substitution to a variable
   substVar : Sub Γ Δ → Var Δ a → Tm Γ a
-  substVar (s `, t) ze     = t
-  substVar (s `, t) (su x) = substVar s x
+  substVar (s `, t) zero     = t
+  substVar (s `, t) (succ x) = substVar s x
 
   -- weaken a substitution
   wkSub : Γ ⊆ Γ' → Sub Γ Δ → Sub Γ' Δ
@@ -824,7 +824,7 @@ module Substitution
 
   -- "keep" the last variable in the context
   keepₛ : Sub Γ Δ → Sub (Γ `, a) (Δ `, a)
-  keepₛ s = dropₛ s `, var ze
+  keepₛ s = dropₛ s `, var zero
 
   -- "keep" the lock in the context
   keep#ₛ : Sub Γ Δ → Sub (Γ #) (Δ #)

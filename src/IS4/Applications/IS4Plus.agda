@@ -290,7 +290,7 @@ reflect : NE a  →̇ Tm'- a
 
 reify {Unit}  x = unit
 reify {𝕔}     x = collect (mapCov (λ _ n → up𝕔 n) idWk x)
-reify {a ⇒ b} x = lam (reify {b} (x (drop idWk) (reflect {a} (var ze))))
+reify {a ⇒ b} x = lam (reify {b} (x (drop idWk) (reflect {a} (var zero))))
 reify {◻ a}   x = box (reify (x idWk (ext#- nil)))
 reify {Bool}  x = true
 
@@ -303,13 +303,13 @@ reflect {Bool}  n = ifte' nil n (ret true) (ret false)
 -- identity substitution
 idₛ' : Sub'- Γ Γ
 idₛ' {[]}     = tt
-idₛ' {Γ `, a} = wkSub'- {Δ = Γ} (drop idWk) (idₛ' {Γ = Γ}) , reflect {a} (var ze)
+idₛ' {Γ `, a} = wkSub'- {Δ = Γ} (drop idWk) (idₛ' {Γ = Γ}) , reflect {a} (var zero)
 idₛ' {Γ #}    = lock (idₛ' {Γ}) (ext#- nil)
 
 -- interpretation of variables
 substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
-substVar' ze     (_ , x) = x
-substVar' (su x) (γ , _) = substVar' x γ
+substVar' zero     (_ , x) = x
+substVar' (succ x) (γ , _) = substVar' x γ
 
 unlock' : Sub'- (Γ #) Δ → Σ (Ctx × Ctx) λ { (ΔL , ΔR) → Sub'- Γ ΔL × CExt Δ ΔL ΔR }
 unlock' (lock γ e) = _ , γ , e

@@ -71,7 +71,7 @@ Rt-reflect : (n : Ne Γ a)
 Rt-build {a = 𝕓}                 r
   = r
 Rt-build {a = a ⇒ b}             tRx
-  = ⟶-multi exp-fun (cong-lam* (Rt-build (tRx _ (Rt-reflect (var ze)))))
+  = ⟶-multi exp-fun (cong-lam* (Rt-build (tRx _ (Rt-reflect (var zero)))))
 Rt-build {a = □ a}   {x = box x} (u , uR- , r)
   = multi r (cong-box* (Rt-build uR-))
 
@@ -109,7 +109,7 @@ invRs {Γ = Γ #} {s = lock s e} {lock s' .e} w (lock x .e) =
 -- syntactic identity is related to semantic identity
 idRs : Rs {Γ} idₛ idₛ'
 idRs {[]}     = []
-idRs {Γ `, x} = invRs fresh idRs `, Rt-reflect (var ze)
+idRs {Γ `, x} = invRs fresh idRs `, Rt-reflect (var zero)
 idRs {Γ #}    = lock idRs nil
 
 -----------------------------
@@ -122,9 +122,9 @@ private
   substVarPresRt : (x : Var Γ a) {s : Sub Δ Γ} {s'  : Sub' Δ Γ}
     → Rs s s'
     → Rt (substVar s x) (substVar' x s')
-  substVarPresRt ze {_ `, x} {_ , x'} (_ `, xRx')
+  substVarPresRt zero {_ `, x} {_ , x'} (_ `, xRx')
     = xRx'
-  substVarPresRt (su x) {s `, _} {s' , _} (sRs' `, _)
+  substVarPresRt (succ x) {s `, _} {s' , _} (sRs' `, _)
     = substVarPresRt x sRs'
 
   beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
@@ -132,7 +132,7 @@ private
   beta-lemma w s t u = ≡-single-≡
     (cong₂ app (cong lam (trans
       (sym (nat-subsTm t (keepₛ s) (keep w)))
-      (cong (λ p → substTm (p `, var ze) t)
+      (cong (λ p → substTm (p `, var zero) t)
         (trans
           (wkSubPres∙ (fresh) (keep w) s)
           (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl)

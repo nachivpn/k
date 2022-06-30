@@ -138,7 +138,7 @@ substTm : Sub Δ Γ → Tm Γ a → Tm Δ a
 substTm s                              (var x)
   = substVar s x
 substTm s                              (lam t)
-  = lam (substTm (wkSub fresh s `, var ze) t)
+  = lam (substTm (wkSub fresh s `, var zero) t)
 substTm s                              (app t u)
   = app (substTm s t) (substTm s u)
 substTm s                              (box t)
@@ -162,7 +162,7 @@ substTm s                              unit
 substTm s                              (print t)
   = print (substTm s t)
 substTm s                              (let-in t u)
-  = let-in (substTm s t) (substTm (wkSub fresh s `, var ze) u)
+  = let-in (substTm s t) (substTm (wkSub fresh s `, var zero) u)
 substTm s                              (ret t)
   = ret (substTm s t)
 
@@ -328,7 +328,7 @@ reflect : NE a  →̇ Tm'- a
 
 reify {Unit} t = unit
 reify {𝕔} t = up𝕔 t
-reify {a ⇒ b} t = lam (reify {b} (t (drop idWk) (reflect {a} (var ze))))
+reify {a ⇒ b} t = lam (reify {b} (t (drop idWk) (reflect {a} (var zero))))
 reify {◻ a} t = box (reify (t idWk (ext#- nil)))
 reify {T a} t = reify-Print t
 
@@ -340,18 +340,18 @@ reflect {Unit}  n = tt
 reflect {𝕔}     n = n
 reflect {a ⇒ b} n = λ e t → reflect {b} (app (wkNe e n) (reify t))
 reflect {◻ a}  n = λ w e → reflect (unbox (wkNe w n) e)
-reflect {T a}   n = bind n (η (reflect {a} (var ze)))
+reflect {T a}   n = bind n (η (reflect {a} (var zero)))
 
 -- identity substitution
 idₛ' : Sub'- Γ Γ
 idₛ' {[]}     = tt
-idₛ' {Γ `, a} = wkSub'- {Δ = Γ} (drop idWk) (idₛ' {Γ = Γ}) , reflect {a} (var ze)
+idₛ' {Γ `, a} = wkSub'- {Δ = Γ} (drop idWk) (idₛ' {Γ = Γ}) , reflect {a} (var zero)
 idₛ' {Γ #}    = lock (idₛ' {Γ}) (ext#- nil)
 
 -- interpretation of variables
 substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
-substVar' ze     (_ , x) = x
-substVar' (su x) (γ , _) = substVar' x γ
+substVar' zero     (_ , x) = x
+substVar' (succ x) (γ , _) = substVar' x γ
 
 -- interpretation of terms
 eval : Tm Γ a → (Sub'- Γ →̇ Tm'- a)

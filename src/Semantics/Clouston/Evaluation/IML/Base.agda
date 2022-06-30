@@ -90,8 +90,8 @@ module Eval (N : Ty') where
   evalWk (keep# w)        = ✦'-map (evalWk w)
 
   evalVar : (v : Var Γ a) → evalCtx Γ →̇ evalTy a
-  evalVar (ze {Γ})       = π₂'[ evalCtx Γ ]
-  evalVar (su {b = b} v) = evalVar v ∘ π₁'[ evalTy b ]
+  evalVar (zero {Γ})       = π₂'[ evalCtx Γ ]
+  evalVar (succ {b = b} v) = evalVar v ∘ π₁'[ evalTy b ]
 
   Sub' = λ Δ Γ → evalCtx Δ →̇ evalCtx Γ
 

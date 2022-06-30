@@ -26,8 +26,8 @@ noClosedNe : Ne [] a → ⊥
 noClosedNe (app n x) = noClosedNe n
 
 neutrVar : Var Γ a → a ⊲ᶜ Γ
-neutrVar ze     = here ⊲-refl
-neutrVar (su x) = there (neutrVar x)
+neutrVar zero     = here ⊲-refl
+neutrVar (succ x) = there (neutrVar x)
 
 ⊲-trans : Transitive _⊲_
 ⊲-trans x ⊲-refl   = x

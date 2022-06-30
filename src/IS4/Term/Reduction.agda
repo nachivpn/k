@@ -22,7 +22,7 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
     → app (lam t) u ⟶ substTm (idₛ `, u) t
 
   exp-fun : (t : Tm Γ (a ⇒ b))
-    → t ⟶ lam (app (wkTm fresh t) (var ze))
+    → t ⟶ lam (app (wkTm fresh t) (var zero))
 
   red-box : (t : Tm (ΓL #) a) (e : CExt Γ ΓL ΓR)
     → unbox (box t) e ⟶ substTm (lock idₛ e) t

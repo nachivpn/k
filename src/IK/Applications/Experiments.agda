@@ -1,7 +1,7 @@
 {-# OPTIONS --without-K #-}
 module IK.Applications.Experiments where
 
-import Context as C
+import Context
 
 open import IK.Norm.Base
 open import IK.Term
@@ -21,9 +21,9 @@ sfPrefix noA (ext# x e) = sfPrefix (λ z → noA (there# z)) e
 
 -- if 𝕓 is not a subformula of Γ, then any normal form
 -- of the type `Nf Γ (𝕓 ⇒ 𝕓)` must be the identity function
-uniqIdFun : ¬ (𝕓 ⊲ᶜ Γ) → (n : Nf Γ (𝕓 ⇒ 𝕓)) → n ≡ lam (up𝕓 (var ze))
-uniqIdFun noB (lam (up𝕓 (var ze)))         = refl
-uniqIdFun noB (lam (up𝕓 (var (su x))))     = ⊥-elim (noB (neutrVar x))
+uniqIdFun : ¬ (𝕓 ⊲ᶜ Γ) → (n : Nf Γ (𝕓 ⇒ 𝕓)) → n ≡ lam (up𝕓 (var zero))
+uniqIdFun noB (lam (up𝕓 (var zero)))        = refl
+uniqIdFun noB (lam (up𝕓 (var (succ x))))    = ⊥-elim (noB (neutrVar x))
 uniqIdFun noB (lam (up𝕓 (app m n)))    with neutrality m
 ... | there p                               =
   ⊥-elim (noB (⊲-lift (sbr⇒ ⊲-refl) p))
@@ -43,8 +43,8 @@ data _⋗_  : Ctx → Ctx → Set where
 
 -- strengthening is the identity on variables
 strenVar : Γ' ⋗ Γ → Var Γ a → Var Γ' a
-strenVar (keep w) ze     = ze
-strenVar (keep w) (su x) = su (strenVar w x)
+strenVar (keep w) zero     = zero
+strenVar (keep w) (succ x) = succ (strenVar w x)
 
 strenNe : Γ' ⋗ Γ → Ne Γ a → Ne Γ' a
 strenNf : Γ' ⋗ Γ → Nf Γ a → Nf Γ' a
@@ -80,17 +80,17 @@ module _ where
   back t = embNf (strenNf add# (norm (unbox t nil)))
 
 noFreeUnbox : ¬ (Nf [] (□ 𝕓 ⇒ 𝕓))
-noFreeUnbox (lam (up𝕓 (var (C.su ()))))
+noFreeUnbox (lam (up𝕓 (var (succ ()))))
 noFreeUnbox (lam (up𝕓 (app n _))) with neutrality n
 ... | here (sb□ ())
-noFreeUnbox (lam (up𝕓 (unbox x (C.ext ()))))
+noFreeUnbox (lam (up𝕓 (unbox x (ext ()))))
 
 noFreeBox : ¬ (Nf [] (𝕓 ⇒ □ 𝕓))
 noFreeBox (lam (box (up𝕓 (app n _)))) with neutrality n
 ... | there# (here ())
 ... | there# (there ())
-noFreeBox (lam (box (up𝕓 (unbox (var (C.su ())) C.nil))))
-noFreeBox (lam (box (up𝕓 (unbox (app n _) C.nil)))) with neutrality n
+noFreeBox (lam (box (up𝕓 (unbox (var (succ ())) nil))))
+noFreeBox (lam (box (up𝕓 (unbox (app n _) nil)))) with neutrality n
 ... | here ()
 ... | there ()
-noFreeBox (lam (box (up𝕓 (unbox (unbox _ (C.ext ())) C.nil))))
+noFreeBox (lam (box (up𝕓 (unbox (unbox _ (ext ())) nil))))

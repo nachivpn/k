@@ -394,20 +394,20 @@ abstract
 module _ {a : Ty} {Δ : Ctx} where
   abstract
     evalTm-pres-∘'' : ∀ (v : Var Γ a) (σ : Sub Δ Γ) → evalTm (substVar σ v) ≈̇ evalVar v [ evalSub σ ]'
-    evalTm-pres-∘'' ze             (σ `, t) = ≈̇-sym (×'-beta-right (evalSub σ))
-    evalTm-pres-∘'' (su {b = b} v) (σ `, t) = let open EqReasoning (Tm'-setoid Δ a) in begin
-      evalTm (substVar (σ `, t) (su {b = b} v))       ≈⟨ evalTm-pres-∘'' v σ ⟩
+    evalTm-pres-∘'' zero             (σ `, t) = ≈̇-sym (×'-beta-right (evalSub σ))
+    evalTm-pres-∘'' (succ {b = b} v) (σ `, t) = let open EqReasoning (Tm'-setoid Δ a) in begin
+      evalTm (substVar (σ `, t) (succ {b = b} v))     ≈⟨ evalTm-pres-∘'' v σ ⟩
       evalVar v [ evalSub σ ]'                        ≈˘⟨ ∘-pres-≈̇-right (evalVar v) (×'-beta-left (evalTm t)) ⟩
       evalVar v ∘ π₁'[ evalTy b ] ∘ evalSub (σ `, t)  ≈˘⟨ ∘-assoc (evalVar v) π₁'[ evalTy b ] (evalSub (σ `, t)) ⟩
-      evalVar (su {b = b} v) [ evalSub (σ `, t) ]'    ∎
+      evalVar (succ {b = b} v) [ evalSub (σ `, t) ]'  ∎
 
 abstract
   evalTm-pres-∘ : ∀ (t : Tm Γ a) → (σ : Sub Δ Γ) → evalTm (substTm σ t) ≈̇ evalTm t [ evalSub σ ]'
   evalTm-pres-∘ (var v) σ = evalTm-pres-∘'' v σ
   evalTm-pres-∘ {a = a} {Δ} (lam {a = a'} t) σ = let open EqReasoning (Tm'-setoid Δ a) in begin
     evalTm (substTm σ (lam t))
-      ≈⟨ lam'-pres-≈̇ (evalTm-pres-∘ t (wkSub (fresh {Δ} {a'}) σ `, var ze)) ⟩
-    lam' (evalTm t [ evalSub (wkSub (fresh {Δ} {a'}) σ `, var ze) ]')
+      ≈⟨ lam'-pres-≈̇ (evalTm-pres-∘ t (wkSub (fresh {Δ} {a'}) σ `, var zero)) ⟩
+    lam' (evalTm t [ evalSub (wkSub (fresh {Δ} {a'}) σ `, var zero) ]')
       ≈⟨ lam'-pres-≈̇ (∘-pres-≈̇-right (evalTm t) (⟨,⟩'-pres-≈̇-left (evalSub-pres-∘' σ (fresh {Δ} {a'})) π₂'[ evalCtx Δ ])) ⟩
     lam' (evalTm t [ ⟨ evalSub σ ∘ evalWk (fresh {Δ} {a'}) , π₂'[ evalCtx Δ ] ⟩' ]' )
       ≈⟨ lam'-pres-≈̇ (∘-pres-≈̇-right (evalTm t) (⟨,⟩'-pres-≈̇-left (∘-pres-≈̇-right (evalSub σ) (evalWk-pres-π₁ Δ a')) π₂'[ evalCtx Δ ])) ⟩
@@ -463,7 +463,7 @@ abstract
       ≈˘⟨ lam'-pres-≈̇ (app'-pres-≈̇-left (∘-pres-≈̇-right (evalTm t) (evalWk-pres-π₁ Γ a)) π₂'[ evalCtx Γ ]) ⟩
     lam' (app' (evalTm t [ evalWk (fresh {Γ} {a}) ]') π₂'[ evalCtx Γ ])
       ≈˘⟨ lam'-pres-≈̇ (app'-pres-≈̇-left (evalTm-pres-∘' fresh t) π₂'[ evalCtx Γ ]) ⟩
-    evalTm (lam (app (wkTm fresh t) (var ze)))
+    evalTm (lam (app (wkTm fresh t) (var zero)))
       ∎
   evalTm-sound (red-box {ΓL} {a} {Γ} t e) = let open EqReasoning (Tm'-setoid Γ a) in begin
     evalTm (unbox (box t) e)

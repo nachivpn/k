@@ -67,8 +67,8 @@ unlock' (lock γ e) = _ , γ , e
 
 -- interpretation of variables
 substVar' : Var Γ a → (Sub'- Γ →̇ Tm'- a)
-substVar' ze     (_ , x) = x
-substVar' (su x) (γ , _) = substVar' x γ
+substVar' zero     (_ , x) = x
+substVar' (succ x) (γ , _) = substVar' x γ
 
 LFExt' : LFExt Γ (ΓL #) ΓR → Sub'- Γ →̇ Sub'- (ΓL #)
 LFExt' nil     γ       = γ          -- = id
@@ -197,13 +197,13 @@ wkSub'Pres∙ {Δ = Δ #}    w w' (lock s e) = cong₂ lock
 -- naturality of substVar'
 nat-substVar' : (w : Δ ⊆ Δ') (x : Var Γ a) (s : Sub' Δ Γ)
   → substVar' x (wkSub' w s) ≡ wkTm' w (substVar' x s)
-nat-substVar' w ze     s       = refl
-nat-substVar' w (su x) (s , _) = nat-substVar' w x s
+nat-substVar' w zero     s       = refl
+nat-substVar' w (succ x) (s , _) = nat-substVar' w x s
 
 -- substVar' obeys Psh
 psh-substVar' : (x : Var Γ a) (s : Sub' Δ Γ) → Pshₛ s → Psh (substVar' x s)
-psh-substVar' ze     (_ , x) (_ , px) = px
-psh-substVar' (su x) (s , _) (ps , _) = psh-substVar' x s ps
+psh-substVar' zero     (_ , x) (_ , px) = px
+psh-substVar' (succ x) (s , _) (ps , _) = psh-substVar' x s ps
 
 ---------------------------------------
 -- `eval t` is a natural transformation
@@ -326,10 +326,10 @@ trimSub'PresId {Δ = Δ #}    (lock s e) = cong₂ lock (trimSub'PresId s) refl
 -- semantic counterpart of coh-trimSub-wkVar in Substitution.agda
 coh-trimSub'-wkVar' : (w : Γ ⊆ Γ') (s : Sub' Δ Γ') (x : Var Γ a)
   → substVar' (wkVar w x) s ≡ substVar' x (trimSub' w s)
-coh-trimSub'-wkVar' (drop w) (s , _) ze     = coh-trimSub'-wkVar' w s ze
-coh-trimSub'-wkVar' (drop w) (s , _) (su x) = coh-trimSub'-wkVar' w s (su x)
-coh-trimSub'-wkVar' (keep w) (s , _) ze     = refl
-coh-trimSub'-wkVar' (keep w) (s , _) (su x) = coh-trimSub'-wkVar' w s x
+coh-trimSub'-wkVar' (drop w) (s , _) zero     = coh-trimSub'-wkVar' w s zero
+coh-trimSub'-wkVar' (drop w) (s , _) (succ x) = coh-trimSub'-wkVar' w s (succ x)
+coh-trimSub'-wkVar' (keep w) (s , _) zero     = refl
+coh-trimSub'-wkVar' (keep w) (s , _) (succ x) = coh-trimSub'-wkVar' w s x
 
 -- semantic counterpart of coh-trimSub-wkTm in HellOfSyntacticLemmas.agda
 coh-trimSub'-wkTm : (w : Γ ⊆ Γ') (s : Sub' Δ Γ') (t : Tm Γ a)

@@ -67,7 +67,7 @@ module _ {t : Tm Γ a → Tm Δ b} (cong-t : ∀ {u u' : Tm Γ a} → (u⟶u' : 
 red-fun≈ : (t : Tm (Γ `, a) b) (u : Tm Γ a) → (app (lam t) u) ≈ substTm (idₛ `, u) t
 red-fun≈ t u = ⟶-to-≈ Reduction.red-fun
 
-exp-fun≈ : (t : Tm Γ (a ⇒ b)) → t ≈ lam (app (wkTm fresh t) (var ze))
+exp-fun≈ : (t : Tm Γ (a ⇒ b)) → t ≈ lam (app (wkTm fresh t) (var zero))
 exp-fun≈ t = ⟶-to-≈ Reduction.exp-fun
 
 red-box≈ : (t : Tm (ΓL #) a) (e : LFExt Γ (ΓL #) ΓR) → unbox (box t) e ≈ wkTm (LFExtToWk e) t

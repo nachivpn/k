@@ -46,8 +46,8 @@ data Tm : Ctx → Ty → Set where
         → Tm Γ a
 
 variable
-  t t' t'' : Tm Γ a
-  u u' u'' : Tm Γ a
+  t t' t'' t''' : Tm Γ a
+  u u' u'' u''' : Tm Γ a
 
 pattern var0 = var v0
 pattern var1 = var v1

@@ -322,7 +322,7 @@ eval-sound : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
   → t ≈ t'
   → Pshₛ s → Pshₛ s' → s ≋ₛ s' → eval t s ≋ eval t' s'
 eval-sound {t = t} ε ps ps' s≋s'
-  = eval-sound-red* {t = t} (zero refl) ps ps' s≋s'
+  = eval-sound-red* {t = t} ⟶*-refl ps ps' s≋s'
 eval-sound {a = a} (inj₁ r ◅ t≈t') ps ps' s≋s'
   = trans-≋ {a = a} (eval-sound-red r ps ps' s≋s') (eval-sound t≈t' ps' ps' (pseudo-refl-≋ₛ (sym-≋ₛ s≋s')))
 eval-sound {a = a} {t = t} {s = s} {s' = s'} (inj₂ r ◅ t≈t') ps ps' s≋s'

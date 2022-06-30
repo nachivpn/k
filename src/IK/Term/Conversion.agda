@@ -79,11 +79,17 @@ exp-box≈ t = ⟶-to-≈ Reduction.exp-box
 cong-lam≈ : ∀ (t≈t' : t ≈ t') → lam t ≈ lam t'
 cong-lam≈ = cong-⟶-to-cong-≈ Reduction.cong-lam
 
+cong-app≈≡ : ∀ (t≈t' : t ≈ t') (u≡u' : u ≡ u') → app t u ≈ app t' u
+cong-app≈≡ t≈t' ≡-refl = cong-⟶-to-cong-≈ Reduction.cong-app1 t≈t'
+
 cong-app1≈ : ∀ (t≈t' : t ≈ t') → app t u ≈ app t' u
-cong-app1≈ = cong-⟶-to-cong-≈ Reduction.cong-app1
+cong-app1≈ t≈t' = cong-app≈≡ t≈t' ≡-refl
+
+cong-app≡≈ : ∀ (t≡t' : t ≡ t') (u≈u' : u ≈ u') → app t u ≈ app t' u'
+cong-app≡≈ ≡-refl u≈u' = cong-⟶-to-cong-≈ Reduction.cong-app2 u≈u'
 
 cong-app2≈ : ∀ (u≈u' : u ≈ u') → app t u ≈ app t u'
-cong-app2≈ = cong-⟶-to-cong-≈ Reduction.cong-app2
+cong-app2≈ u≈u' = cong-app≡≈ ≡-refl u≈u'
 
 cong-app≈ : ∀ (t≈t' : t ≈ t') (u≈u' : u ≈ u') → app t u ≈ app t' u'
 cong-app≈ t≈t' u≈u' = ≈-trans (cong-app1≈ t≈t') (cong-app2≈ u≈u')

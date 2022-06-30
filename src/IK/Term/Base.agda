@@ -44,8 +44,8 @@ data Tm : Ctx → Ty → Set where
         → Tm Γ a
 
 variable
-  t t' t'' : Tm Γ a
-  u u' u'' : Tm Γ a
+  t t' t'' t''' : Tm Γ a
+  u u' u'' u''' : Tm Γ a
 
 wkTm : Γ ⊆ Γ' → Tm Γ a → Tm Γ' a
 wkTm w (var x)                = var (wkVar w x)

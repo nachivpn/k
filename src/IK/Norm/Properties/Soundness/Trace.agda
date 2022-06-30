@@ -50,7 +50,7 @@ Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
 Rt-prepend {a = 𝕓} r uRx
   = multi r uRx
 Rt-prepend {a = a ⇒ b} r uRx
-  = λ w uRy → Rt-prepend (cong-app* (invRed* w r) (zero refl)) (uRx w uRy)
+  = λ w uRy → Rt-prepend (cong-app1* (invRed* w r)) (uRx w uRy)
 Rt-prepend {a = □ a} {t = t} {u} {x = box x} r (t' , t'Rx , r')
   = t' , t'Rx , multi r r'
 
@@ -59,7 +59,7 @@ Rt-cast : {t u : Tm Γ a} {x : Tm' Γ a}
   → t ≡ u
   → Rt u x
   → Rt t x
-Rt-cast p uRx = Rt-prepend (zero p) uRx
+Rt-cast refl uRx = uRx
 
 -- extract reduction trace from Rt
 Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
@@ -71,16 +71,16 @@ Rt-reflect : (n : Ne Γ a)
 Rt-build {a = 𝕓}                 r
   = r
 Rt-build {a = a ⇒ b}             tRx
-  = multi (one exp-fun) (cong-lam* (Rt-build (tRx _ (Rt-reflect (var ze)))))
+  = ⟶-multi exp-fun (cong-lam* (Rt-build (tRx _ (Rt-reflect (var ze)))))
 Rt-build {a = □ a}   {x = box x} (u , uR- , r)
   = multi r (cong-box* (Rt-build uR-))
 
 Rt-reflect {a = 𝕓}     n
-  = zero refl
+  = ⟶*-refl
 Rt-reflect {a = a ⇒ b} n
-  = λ e y → Rt-prepend (cong-app* (zero (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
+  = λ e y → Rt-prepend (cong-app≡* (nat-embNe _ _) (Rt-build y)) (Rt-reflect _ )
 Rt-reflect {a = □ a}   n
-  = unbox (embNe n) nil , Rt-reflect (unbox n nil) , one exp-box
+  = unbox (embNe n) nil , Rt-reflect (unbox n nil) , single exp-box
 
 -- Rt is invariant under weakening
 invRt : {t : Tm Γ a} {x : Tm' Γ a}
@@ -88,7 +88,7 @@ invRt : {t : Tm Γ a} {x : Tm' Γ a}
   → Rt t x
   → Rt (wkTm w t) (wkTm' w x)
 invRt {a = 𝕓}  {x = x}       w tRx =
-  multi (invRed* _ tRx) (zero (nat-embNf _ (reify x)))
+  multi-≡ (invRed* _ tRx) (nat-embNf _ (reify x))
 invRt {a = a ⇒ b}            w tRx =
   λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) (tRx (w ∙ w') y)
 invRt {a = □ a} {x = box x}  e (u , uRx , r) =
@@ -129,26 +129,26 @@ private
 
   beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ⟶* substTm (wkSub w s `, u) t
-  beta-lemma w s t u = multi (zero (cong₂ app (cong lam (trans
-    (sym (nat-subsTm t (keepₛ s) (keep w)))
-    (cong (λ p → substTm (p `, var ze) t)
-      (trans
-        (wkSubPres∙ (fresh) (keep w) s)
-        (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl))
-    (multi
-      (one red-fun)
-      (zero (trans
-        (substTmPres∙ _ _ t )
-        (cong (λ p → substTm (p `, u) t) (trans
-          (sym (coh-trimSub-wkSub s _ _))
-          (trans (coh-trimSub-wkSub s idₛ w) (rightIdSub _)))))))
+  beta-lemma w s t u = ≡-single-≡
+    (cong₂ app (cong lam (trans
+      (sym (nat-subsTm t (keepₛ s) (keep w)))
+      (cong (λ p → substTm (p `, var ze) t)
+        (trans
+          (wkSubPres∙ (fresh) (keep w) s)
+          (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl)
+    red-fun
+    (trans
+      (substTmPres∙ _ _ t )
+      (cong (λ p → substTm (p `, u) t) (trans
+        (sym (coh-trimSub-wkSub s _ _))
+        (trans (coh-trimSub-wkSub s idₛ w) (rightIdSub _)))))
 
   unboxPresRt : {t : Tm Γ (□ a)} {x : Box (Tm'- a) Γ}
     → (e : LFExt Γ' (Γ #) ΓR)
     → Rt t x
     → Rt (unbox t e) (unbox' x e)
   unboxPresRt {t = t} {box x} e (u , uRx , r) =
-    Rt-prepend (multi (cong-unbox* r) (one red-box)) (invRt (LFExtToWk e) uRx)
+    Rt-prepend (multi-⟶ (cong-unbox* r) red-box) (invRt (LFExtToWk e) uRx)
 
 -- The Fundamental theorem, for terms
 
@@ -167,7 +167,7 @@ fund (app t u)   {s = s} {s'} sRs'
   = Rt-cast (cong₂ app (sym (wkTmPresId _)) refl)
             (fund t sRs' idWk (fund u sRs'))
 fund (box t)     {s = s} {s'} sRs'
-  = substTm (lock s nil) t , fund t (lock sRs' nil) , zero refl
+  = substTm (lock s nil) t , fund t (lock sRs' nil) , ⟶*-refl
 fund (unbox t nil) {s = lock s e} {lock s' .e} (lock sRs' .e)
   = unboxPresRt e (fund t sRs')
 fund (unbox t (ext e)) {s = s `, _} {s' , _} (sRs' `, _)

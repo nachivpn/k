@@ -66,10 +66,10 @@ module _ {t : Tm Γ a → Tm Δ b} (cong-t : ∀ {u u' : Tm Γ a} → (u⟶u' : 
 red-fun≈ : (t : Tm (Γ `, a) b) (u : Tm Γ a) → (app (lam t) u) ≈ substTm (idₛ `, u) t
 red-fun≈ t u = ⟶-to-≈ Reduction.red-fun
 
-exp-fun≈ : (t : Tm Γ (a ⇒ b)) → t ≈ lam (app (wkTm fresh t) (var ze))
+exp-fun≈ : (t : Tm Γ (a ⇒ b)) → t ≈ lam (app (wkTm fresh t) (var zero))
 exp-fun≈ t = ⟶-to-≈ Reduction.exp-fun
 
-red-box≈ : (t : Tm (ΓL 🔒) a) (e : LFExt Γ (ΓL 🔒) ΓR) → unbox (box t) e ≈ wkTm (LFExtToWk e) t
+red-box≈ : (t : Tm (ΓL #) a) (e : LFExt Γ (ΓL #) ΓR) → unbox (box t) e ≈ wkTm (LFExtToWk e) t
 red-box≈ t e = ⟶-to-≈ Reduction.red-box
 
 exp-box≈ : (t : Tm Γ (□ a)) → t ≈ box (unbox t new)
@@ -78,11 +78,17 @@ exp-box≈ t = ⟶-to-≈ Reduction.exp-box
 cong-lam≈ : ∀ (t≈t' : t ≈ t') → lam t ≈ lam t'
 cong-lam≈ = cong-⟶-to-cong-≈ Reduction.cong-lam
 
+cong-app≈≡ : ∀ (t≈t' : t ≈ t') (u≡u' : u ≡ u') → app t u ≈ app t' u
+cong-app≈≡ t≈t' ≡-refl = cong-⟶-to-cong-≈ Reduction.cong-app1 t≈t'
+
 cong-app1≈ : ∀ (t≈t' : t ≈ t') → app t u ≈ app t' u
-cong-app1≈ = cong-⟶-to-cong-≈ Reduction.cong-app1
+cong-app1≈ t≈t' = cong-app≈≡ t≈t' ≡-refl
+
+cong-app≡≈ : ∀ (t≡t' : t ≡ t') (u≈u' : u ≈ u') → app t u ≈ app t' u'
+cong-app≡≈ ≡-refl u≈u' = cong-⟶-to-cong-≈ Reduction.cong-app2 u≈u'
 
 cong-app2≈ : ∀ (u≈u' : u ≈ u') → app t u ≈ app t u'
-cong-app2≈ = cong-⟶-to-cong-≈ Reduction.cong-app2
+cong-app2≈ u≈u' = cong-app≡≈ ≡-refl u≈u'
 
 cong-app≈ : ∀ (t≈t' : t ≈ t') (u≈u' : u ≈ u') → app t u ≈ app t' u'
 cong-app≈ t≈t' u≈u' = ≈-trans (cong-app1≈ t≈t') (cong-app2≈ u≈u')

@@ -24,9 +24,9 @@ nat-embNe : (w : Γ ⊆ Γ') (n : Ne Γ a)
 nat-embNf : (w : Γ ⊆ Γ') (n : Nf Γ a)
   → wkTm w (embNf n) ≡ embNf (wkNf w n)
 
-nat-embNf w (up𝕓 x) = nat-embNe w x
+nat-embNf w (up  x) = nat-embNe w x
 nat-embNf w (lam n) = cong lam (nat-embNf (keep w) n)
-nat-embNf w (box n) = cong box (nat-embNf (keep🔒 w) n)
+nat-embNf w (box n) = cong box (nat-embNf (keep# w) n)
 
 nat-embNe w (var x)     = ≡-refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
@@ -55,7 +55,7 @@ wkNePresId {Γ = Γ} (unbox {ΓL = ΓL} {a = a} n e) = let open ≡-Reasoning in
       factorWkPresId-under-wkNe = ≅-cong (ΓL ⊆_) (lCtxPresId e) (λ w → wkNe w n)
         (≅-trans (≡-subst-addable _ _ _) (≡-to-≅ (factorWkPresId e)))
 
-wkNfPresId (up𝕓 n) = cong up𝕓 (wkNePresId n)
+wkNfPresId (up  n) = cong up  (wkNePresId n)
 wkNfPresId (lam n) = cong lam (wkNfPresId n)
 wkNfPresId (box n) = cong box (wkNfPresId n)
 
@@ -90,6 +90,6 @@ wkNePres∙ {Γ'' = Γ''} w w' (unbox {ΓL = ΓL} {a = a} n e) = let open ≡-Re
       factorWkPres∙-under-wkNe = ≅-cong (ΓL ⊆_) (≡-sym (lCtxPres∙ e w w')) (λ w → wkNe w n)
         (≅-trans (≡-to-≅ (≡-sym (factorWkPres∙ e w w'))) (≡-subst-removable _ _ _))
 
-wkNfPres∙ w w' (up𝕓 n) = cong up𝕓 (wkNePres∙ w w' n)
+wkNfPres∙ w w' (up  n) = cong up  (wkNePres∙ w w' n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)
-wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep🔒 w) (keep🔒 w') n)
+wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep# w) (keep# w') n)

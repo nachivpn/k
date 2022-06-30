@@ -24,7 +24,7 @@ quotTm x = embNf (reify _ x)
 -----------------------
 
 Rt : {a : Ty} {Γ : Ctx} → (t : Tm Γ a) → (x : Tm' Γ a) → Set
-Rt {𝕓}          t x =
+Rt {ι}          t x =
   t ≈ quotTm x
 Rt {a ⇒ b} {Γ}  t f =
   {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
@@ -49,7 +49,7 @@ Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
   → t ≈ u
   → Rt u x
   → Rt t x
-Rt-prepend {a = 𝕓} r uRx
+Rt-prepend {a = ι} r uRx
   = ≈-trans r uRx
 Rt-prepend {a = a ⇒ b} r uRx
   = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) ≈-refl) (uRx w uRy)
@@ -71,14 +71,14 @@ Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
 Rt-reflect : (n : Ne Γ a)
   → Rt (embNe n) (reflect a n)
 
-Rt-build {a = 𝕓}     r
+Rt-build {a = ι}     r
   = r
 Rt-build {a = a ⇒ b} tRx
-  = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (Rt-build (tRx _ (Rt-reflect (var ze)))))
+  = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (Rt-build (tRx _ (Rt-reflect (var zero)))))
 Rt-build {a = □ a}  tRx
   = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (Rt-build (Rt-cast (cong₂ unbox (sym (wkTmPresId _)) refl) refl (tRx idWk new))))
 
-Rt-reflect {a = 𝕓}     n
+Rt-reflect {a = ι}     n
   = ≈-refl
 Rt-reflect {a = a ⇒ b} n
   = λ w y → Rt-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
@@ -90,7 +90,7 @@ wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}
   → (w : Γ ⊆ Δ)
   → Rt t x
   → Rt (wkTm w t) (wkTm' a w x)
-wkTmPresRt {a = 𝕓}  {x = x}       w tRx
+wkTmPresRt {a = ι}  {x = x}       w tRx
   = ≈-trans (wkTmPres≈ _ tRx) (≈-reflexive (nat-embNf _ (reify _ x)))
 wkTmPresRt {a = a ⇒ b}            w tRx
   = λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') y)
@@ -106,14 +106,14 @@ wkSubPresRs {Γ = []}     {s = []}      {tt}     w sRs'
   = []
 wkSubPresRs {Γ = Γ `, _} {s = s `, t} {elem (s' , x)} w (sRs' `, tRx)
   = wkSubPresRs {Γ = Γ} w sRs' `, wkTmPresRt w tRx
-wkSubPresRs {Γ = Γ 🔒} {s = lock s e} {elem (ΓL , (ΓR , .e) , s')} w (lock x .e)
+wkSubPresRs {Γ = Γ #} {s = lock s e} {elem (ΓL , (ΓR , .e) , s')} w (lock x .e)
   = lock (wkSubPresRs (factorWk e w) x) (factorExt e w)
 
 -- syntactic identity is related to semantic identity
 idRs : Rs {Γ} idₛ (idₛ' Γ)
 idRs {[]}     = []
-idRs {Γ `, x} = wkSubPresRs fresh idRs `, Rt-reflect (var ze)
-idRs {Γ 🔒}    = lock idRs new
+idRs {Γ `, x} = wkSubPresRs fresh idRs `, Rt-reflect (var zero)
+idRs {Γ #}    = lock idRs new
 
 -----------------------------
 -- The Fundamental Theorem --
@@ -125,16 +125,16 @@ private
   substVarPresRt : (x : Var Γ a) {s : Sub Δ Γ} {s'  : Sub' Δ Γ}
     → Rs s s'
     → Rt (substVar s x) (substVar' x s')
-  substVarPresRt ze {_ `, x} {elem (_ , x')} (_ `, xRx')
+  substVarPresRt zero     {_ `, x} {elem (_ , x')} (_ `, xRx')
     = xRx'
-  substVarPresRt (su x) {s `, _} {elem (s' , _)} (sRs' `, _)
+  substVarPresRt (succ x) {s `, _} {elem (s' , _)} (sRs' `, _)
     = substVarPresRt x sRs'
 
   beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ≈ substTm (wkSub w s `, u) t
   beta-lemma w s t u = ≈-trans (≈-reflexive (cong₂ app (cong lam (trans
     (sym (nat-substTm t (keepₛ s) (keep w)))
-    (cong (λ p → substTm (p `, var ze) t)
+    (cong (λ p → substTm (p `, var zero) t)
       (trans
         (wkSubPres∙ (fresh) (keep w) s)
         (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl))
@@ -168,19 +168,19 @@ Fund {Γ} t f = ∀ {Δ} {s : Sub Δ Γ} {s' : Sub' Δ Γ}
 lCtxₛ'∼lCtxₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ} → Rs s s' → lCtxₛ' e s' ≡ lCtxₛ e s
 lCtxₛ'∼lCtxₛ nil       sRs'          = refl
 lCtxₛ'∼lCtxₛ (ext e)   (sRs' `, _)   = lCtxₛ'∼lCtxₛ e sRs'
-lCtxₛ'∼lCtxₛ (ext🔒- e) (lock sRs' _) = lCtxₛ'∼lCtxₛ e sRs'
+lCtxₛ'∼lCtxₛ (ext#- e) (lock sRs' _) = lCtxₛ'∼lCtxₛ e sRs'
 
 rCtxₛ'∼rCtxₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ} → Rs s s' →  rCtxₛ' e s' ≡ rCtxₛ e s
 rCtxₛ'∼rCtxₛ nil       sRs'          = refl
 rCtxₛ'∼rCtxₛ (ext e)   (sRs' `, x)   = rCtxₛ'∼rCtxₛ e sRs'
-rCtxₛ'∼rCtxₛ (ext🔒- e) (lock sRs' _) = cong (_,, _) (rCtxₛ'∼rCtxₛ e sRs')
+rCtxₛ'∼rCtxₛ (ext#- e) (lock sRs' _) = cong (_,, _) (rCtxₛ'∼rCtxₛ e sRs')
 
 factorSubPresRs : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ}
     → (sRs' : Rs s s')
     → Rs (factorSubₛ e s) (subst (λ ΔL → Sub' ΔL ΓL) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
-factorSubPresRs nil       sRs'           = sRs'
-factorSubPresRs (ext e)   (sRs' `, _)    = factorSubPresRs e sRs'
-factorSubPresRs (ext🔒- e) (lock sRs' _) = factorSubPresRs e sRs'
+factorSubPresRs nil       sRs'          = sRs'
+factorSubPresRs (ext e)   (sRs' `, _)   = factorSubPresRs e sRs'
+factorSubPresRs (ext#- e) (lock sRs' _) = factorSubPresRs e sRs'
 
 factorExtₛ'∼factorExtₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ}
   → (sRs' : Rs s s')
@@ -214,13 +214,13 @@ fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
   unbox-box-reduces = begin
     unbox (wkTm w (substTm s (box t))) e
       ≡⟨⟩
-    unbox (box (wkTm (keep🔒 w) (substTm (lock s new) t))) e
+    unbox (box (wkTm (keep# w) (substTm (lock s new) t))) e
       ≈⟨ ⟶-to-≈ (red-box _ _) ⟩
-    substTm (lock idₛ e) (wkTm (keep🔒 w) (substTm (lock s new) t))
+    substTm (lock idₛ e) (wkTm (keep# w) (substTm (lock s new) t))
       ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
-    substTm (lock idₛ e) (substTm (wkSub (keep🔒 w) (lock s new)) t)
+    substTm (lock idₛ e) (substTm (wkSub (keep# w) (lock s new)) t)
       ≡⟨ substTmPres∙ _ _ t ⟩
-    substTm ((wkSub (keep🔒 w) (lock s new)) ∙ₛ (lock idₛ e) ) t
+    substTm ((wkSub (keep# w) (lock s new)) ∙ₛ (lock idₛ e) ) t
       ≡⟨⟩
     substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
       ≈⟨ substTmPres≈ t lockLemma ⟩

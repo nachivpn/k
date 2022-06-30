@@ -73,24 +73,24 @@ unbox' φ ψ = λ' φ ∘ ψ
 
 module Eval (N : Ty') where
   evalTy : (a : Ty) → Ty'
-  evalTy 𝕓       = N
+  evalTy ι       = N
   evalTy (a ⇒ b) = evalTy a ⇒' evalTy b
   evalTy (□ a)   = □' evalTy a
 
   evalCtx : (Γ : Ctx) → Ty'
   evalCtx []       = []'
   evalCtx (Γ `, a) = evalCtx Γ ×' evalTy a
-  evalCtx (Γ 🔒)    = ✦' evalCtx Γ
+  evalCtx (Γ #)    = ✦' evalCtx Γ
 
   evalWk : (w : Γ ⊆ Δ) → evalCtx Δ →̇ evalCtx Γ
   evalWk base             = unit'
   evalWk (drop {a = a} w) = evalWk w ∘ π₁'[ evalTy a ]
   evalWk (keep {a = a} w) = evalWk w ×'-map id'[ evalTy a ]
-  evalWk (keep🔒 w)        = ✦'-map (evalWk w)
+  evalWk (keep# w)        = ✦'-map (evalWk w)
 
   evalVar : (v : Var Γ a) → evalCtx Γ →̇ evalTy a
-  evalVar (ze {Γ})       = π₂'[ evalCtx Γ ]
-  evalVar (su {b = b} v) = evalVar v ∘ π₁'[ evalTy b ]
+  evalVar (zero {Γ})       = π₂'[ evalCtx Γ ]
+  evalVar (succ {b = b} v) = evalVar v ∘ π₁'[ evalTy b ]
 
   Sub' = λ Δ Γ → evalCtx Δ →̇ evalCtx Γ
 

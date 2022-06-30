@@ -31,7 +31,7 @@ norm t = quot (eval t)
 quotₛ : Sub'- Γ →̇ Nfₛ- Γ
 quotₛ {[]}     tt         = []
 quotₛ {Γ `, _} (s , x)    = (quotₛ s) `, (reify x)
-quotₛ {Γ 🔒}    (lock s e) = lock (quotₛ s) e
+quotₛ {Γ #}    (lock s e) = lock (quotₛ s) e
 
 -- normalization function, for substitutions
 normₛ : Sub Δ Γ → Nfₛ Δ Γ

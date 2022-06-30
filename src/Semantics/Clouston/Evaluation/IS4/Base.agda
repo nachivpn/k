@@ -66,7 +66,7 @@ module Eval (N : Ty') where
   evalAcc : (e : CExt Γ ΓL ΓR) → evalCtx Γ →̇ ✦' evalCtx ΓL
   evalAcc nil             = η'
   evalAcc (ext {a = a} e) = evalAcc e ∘ π₁'[ evalTy a ]
-  evalAcc (ext🔒- e)       = μ' ∘ ✦'-map (evalAcc e)
+  evalAcc (ext#- e)       = μ' ∘ ✦'-map (evalAcc e)
   
   evalTm : (t : Tm Γ a) → evalCtx Γ →̇ evalTy a
   evalTm (var v)     = evalVar v

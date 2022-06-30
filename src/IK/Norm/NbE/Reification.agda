@@ -16,20 +16,20 @@ reify   : Tm' Γ a → Nf Γ a
 reflect : Ne Γ a  → Tm' Γ a
 
 -- interpretation of neutrals
-reflect {a = 𝕓} n     = up𝕓 n
+reflect {a = ι}     n = up n
 reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
-reflect {a = □ a} n   = box (reflect (unbox n new))
+reflect {a = □ a}   n = box (reflect (unbox n new))
 
 -- reify values to normal forms
-reify {a = 𝕓}     x       = x
-reify {a = a ⇒ b} x       = lam (reify (x (drop idWk) (reflect (var ze))))
+reify {a = ι}     x       = x
+reify {a = a ⇒ b} x       = lam (reify (x (drop idWk) (reflect (var zero))))
 reify {a = □ a}   (box x) = box (reify x)
 
 -- identity substitution
 idₛ' : Sub' Γ Γ
 idₛ' {[]}     = tt
-idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , reflect (var ze)
-idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) new
+idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , reflect (var zero)
+idₛ' {Γ #}    = lock (idₛ' {Γ}) new
 
 ------------------------------------------------
 -- reflect and reify are natural transformations
@@ -40,10 +40,10 @@ idₛ' {Γ 🔒}    = lock (idₛ' {Γ}) new
 
 -- naturality of reflect
 nat-reflect : (w : Γ ⊆ Γ') (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w (reflect n)
-nat-reflect {a = 𝕓}     w n = refl
+nat-reflect {a = ι}     w n = refl
 nat-reflect {a = a ⇒ b} w n = funexti' (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
-nat-reflect {a = □ a}  w n = cong box (nat-reflect (keep🔒 w) (unbox n nil))
+nat-reflect {a = □ a}   w n = cong box (nat-reflect (keep# w) (unbox n nil))
 
 -- image of reflect is in Psh
 psh-reflect : (n : Ne Γ a) → Psh (reflect n)
@@ -51,7 +51,7 @@ psh-reflect : (n : Ne Γ a) → Psh (reflect n)
 nat-reify : (w : Γ ⊆ Γ') (x : Tm' Γ a) → Psh x → reify (wkTm' w x) ≡ wkNf w (reify x)
 
 -- psh-reflect
-psh-reflect {a = 𝕓}     n = tt
+psh-reflect {a = ι}     n = tt
 psh-reflect {a = a ⇒ b} n = λ w x px
   → (λ w' → trans
        (cong reflect
@@ -61,24 +61,24 @@ psh-reflect {a = a ⇒ b} n = λ w x px
 psh-reflect {a = □ a}  n = psh-reflect (unbox n nil)
 
 -- nat-reify
-nat-reify {a = 𝕓}         w x   px
+nat-reify {a = ι}         w x   px
   = refl
 nat-reify {Γ} {a = a ⇒ b} w f   pf
-  = let (nf , pfx) = pf fresh (reflect (var ze)) (psh-reflect {Γ = _ `, a} (var ze))
+  = let (nf , pfx) = pf fresh (reflect (var zero)) (psh-reflect {Γ = _ `, a} (var zero))
   in cong lam
     (trans
       (cong reify
         (trans
           (cong₂ f
             (cong drop (trans (rightIdWk _) (sym (leftIdWk _))))
-            (nat-reflect (keep w) (var ze)))
+            (nat-reflect (keep w) (var zero)))
           (nf (keep w))))
-      (nat-reify (keep w) (f fresh (reflect (var ze))) pfx))
+      (nat-reify (keep w) (f fresh (reflect (var zero))) pfx))
 nat-reify {a = □ a} w  (box x) px
-  = cong box (nat-reify (keep🔒 w) x px)
+  = cong box (nat-reify (keep# w) x px)
 
 -- idₛ' is in Pshₛ
 psh-idₛ' : Pshₛ (idₛ' {Γ})
 psh-idₛ' {[]}     = tt
-psh-idₛ' {Γ `, a} = wkSub'PresPsh fresh (idₛ' {Γ}) (psh-idₛ' {Γ}) , psh-reflect {Γ `, a} (var ze)
-psh-idₛ' {Γ 🔒}    = psh-idₛ' {Γ}
+psh-idₛ' {Γ `, a} = wkSub'PresPsh fresh (idₛ' {Γ}) (psh-idₛ' {Γ}) , psh-reflect {Γ `, a} (var zero)
+psh-idₛ' {Γ #}    = psh-idₛ' {Γ}

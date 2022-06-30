@@ -150,15 +150,15 @@ abstract
 
 abstract
   evalWk-pres-id : ∀ (Γ : Ctx) → evalWk idWk[ Γ ] ≈̇ id'
-  evalWk-pres-id [] = ≈̇-sym []'-eta
+  evalWk-pres-id []          = ≈̇-sym []'-eta
   evalWk-pres-id Γ@(Γ' `, a) = let open EqReasoning (Sub'-setoid Γ Γ) in begin
     evalWk (keep[ a ] idWk[ Γ' ])             ≈⟨ ×'-map-pres-≈̇-left (evalWk-pres-id Γ') id'[ evalTy a ] ⟩
     id'[ evalCtx Γ' ] ×'-map id'[ evalTy a ]  ≈⟨ ×'-map-pres-id' ⟩
     id'[ evalCtx Γ ]                          ∎
-  evalWk-pres-id Γ@(Γ' 🔒) = let open EqReasoning (Sub'-setoid Γ Γ) in begin
-    evalWk (keep🔒 idWk[ Γ' ])  ≈⟨ ✦'-map-pres-≈̇ (evalWk-pres-id Γ') ⟩
-    ✦'-map id'[ evalCtx Γ' ]    ≈⟨ ✦'-map-pres-id' ⟩
-    id'[ evalCtx Γ ]            ∎
+  evalWk-pres-id Γ@(Γ' #) = let open EqReasoning (Sub'-setoid Γ Γ) in begin
+    evalWk (keep# idWk[ Γ' ])  ≈⟨ ✦'-map-pres-≈̇ (evalWk-pres-id Γ') ⟩
+    ✦'-map id'[ evalCtx Γ' ]   ≈⟨ ✦'-map-pres-id' ⟩
+    id'[ evalCtx Γ ]           ∎
 
   evalWk-pres-∘-π₁ : evalWk (drop[ a ] w) ≈̇ evalWk w ∘ π₁'[ evalTy a ]
   evalWk-pres-∘-π₁ = ≈̇-refl
@@ -172,7 +172,7 @@ abstract
     id'[ evalCtx Γ ] ∘ π₁'[ evalTy a ]  ≈⟨ id'-unit-left (evalCtx Γ) π₁'[ evalTy a ] ⟩
     π₁'[ evalTy a ]                     ∎
 
-  evalWk-pres-✦-map : evalWk (keep🔒 w) ≈̇ ✦'-map (evalWk w)
+  evalWk-pres-✦-map : evalWk (keep# w) ≈̇ ✦'-map (evalWk w)
   evalWk-pres-✦-map = ≈̇-refl
 
 module _ {a : Ty} where
@@ -182,13 +182,13 @@ module _ {a : Ty} where
       evalVar (wkVar (drop[ b ] w) v)                     ≈⟨ ∘-pres-≈̇-left (evalVar-pres-∘ w v) π₁'[ evalTy b ] ⟩
       (evalVar v ∘ evalWk w) ∘ π₁'[ evalTy b ]            ≈⟨ ∘-assoc (evalVar v) (evalWk w) π₁'[ evalTy b ] ⟩
       evalVar v ∘ evalWk (drop[ b ] w)                    ∎
-    evalVar-pres-∘ (keep {Δ = Δ} {a} w) (ze {Γ}) = let open EqReasoning (Tm'-setoid (Δ `, a) a) in begin
-      evalVar (wkVar (keep[ a ] w) (ze {Γ}))              ≈˘⟨ id'-unit-left (evalTy a) π₂'[ evalCtx Δ ] ⟩
+    evalVar-pres-∘ (keep {Δ = Δ} {a} w) (zero {Γ}) = let open EqReasoning (Tm'-setoid (Δ `, a) a) in begin
+      evalVar (wkVar (keep[ a ] w) (zero {Γ}))            ≈˘⟨ id'-unit-left (evalTy a) π₂'[ evalCtx Δ ] ⟩
       id'[ evalTy a ] ∘ π₂'[ evalCtx Δ ]                  ≈˘⟨ ×'-beta-right (evalWk w ∘ π₁'[ evalTy a ]) ⟩
-      evalVar (ze {Γ} {a}) ∘ evalWk (keep[ a ] w)         ∎
-    evalVar-pres-∘ (keep {Δ = Δ} {b} w) (su {Γ} {a} {b} n) = let open EqReasoning (Tm'-setoid (Δ `, b) a) in begin
-      evalVar (wkVar (keep[ b ] w) (su {Γ} {a} {b} n))    ≈⟨ ∘-pres-≈̇-left (evalVar-pres-∘ w n) π₁'[ evalTy b ] ⟩
+      evalVar (zero {Γ} {a}) ∘ evalWk (keep[ a ] w)       ∎
+    evalVar-pres-∘ (keep {Δ = Δ} {b} w) (succ {Γ} {a} {b} n) = let open EqReasoning (Tm'-setoid (Δ `, b) a) in begin
+      evalVar (wkVar (keep[ b ] w) (succ {Γ} {a} {b} n))  ≈⟨ ∘-pres-≈̇-left (evalVar-pres-∘ w n) π₁'[ evalTy b ] ⟩
       (evalVar n ∘ evalWk w) ∘ π₁'[ evalTy b ]            ≈⟨ ∘-assoc (evalVar n) (evalWk w) π₁'[ evalTy b ] ⟩
       evalVar n ∘ evalWk w ∘ π₁'[ evalTy b ]              ≈˘⟨ ∘-pres-≈̇-right (evalVar n) (×'-beta-left (id' ∘ π₂')) ⟩
       evalVar n ∘ π₁'[ evalTy b ] ∘ evalWk (keep[ b ] w)  ≈˘⟨ ∘-assoc (evalVar n) π₁'[ evalTy b ] (evalWk (keep[ b ] w)) ⟩
-      evalVar (su {Γ} {a} {b} n) ∘ evalWk (keep[ b ] w)   ∎
+      evalVar (succ {Γ} {a} {b} n) ∘ evalWk (keep[ b ] w) ∎

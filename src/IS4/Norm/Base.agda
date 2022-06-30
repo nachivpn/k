@@ -17,7 +17,7 @@ quot {Γ} {a} f = reify a (f (idₛ' Γ))
 quotₛ : Sub'- Γ →̇ Nfₛ- Γ
 quotₛ {[]}     tt                        = []
 quotₛ {Γ `, a} (elem (s , x))            = quotₛ s `, reify a x
-quotₛ {Γ 🔒}   (elem (ΓL , (ΓR , e) , s)) = lock (quotₛ s) e
+quotₛ {Γ #}   (elem (ΓL , (ΓR , e) , s)) = lock (quotₛ s) e
 
 -- normalization function
 norm : Tm Γ a → Nf Γ a

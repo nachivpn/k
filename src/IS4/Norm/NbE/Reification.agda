@@ -21,7 +21,7 @@ reify-pres-≋  : ∀ (a : Ty) {x x' : Tm' Γ a} (x≋x' : x ≋[ evalTy a ] x')
 reify-natural : ∀ (a : Ty) (x : Tm' Γ a) (w : Γ ⊆ Γ') → reify a (wk[ evalTy a ] w x) ≡ wkNf w (reify a x)
 
 -- interpretation of neutrals
-reflect 𝕓       n = n
+reflect ι       n = n
 reflect (a ⇒ b) n = record
   { fun     = λ w    p    → reflect b (app (wkNe w n) (reify a p))
   ; pres-≋  = λ w    p≋p' → reflect-pres-≋ b (cong (app (wkNe w n)) (reify-pres-≋ a p≋p'))
@@ -43,7 +43,7 @@ reflect (□ a) n = record
 
 reflect-pres-≋ = λ a n≡n' → ≋[ evalTy a ]-reflexive (cong (reflect a) n≡n')
 
-reflect-natural 𝕓       n w = ≋[ evalTy 𝕓 ]-refl
+reflect-natural ι       n w = ≋[ evalTy ι ]-refl
 reflect-natural (a ⇒ b) n w = record
   { pw = λ w' p → let open EqReasoning ≋[ evalTy b ]-setoid in begin
       reflect (a ⇒ b) (wkNe w n) .apply w' p                  ≡⟨⟩
@@ -60,15 +60,15 @@ reflect-natural (□ a) n w = record
   }
 
 -- reify values to normal forms
-reify 𝕓       n = up𝕓 n
+reify ι       n = up  n
 reify (a ⇒ b) f = lam (reify b (f .apply (fresh[ a ]) (reflect a var0)))
 reify (□ a)   g = box (reify a (g .apply idWk newR))
 
-reify-pres-≋ 𝕓       x≋x' = cong up𝕓 x≋x'
+reify-pres-≋ ι       x≋x' = cong up  x≋x'
 reify-pres-≋ (a ⇒ b) x≋x' = cong lam (reify-pres-≋ b (x≋x' .pw (fresh[ a ]) (reflect a var0)))
 reify-pres-≋ (□ a)   x≋x' = cong box (reify-pres-≋ a (x≋x' .pw idWk newR))
 
-reify-natural 𝕓       x w = refl
+reify-natural ι       x w = refl
 reify-natural (a ⇒ b) x w = let open ≡-Reasoning in begin
   reify (a ⇒ b) (wk[ evalTy (a ⇒ b) ] w x)                                                             ≡⟨⟩
   lam (reify b (x .apply (w ∙ fresh[ a ])           (reflect a var0)))                                 ≡˘⟨ cong₂ (λ w n → lam (reify b (x .apply w (reflect a n)))) fresh-keep refl ⟩
@@ -83,13 +83,13 @@ reify-natural (□ a) x w = let open ≡-Reasoning in begin
   box (reify a (x .apply (w ∙ idWk)                newR))                                ≡⟨  cong (λ w → box (reify a (x .apply w newR))) (rightIdWk w) ⟩
   box (reify a (x .apply w                         newR))                                ≡˘⟨ cong (λ w → box (reify a (x .apply w newR))) (leftIdWk w) ⟩
   box (reify a (x .apply (idWk ∙ w)                newR))                                ≡⟨⟩
-  box (reify a (x .apply (idWk ∙ factorWk newR (keep🔒 w)) (factorR newR (keep🔒 w))))  ≡⟨  cong box (reify-pres-≋ a (x .natural idWk newR (keep🔒 w))) ⟩
-  box (reify a (wk[ evalTy a ] (keep🔒 w) (x .apply idWk newR)))                        ≡⟨  cong box (reify-natural a (x .apply idWk newR) (keep🔒 w)) ⟩
-  box (wkNf (keep🔒 w) (reify a (x .apply idWk newR)))                                  ≡⟨⟩
-  wkNf w (reify (□ a) x) ∎
+  box (reify a (x .apply (idWk ∙ factorWk newR (keep# w)) (factorR newR (keep# w))))     ≡⟨  cong box (reify-pres-≋ a (x .natural idWk newR (keep# w))) ⟩
+  box (reify a (wk[ evalTy a ] (keep# w) (x .apply idWk newR)))                          ≡⟨  cong box (reify-natural a (x .apply idWk newR) (keep# w)) ⟩
+  box (wkNf (keep# w) (reify a (x .apply idWk newR)))                                    ≡⟨⟩
+  wkNf w (reify (□ a) x)                                                                 ∎
 
 -- (reflected) identity substitution (one direction of the prinicipal lemma?)
 idₛ' : (Γ : Ctx) → Sub' Γ Γ
 idₛ' []       = tt
 idₛ' (Γ `, a) = record { elem = (wkSub' Γ (fresh[ a ]) (idₛ' Γ) , reflect a var0) }
-idₛ' (Γ 🔒)    = elem (-, newR , idₛ' Γ)
+idₛ' (Γ #)    = elem (-, newR , idₛ' Γ)

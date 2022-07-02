@@ -10,6 +10,7 @@ open import Data.Product using (Σ ; ∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; cong₂)
 
 open import IK.Term.Base
+open import IK.Term.Reduction
 
 --------------------
 -- Substitution laws
@@ -320,3 +321,36 @@ beta-wk-lemma w u t = trans
     (cong
       (λ p → substTm (p `, wkTm w u) t)
       (sym (trans (trimSubId w) (sym (wkSubId w)))))))
+
+-----------------------------------
+--- Reduction and conversion lemmas
+-----------------------------------
+
+wkTmPres⟶ :  {t t' : Tm Γ a}
+  → (w : Γ ⊆ Δ)
+  → t ⟶ t'
+  → wkTm w t ⟶ wkTm w t'
+wkTmPres⟶ w (red-fun {t = t} {u = u})
+  = step-≡ red-fun (beta-wk-lemma w u t)
+wkTmPres⟶ w exp-fun
+  = step-≡ exp-fun (cong lam (cong₂ app keepFreshLemma refl))
+wkTmPres⟶ w (red-box {e = e})
+  = step-≡ red-box (sliceCompLemma w e _)
+wkTmPres⟶ w exp-box
+  = exp-box
+wkTmPres⟶ w (cong-lam r)
+  = cong-lam (wkTmPres⟶ (keep w) r)
+wkTmPres⟶ w (cong-box r)
+  = cong-box (wkTmPres⟶ (keep# w) r)
+wkTmPres⟶ w (cong-unbox r)
+  = cong-unbox (wkTmPres⟶ (sliceLeft _ w) r)
+wkTmPres⟶ w (cong-app1 r)
+  = cong-app1 (wkTmPres⟶ w r)
+wkTmPres⟶ w (cong-app2 r)
+  = cong-app2 (wkTmPres⟶ w r)
+
+wkTmPres⟶* :  {t t' : Tm Γ a}
+  → (w : Γ ⊆ Δ)
+  → t ⟶* t'
+  → wkTm w t ⟶* wkTm w t'
+wkTmPres⟶* w = cong-⟶-to-cong-⟶* (wkTmPres⟶ w)

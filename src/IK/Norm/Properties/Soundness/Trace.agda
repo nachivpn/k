@@ -50,7 +50,7 @@ Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
 Rt-prepend {a = ι} r uRx
   = multi r uRx
 Rt-prepend {a = a ⇒ b} r uRx
-  = λ w uRy → Rt-prepend (cong-app1* (invRed* w r)) (uRx w uRy)
+  = λ w uRy → Rt-prepend (cong-app1* (wkTmPres⟶* w r)) (uRx w uRy)
 Rt-prepend {a = □ a} {t = t} {u} {x = box x} r (t' , t'Rx , r')
   = t' , t'Rx , multi r r'
 
@@ -88,11 +88,11 @@ invRt : {t : Tm Γ a} {x : Tm' Γ a}
   → Rt t x
   → Rt (wkTm w t) (wkTm' w x)
 invRt {a = ι}  {x = x}       w tRx =
-  multi-≡ (invRed* _ tRx) (nat-embNf _ (reify x))
+  multi-≡ (wkTmPres⟶* _ tRx) (nat-embNf _ (reify x))
 invRt {a = a ⇒ b}            w tRx =
   λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) (tRx (w ∙ w') y)
 invRt {a = □ a} {x = box x}  e (u , uRx , r) =
-  wkTm (keep# e) u , invRt (keep# e) uRx , invRed* e r
+  wkTm (keep# e) u , invRt (keep# e) uRx , wkTmPres⟶* e r
 
 -- Rs is invariant under weakening
 invRs : {s : Sub Δ Γ} {s' : Sub' Δ Γ}

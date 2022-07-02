@@ -8,6 +8,8 @@ open import Relation.Binary.Construct.Closure.ReflexiveTransitive.Properties usi
 
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; cong₂)
 
+import RUtil
+
 open import IS4.Term.Base
 
 open ReflexiveTransitive public using (ε ; _◅_)
@@ -52,6 +54,9 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
 
   shift-unbox : {ΓLL : Ctx} {a : Ty} (t : Tm ΓLL (□ a)) {ΓLR ΓL : Ctx} (w : LFExt ΓL ΓLL ΓLR) {ΓR Γ : Ctx} (e : CExt Γ ΓL ΓR)
    → unbox t (extRAssoc (upLFExt w) e) ⟶ unbox (wkTm (LFExtToWk w) t) e
+
+module _ {Γ : Ctx} {a : Ty} where
+  open RUtil (_⟶_ {Γ} {a}) public
 
 -- zero or more steps of reduction
 Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _

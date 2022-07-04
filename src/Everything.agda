@@ -16,10 +16,6 @@ import IK.Norm.Properties.Completeness
 import IK.Norm.Properties.Soundness
 import IK.Norm.Properties.Soundness.Trace
 
-import IK.Applications.Experiments
-import IK.Applications.Neutrality
-import IK.Applications.WeakNorm
-
 import IS4.Term
 import IS4.Term.Conversion
 import IS4.Term.NormalForm

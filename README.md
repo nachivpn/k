@@ -183,4 +183,5 @@ that is (or is parameterized to be) calculi-independent.
 - `EUtil.agda`: Utilities for working with negation
 - `PUtil.agda`: Utilities for working with sigma types
 - `PEUtil.agda`: Utilities for working with propositional equality
+- `RUtil.agda`: Utilities for working with binary relations
 - `Everything.agda`: Imports main modules for easy typechecking of the artifact

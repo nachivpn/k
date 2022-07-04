@@ -1,10 +1,6 @@
 {-# OPTIONS --safe --without-K #-}
 module IK.Term.Reduction where
 
-open import IK.Term.Base
-open import IK.Term.Properties
-  using (beta-wk-lemma ; keepFreshLemma ; sliceCompLemma)
-
 open import Relation.Nullary
   using (¬_)
 
@@ -22,6 +18,10 @@ open import Relation.Binary.PropositionalEquality
 
 open ReflexiveTransitive public
   using (ε ; _◅_)
+
+import RUtil
+
+open import IK.Term.Base
 
 -------------------
 -- Reduction rules
@@ -60,6 +60,9 @@ data _⟶_ : Tm Γ a → Tm Γ a → Set where
   cong-unbox : {t t' : Tm ΓL (□ a)} {e : LFExt Γ (ΓL #) ΓR}
     → t ⟶ t'
     → unbox t e ⟶ unbox t' e
+
+module _ {Γ : Ctx} {a : Ty} where
+  open RUtil (_⟶_ {Γ} {a}) public
 
 -- zero or more steps of reduction
 Tm-preorder : (Γ : Ctx) → (a : Ty) → Preorder _ _ _
@@ -151,32 +154,3 @@ cong-app*  : {t t' : Tm Γ (a ⇒ b)} {u u' : Tm Γ  a}
   → t ⟶* t' → u ⟶* u'
   → app t u ⟶* app t' u'
 cong-app* t⟶*t' u⟶*u' = multi (cong-app1* t⟶*t') (cong-app2* u⟶*u')
-
-invRed :  {t t' : Tm Γ a}
-  → (w : Γ ⊆ Δ)
-  → t ⟶ t'
-  → wkTm w t ⟶* wkTm w t'
-invRed w (red-fun {t = t} {u = u})
-  = single-≡ red-fun (beta-wk-lemma w u t)
-invRed w exp-fun
-  = single-≡ exp-fun (cong lam (cong₂ app keepFreshLemma refl))
-invRed w (red-box {e = e})
-  = single-≡ red-box (sliceCompLemma w e _)
-invRed w exp-box
-  = single exp-box
-invRed w (cong-lam r)
-  = cong-lam* (invRed (keep w) r)
-invRed w (cong-box r)
-  = cong-box* (invRed (keep# w) r)
-invRed w (cong-unbox r)
-  = cong-unbox* (invRed (sliceLeft _ w) r)
-invRed w (cong-app1 r)
-  = cong-app* (invRed w r) ε
-invRed w (cong-app2 r)
-  = cong-app* ε (invRed w r)
-
-invRed* :  {t t' : Tm Γ a}
-  → (w : Γ ⊆ Δ)
-  → t ⟶* t'
-  → wkTm w t ⟶* wkTm w t'
-invRed* w = cong-⟶*-to-cong-⟶* (invRed w)

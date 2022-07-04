@@ -443,20 +443,82 @@ normₛ : Sub Δ Γ → Nfₛ Δ Γ
 normₛ {Δ} {Γ} s = quotₛ (evalₛ s (idₛ' {Δ}))
 
 module _ where
-  open import Data.Empty using (⊥; ⊥-elim)
-  open import Data.Product using (∃)
-  open import Relation.Binary.PropositionalEquality
+  open import Data.Empty      using (⊥ ; ⊥-elim)
+  open import Data.Product    using (∃)
 
-  noClosedNe : Ne [] a → ⊥
-  noClosedNe (app n x)     = noClosedNe n
-  noClosedNe (unbox n nil) = noClosedNe n
+  open import Relation.Binary using (Transitive)
 
-  noClosedNe# : Ne ([] #) a → ⊥
-  noClosedNe# (app n _)                      = noClosedNe# n
-  noClosedNe# (unbox n Ext.nil)              = noClosedNe# n
-  noClosedNe# (unbox n (Ext.ext# _ Ext.nil)) = noClosedNe n
+  infixr 3 _⊲_ _⊲ᶜ_
 
-  purity : (t : Nf [] (T (◻ Unit))) → t ≡ ret (box unit)
-  purity (ret (box unit))   = refl
-  purity (let-in x t)       = ⊥-elim (noClosedNe x)
-  purity (let-print-in x t) = ⊥-elim (noClosedNe x)
+  -- For types a and b, a ⊲ b denotes that a occurs as a subformula of
+  -- b.
+  data _⊲_ : (a : Ty) → (b : Ty) → Set where
+    ⊲-refl : a ⊲ a
+    ⊲-⇒-r  : (a⊲b : a ⊲ b) → a ⊲ c ⇒ b
+    ⊲-⇒-l  : (a⊲b : a ⊲ b) → a ⊲ b ⇒ c
+    ⊲-◻    : (a⊲b : a ⊲ b) → a ⊲ ◻ b
+    ⊲-T    : (a⊲b : a ⊲ b) → a ⊲ T b
+
+  -- For a type a and a context Γ, a ⊲ᶜ Γ denotes that a occurs as a
+  -- subformula of a type in Γ.
+  data _⊲ᶜ_ : (a : Ty) → (Γ : Ctx) → Set where
+    here   : (a⊲b  : a ⊲  b) → a ⊲ᶜ Γ `, b
+    there  : (a⊲ᶜΓ : a ⊲ᶜ Γ) → a ⊲ᶜ Γ `, c
+    there# : (a⊲ᶜΓ : a ⊲ᶜ Γ) → a ⊲ᶜ Γ #
+
+  ⊲-trans : Transitive _⊲_
+  ⊲-trans a⊲b ⊲-refl      = a⊲b
+  ⊲-trans a⊲b (⊲-⇒-r b⊲c) = ⊲-⇒-r (⊲-trans a⊲b b⊲c)
+  ⊲-trans a⊲b (⊲-⇒-l b⊲c) = ⊲-⇒-l (⊲-trans a⊲b b⊲c)
+  ⊲-trans a⊲b (⊲-◻   b⊲c) = ⊲-◻   (⊲-trans a⊲b b⊲c)
+  ⊲-trans a⊲b (⊲-T   b⊲c) = ⊲-T   (⊲-trans a⊲b b⊲c)
+
+  ⊲-⊲ᶜ : a ⊲ b → b ⊲ᶜ Γ → a ⊲ᶜ Γ
+  ⊲-⊲ᶜ a⊲b (here   b⊲c)  = here   (⊲-trans a⊲b b⊲c)
+  ⊲-⊲ᶜ a⊲b (there  b⊲ᶜΓ) = there  (⊲-⊲ᶜ    a⊲b b⊲ᶜΓ)
+  ⊲-⊲ᶜ a⊲b (there# b⊲ᶜΓ) = there# (⊲-⊲ᶜ    a⊲b b⊲ᶜΓ)
+
+  -- Being a subformula is preserved by adding variables (on the
+  -- right).
+  ,,Pres⊲ᶜ-right : a ⊲ᶜ Γ → a ⊲ᶜ Γ ,, Δ
+  ,,Pres⊲ᶜ-right {Δ = []      } a⊲ᶜΓ = a⊲ᶜΓ
+  ,,Pres⊲ᶜ-right {Δ = _Δ `, _c} a⊲ᶜΓ = there  (,,Pres⊲ᶜ-right a⊲ᶜΓ)
+  ,,Pres⊲ᶜ-right {Δ = _Δ #    } a⊲ᶜΓ = there# (,,Pres⊲ᶜ-right a⊲ᶜΓ)
+
+  -- Variables satisfy the subformula property.
+  Var-neutrality : Var Γ a → a ⊲ᶜ Γ
+  Var-neutrality zero     = here ⊲-refl
+  Var-neutrality (succ v) = there (Var-neutrality v)
+
+  -- Neutrals satisfy the subformula property.
+  Ne-neutrality : Ne Γ a → a ⊲ᶜ Γ
+  Ne-neutrality (var   v)    = Var-neutrality v
+  Ne-neutrality (app   n _m) = ⊲-⊲ᶜ (⊲-⇒-r ⊲-refl) (Ne-neutrality n)
+  Ne-neutrality (unbox n e) rewrite extIs,, e
+     = ,,Pres⊲ᶜ-right (⊲-⊲ᶜ (⊲-◻ ⊲-refl) (Ne-neutrality n))
+
+  -- A context with one capability
+  Cap : Ctx
+  Cap = [] `, 𝕔
+
+  -- There are no neutrals of type □ a in context Cap.
+  noNe-Cap-□ : Ne Cap (◻ a) → ⊥
+  noNe-Cap-□ n with Ne-neutrality n
+  ... | here  ()
+  ... | there ()
+
+  -- There are no neutrals of type a in context Cap #.
+  noNe-Cap# : Ne (Cap #) a → ⊥
+  noNe-Cap# (app n _)             = noNe-Cap# n
+  noNe-Cap# (unbox n nil)         = noNe-Cap# n
+  noNe-Cap# (unbox n (ext#- nil)) = noNe-Cap-□ n
+  noNe-Cap# (unbox n (ext#- (ext nil))) with Ne-neutrality n
+  ... | ()
+
+  -- A normal form of type □ (T Unit) in context Cap is
+  -- (syntactically) equal to box (return unit).
+  purity : (t : Nf Cap (◻ (T Unit))) → t ≡ box (ret unit)
+  purity (box (ret unit))         = refl
+  purity (box (let-in c t))       = ⊥-elim (noNe-Cap# c)
+  purity (box (print (up n)))     = ⊥-elim (noNe-Cap# n)
+  purity (box (let-print-in c t)) = ⊥-elim (noNe-Cap# c)

@@ -444,8 +444,6 @@ normₛ {Δ} {Γ} s = quotₛ (evalₛ s (idₛ' {Δ}))
 
 module _ where
   open import Data.Empty      using (⊥ ; ⊥-elim)
-  open import Data.Product    using (∃)
-
   open import Relation.Binary using (Transitive)
 
   infixr 3 _⊲_ _⊲ᶜ_

@@ -66,6 +66,8 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 
   - Section 3.1.2
     + Evaluation function → function `eval` in lines 78-83 of `src/IK/Norm/NbE/Model.agda`
+      (Note that the interpretation of types in &lambda;<sub>IK</sub> in lines 32-35 differs from the generic one given in Section 2 of the paper for the type &square;A. These are however equivalent interpretations in the NbE model. That is, defining ⟦ &square;A ⟧<sub>Γ</sub> as Γ ≤ Γ' ⇒ Γ' ◁IK Γ'' ⇒ ⟦ A ⟧<sub>Γ''</sub> is equivalent to defining it as ⟦ A ⟧<sub>Γ,🔒</sub>. We pick Γ for Γ' and Γ,🔒 for Γ'' in one direction, and apply the monotonicity lemma twice in the other since Γ' ◁IK Γ'' implies Γ'' ≤ Γ',🔒. The latter interpretation is given by the `Box` type in line 23.)
+     
     + Soundness of evaluation (Theorem 2) → lines 321-331 in `src/IK/Norm/Properties/Completeness.agda`
 
   - Section 3.1.3

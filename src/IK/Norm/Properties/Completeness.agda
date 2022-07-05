@@ -229,7 +229,7 @@ private
     → s ≋ₛ s'
     → eval (unbox (box t) e) s ≋ eval t (trimSub' (LFExtToWk e) s')
   lemma1 {t = t} nil {s = lock s e} {s' = lock s' e} ps ps' (lock s≋s' e)
-    with ←#IsPre# e | #→isPost# e
+    with ←#IsPre# e | #→IsPost# e
   ... | refl | refl
     rewrite sym (nat-eval t (LFExtToWk e) (lock s nil) ps)
       | ExtIsProp (wkLFExt nil (LFExtToWk e)) e

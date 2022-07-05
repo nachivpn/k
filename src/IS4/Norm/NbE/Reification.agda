@@ -61,11 +61,11 @@ reflect-natural (□ a) n w = record
 
 -- reify values to normal forms
 reify ι       n = up  n
-reify (a ⇒ b) f = lam (reify b (f .apply (fresh[ a ]) (reflect a var0)))
+reify (a ⇒ b) f = lam (reify b (f .apply fresh[ a ] (reflect a var0)))
 reify (□ a)   g = box (reify a (g .apply idWk newR))
 
 reify-pres-≋ ι       x≋x' = cong up  x≋x'
-reify-pres-≋ (a ⇒ b) x≋x' = cong lam (reify-pres-≋ b (x≋x' .pw (fresh[ a ]) (reflect a var0)))
+reify-pres-≋ (a ⇒ b) x≋x' = cong lam (reify-pres-≋ b (x≋x' .pw fresh[ a ] (reflect a var0)))
 reify-pres-≋ (□ a)   x≋x' = cong box (reify-pres-≋ a (x≋x' .pw idWk newR))
 
 reify-natural ι       x w = refl
@@ -74,8 +74,8 @@ reify-natural (a ⇒ b) x w = let open ≡-Reasoning in begin
   lam (reify b (x .apply (w ∙ fresh[ a ])           (reflect a var0)))                                 ≡˘⟨ cong₂ (λ w n → lam (reify b (x .apply w (reflect a n)))) fresh-keep refl ⟩
   lam (reify b (x .apply (fresh[ a ] ∙ keep[ a ] w) (reflect a (wkNe (keep[ a ] w) var0))))            ≡⟨  cong lam (reify-pres-≋ b (x .apply-≋ _ (reflect-natural a var0 (keep[ a ] w)))) ⟩
   lam (reify b (x .apply (fresh[ a ] ∙ keep[ a ] w) (wk[ evalTy a ] (keep[ a ] w) (reflect a var0))))  ≡˘⟨ cong lam (reify-pres-≋ b (x .natural fresh[ a ] (keep[ a ] w) _)) ⟩
-  lam (reify b (wk[ evalTy b ] (keep[ a ] w) (x .apply (fresh[ a ]) (reflect a var0))))                ≡⟨  cong lam (reify-natural b _ (keep[ a ] w)) ⟩
-  lam (wkNf (keep[ a ] w) (reify b (x .apply (fresh[ a ]) (reflect a var0))))                          ≡⟨⟩
+  lam (reify b (wk[ evalTy b ] (keep[ a ] w) (x .apply fresh[ a ] (reflect a var0))))                  ≡⟨  cong lam (reify-natural b _ (keep[ a ] w)) ⟩
+  lam (wkNf (keep[ a ] w) (reify b (x .apply fresh[ a ] (reflect a var0))))                            ≡⟨⟩
   wkNf w (reify (a ⇒ b) x)                                                                             ∎
 reify-natural (□ a) x w = let open ≡-Reasoning in begin
   reify (□ a) (wk[ evalTy (□ a) ] w x)                                                   ≡⟨⟩
@@ -91,5 +91,5 @@ reify-natural (□ a) x w = let open ≡-Reasoning in begin
 -- (reflected) identity substitution (one direction of the prinicipal lemma?)
 idₛ' : (Γ : Ctx) → Sub' Γ Γ
 idₛ' []       = tt
-idₛ' (Γ `, a) = record { elem = (wkSub' Γ (fresh[ a ]) (idₛ' Γ) , reflect a var0) }
+idₛ' (Γ `, a) = record { elem = (wkSub' Γ fresh[ a ] (idₛ' Γ) , reflect a var0) }
 idₛ' (Γ #)    = elem (-, newR , idₛ' Γ)

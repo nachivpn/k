@@ -173,7 +173,7 @@ wkTm'Pres∙ {a = □ a}  w w' (box x) =
 wkSub'PresId : (s : Sub' Γ Δ) → wkSub' idWk s ≡ s
 wkSub'PresId {Δ = []}     tt         = refl
 wkSub'PresId {Δ = Δ `, a} (s , x)    = cong₂ _,_ (wkSub'PresId s) (wkTm'PresId x)
-wkSub'PresId {Δ = Δ #}    (lock s e) with ←#IsPre# e | #→isPost# e
+wkSub'PresId {Δ = Δ #}    (lock s e) with ←#IsPre# e | #→IsPost# e
 ... | refl | refl = cong₂ lock
   (trans (cong₂ wkSub' (sliceLeftId e) refl) (wkSub'PresId s))
   (wkLFExtPresId e)
@@ -184,8 +184,8 @@ wkSub'Pres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Γ'') (s : Sub' Γ Δ)
 wkSub'Pres∙ {Δ = []}     w w' tt         = refl
 wkSub'Pres∙ {Δ = Δ `, a} w w' (s , x)    = cong₂ _,_ (wkSub'Pres∙ w w' s) (wkTm'Pres∙ w w' x)
 wkSub'Pres∙ {Δ = Δ #}    w w' (lock s e) = cong₂ lock
-  (trans  (wkSub'Pres∙ _ _ s) (cong₂ wkSub' (sliceLeftPres∙ w' w e) refl))
-  (wkLFExtPres∙ w' w e)
+  (trans  (wkSub'Pres∙ _ _ s) (cong₂ wkSub' (sliceLeftPres∙ w w' e) refl))
+  (wkLFExtPres∙ w w' e)
 
 -------------------------------------------
 -- `subsVar' x` is a natural transformation

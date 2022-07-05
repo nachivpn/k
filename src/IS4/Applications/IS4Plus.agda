@@ -342,7 +342,7 @@ eval (unbox t (ext e))             (s , _)
 eval (unbox t (ext#- e))           (lock s nil)
   = eval (unbox t e) s
 eval {a = a} (unbox t (ext#- e))   (lock s (ext {a = b} e'))
-  = wkTm'- {_} {_} {a} (fresh {a = b}) (eval (unbox t (ext#- e)) (lock s e'))
+  = wkTm'- {_} {_} {a} fresh[ b ] (eval (unbox t (ext#- e)) (lock s e'))
 eval {a = a} (unbox t (ext#- nil)) (lock s (ext#- e'))
   = unbox' {a} (eval t s) (ext#- e')
 eval (unbox t (ext#- (ext e)))     (lock (s , _) (ext#- e'))

@@ -134,7 +134,7 @@ private
       (sym (nat-subsTm t (keepₛ s) (keep w)))
       (cong (λ p → substTm (p `, var zero) t)
         (trans
-          (wkSubPres∙ (fresh) (keep w) s)
+          (wkSubPres∙ fresh (keep w) s)
           (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl)
     red-fun
     (trans

@@ -328,7 +328,7 @@ wkSubPres∙ {Δ'' = Δ''} w w' (lock {ΔL = ΔL} {Γ = Γ} s e) = let open ≡-
 
 private
   wkSubFreshLemma : {s : Sub Δ Γ} {w : Δ ⊆ Δ'}
-    → wkSub (fresh {a = a}) (wkSub w s) ≡ wkSub (keep w) (dropₛ s)
+    → wkSub fresh[ a ] (wkSub w s) ≡ wkSub (keep w) (dropₛ s)
   wkSubFreshLemma {s = s} {w} = ≡-trans (wkSubPres∙ w fresh s) (≡-trans
     (cong₂ wkSub (cong drop (rightIdWk _)) ≡-refl )
     (≡-sym (≡-trans
@@ -687,7 +687,7 @@ wkSubId (keep# w) = cong₂ lock (wkSubId w) ≡-refl
 -- Outcast lemmas
 
 keepFreshLemma : {w : Γ ⊆ Γ'} {t : Tm Γ a}
-  → wkTm (fresh {a = b}) (wkTm w t) ≡ wkTm (keep w) (wkTm fresh t)
+  → wkTm fresh[ b ] (wkTm w t) ≡ wkTm (keep w) (wkTm fresh t)
 keepFreshLemma = ≡-trans (wkTmPres∙ _ _ _) (≡-sym (≡-trans
     (wkTmPres∙ _ _ _)
     (cong₂ wkTm (cong drop (≡-trans (leftIdWk _) (≡-sym (rightIdWk _)))) ≡-refl)))
@@ -751,11 +751,11 @@ factorSubₛIdWkIsFactorSubₛId (ext {a = a} e) = let open ≡-Reasoning in beg
       ≡⟨ wkSubId _ ⟩
     embWk (w' ∙ w) ∎
   --
-  substCrunch : wkSub (factorWk (factorExtₛ e idₛ) (fresh {a = a})) (embWk (LFExtToWk (factorSubₛIdWk e)))
+  substCrunch : wkSub (factorWk (factorExtₛ e idₛ) fresh[ a ]) (embWk (LFExtToWk (factorSubₛIdWk e)))
     ≡ embWk (LFExtToWk (extRAssoc (factorSubₛIdWk e) (factorDropsWk (factorExtₛ e idₛ) freshExt)))
   substCrunch = let open ≡-Reasoning in begin
-    wkSub (factorWk (factorExtₛ e idₛ) (fresh {a = a})) (embWk (LFExtToWk (factorSubₛIdWk e)))
-      ≡⟨ coh-wkSub-embwk (factorWk (factorExtₛ e idₛ) (fresh {a = a})) (LFExtToWk (factorSubₛIdWk e)) ⟩
+    wkSub (factorWk (factorExtₛ e idₛ) fresh[ a ]) (embWk (LFExtToWk (factorSubₛIdWk e)))
+      ≡⟨ coh-wkSub-embwk (factorWk (factorExtₛ e idₛ) fresh[ a ]) (LFExtToWk (factorSubₛIdWk e)) ⟩
     embWk (LFExtToWk (factorSubₛIdWk e) ∙ factorWk (factorExtₛ e idₛ) fresh)
       ≡⟨ cong (λ x → embWk (LFExtToWk (factorSubₛIdWk e) ∙ x)) (≡-sym (factorDropsWkIsfactorWk (factorExtₛ e idₛ) freshExt)) ⟩
     embWk (LFExtToWk (factorSubₛIdWk e) ∙ LFExtToWk (factorDropsWk (factorExtₛ e idₛ) freshExt))

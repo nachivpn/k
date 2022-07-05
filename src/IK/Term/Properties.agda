@@ -66,11 +66,11 @@ trimSubId (keep# w) = cong₂ lock (trimSubId w) refl
 -- Standard, standard, standard, oh wait...
 
 wkTmPresId : (t : Tm Γ a) → wkTm idWk t ≡ t
-wkTmPresId (var x)   = cong var (wkVarPresId x)
-wkTmPresId (lam t)   = cong lam (wkTmPresId t)
-wkTmPresId (app t u) = cong₂ app (wkTmPresId t) (wkTmPresId u)
-wkTmPresId (box t)   = cong box (wkTmPresId t)
-wkTmPresId (unbox t e) with ←#IsPre# e | #→isPost# e
+wkTmPresId (var   v)   = cong  var (wkVarPresId v)
+wkTmPresId (lam   t)   = cong  lam (wkTmPresId  t)
+wkTmPresId (app   t u) = cong₂ app (wkTmPresId  t) (wkTmPresId u)
+wkTmPresId (box   t)   = cong  box (wkTmPresId  t)
+wkTmPresId (unbox t e) with ←#IsPre# e | #→IsPost# e
 wkTmPresId (unbox t e) | refl | refl = cong₂ unbox
   (trans (cong₂ wkTm (sliceLeftId e) refl) (wkTmPresId t))
   (wkLFExtPresId e)
@@ -78,7 +78,7 @@ wkTmPresId (unbox t e) | refl | refl = cong₂ unbox
 wkSubPresId : (s : Sub Γ Δ) → wkSub idWk s ≡ s
 wkSubPresId []       = refl
 wkSubPresId (s `, t) = cong₂ _`,_ (wkSubPresId s) (wkTmPresId t)
-wkSubPresId (lock s e) with ←#IsPre# e | #→isPost# e
+wkSubPresId (lock s e) with ←#IsPre# e | #→IsPost# e
 ... | refl | refl = cong₂ lock
   (trans (cong₂ wkSub (sliceLeftId e) refl) (wkSubPresId s))
   (wkLFExtPresId e)
@@ -86,12 +86,12 @@ wkSubPresId (lock s e) with ←#IsPre# e | #→isPost# e
 -- weakening of terms (a functor map) preserves weakening composition
 wkTmPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (t : Tm Γ a)
   → wkTm w' (wkTm w t) ≡ wkTm (w ∙ w') t
-wkTmPres∙ w w' (var x)     = cong var (wkVarPres∙ w w' x)
-wkTmPres∙ w w' (lam t)     = cong lam (wkTmPres∙ (keep w) (keep w') t)
-wkTmPres∙ w w' (app t u)   = cong₂ app (wkTmPres∙ w w' t) (wkTmPres∙ w w' u)
-wkTmPres∙ w w' (box t)     = cong box (wkTmPres∙ (keep# w) (keep# w') t)
+wkTmPres∙ w w' (var   v)   = cong  var (wkVarPres∙ w w' v)
+wkTmPres∙ w w' (lam   t)   = cong  lam (wkTmPres∙ (keep w) (keep  w') t)
+wkTmPres∙ w w' (app   t u) = cong₂ app (wkTmPres∙ w w' t) (wkTmPres∙ w w' u)
+wkTmPres∙ w w' (box   t)   = cong  box (wkTmPres∙ (keep# w) (keep# w') t)
 wkTmPres∙ w w' (unbox t e) = cong₂ unbox
-  (trans (wkTmPres∙ _ _ _) (cong₂ wkTm (sliceLeftPres∙ w' w e) refl)) (wkLFExtPres∙  w' w e)
+  (trans (wkTmPres∙ _ _ _) (cong₂ wkTm (sliceLeftPres∙ w w' e) refl)) (wkLFExtPres∙  w w' e)
 
 -- weakening of substitutions preserves weakening compisition
 wkSubPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (s : Sub Γ ΓR)
@@ -99,12 +99,12 @@ wkSubPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (s : Sub Γ ΓR)
 wkSubPres∙ w w' []         = refl
 wkSubPres∙ w w' (s `, t)   = cong₂ _`,_ (wkSubPres∙ w w' s) (wkTmPres∙ w w' t)
 wkSubPres∙ w w' (lock s e) = cong₂ lock
-  (trans  (wkSubPres∙ _ _ s) (cong₂ wkSub (sliceLeftPres∙ w' w e) refl))
-  (wkLFExtPres∙  w' w e)
+  (trans  (wkSubPres∙ _ _ s) (cong₂ wkSub (sliceLeftPres∙ w w' e) refl))
+  (wkLFExtPres∙ w w' e)
 
 private
   wkSubFreshLemma : {s : Sub Δ Γ} {w : Δ ⊆ Δ'}
-    → wkSub (fresh {a = a}) (wkSub w s) ≡ wkSub (keep w) (dropₛ s)
+    → wkSub fresh[ a ] (wkSub w s) ≡ wkSub (keep w) (dropₛ s)
   wkSubFreshLemma {s = s} {w} = trans (wkSubPres∙ w fresh s) (trans
     (cong₂ wkSub (cong drop (rightIdWk _)) refl )
     (sym (trans
@@ -201,9 +201,9 @@ substVarPresId (succ x) = trans (nat-substVar x idₛ fresh) (trans
   (cong var (wkIncr x)))
 
 private
-  dropUnboxLemma : (e  : LFExt Γ (ΓL #) ΓR) {t : Tm ΓL (□ a)}
-    → wkTm (fresh {a = b}) (unbox t e) ≡ unbox t (ext e)
-  dropUnboxLemma e with (←#IsPre# e) | #→isPost# e
+  dropUnboxLemma : (e : LFExt Γ (ΓL #) ΓR) {t : Tm ΓL (□ a)}
+    → wkTm fresh[ b ] (unbox t e) ≡ unbox t (ext e)
+  dropUnboxLemma e with ←#IsPre# e | #→IsPost# e
   dropUnboxLemma e | refl | refl = cong₂ unbox (trans
     (cong₂ wkTm (sliceLeftId e) refl) (wkTmPresId _))
     (cong ext (wkLFExtPresId e))
@@ -214,7 +214,7 @@ substTmPresId (lam t)       = cong lam (substTmPresId t)
 substTmPresId (app t u)     = cong₂ app (substTmPresId t) (substTmPresId u)
 substTmPresId (box t)       = cong box (substTmPresId t)
 substTmPresId (unbox t nil) = cong₂ unbox (substTmPresId t) refl
-substTmPresId {Γ = Γ `, a} (unbox t (ext e)) with ←#IsPre# e | #→isPost# e | substTmPresId (unbox t e)
+substTmPresId {Γ = Γ `, a} (unbox t (ext e)) with ←#IsPre# e | #→IsPost# e | substTmPresId (unbox t e)
 ... | refl | refl | rec = trans (nat-subsTm (unbox t e) idₛ fresh)
     (trans
       (cong (wkTm fresh) rec)
@@ -251,13 +251,13 @@ rightIdSub : (s : Sub Γ Γ') → s ∙ₛ idₛ ≡ s
 rightIdSub []           = refl
 rightIdSub (s `, t)     = cong₂ _`,_ (rightIdSub s) (substTmPresId t)
 rightIdSub (lock s nil) = cong₂ lock (rightIdSub s) refl
-rightIdSub (lock s (ext x)) with ←#IsPre# x | #→isPost# x
+rightIdSub (lock s (ext e)) with ←#IsPre# e | #→IsPost# e
 ... | refl | refl = trans
-  (sym (coh-wkSub-∙ₛ (lock s x) _ _))
+  (sym (coh-wkSub-∙ₛ (lock s e) _ _))
   (trans
-    (cong (wkSub fresh) (rightIdSub (lock s x)))
+    (cong (wkSub fresh) (rightIdSub (lock s e)))
     (trans
-      (cong₂ lock (cong₂ wkSub (sliceLeftId x) refl) (cong ext (wkLFExtPresId x)))
+      (cong₂ lock (cong₂ wkSub (sliceLeftId e) refl) (cong ext (wkLFExtPresId e)))
       (cong₂ lock (wkSubPresId s) refl)))
 
 
@@ -300,7 +300,7 @@ wkSubId (keep# w) = cong₂ lock (wkSubId w) refl
 -- Outcast lemmas
 
 keepFreshLemma : {w : Γ ⊆ Γ'} {t : Tm Γ a}
-  → wkTm (fresh {a = b}) (wkTm w t) ≡ wkTm (keep w) (wkTm fresh t)
+  → wkTm fresh[ b ] (wkTm w t) ≡ wkTm (keep w) (wkTm fresh t)
 keepFreshLemma = trans (wkTmPres∙ _ _ _) (sym (trans
     (wkTmPres∙ _ _ _)
     (cong₂ wkTm (cong drop (trans (leftIdWk _) (sym (rightIdWk _)))) refl)))

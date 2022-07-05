@@ -113,9 +113,8 @@ data _⊆_  : Ctx → Ctx → Set where
 
 -}
 
-drop[_] = λ {Γ} {Δ} a → drop {Γ} {Δ} {a}
-
-keep[_] = λ {Γ} {Δ} a → keep {Γ} {Δ} {a}
+pattern drop[_] a w = drop {a = a} w
+pattern keep[_] a w = keep {a = a} w
 
 variable
   w w' w'' : Γ ⊆ Γ'
@@ -249,9 +248,8 @@ data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
   ext  : (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ `, a) ΓL (ΓR `, a)
   ext# : WL θ → (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ #) ΓL (ΓR #)
 
-nil[_] = λ {θ} Γ → nil {θ} {Γ}
-
-ext[_] = λ {θ} {Γ} {ΓL} {ΓR} a → ext {θ} {Γ} {ΓL} {ΓR} {a}
+pattern nil[_] Γ   = nil {Γ = Γ}
+pattern ext[_] a w = ext {a = a} w
 
 -- Lock-free context extension (w/o locks, Ext flag set to ff)
 --

@@ -1,7 +1,7 @@
 {-# OPTIONS --safe --without-K #-}
 module PEUtil where
 
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; subst)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; subst ; subst₂)
 
 module _ {a} {A : Set a} {x y z : A} where
   trans˘ : x ≡ y → z ≡ y → x ≡ z
@@ -9,6 +9,14 @@ module _ {a} {A : Set a} {x y z : A} where
 
   ˘trans : y ≡ x → y ≡ z → x ≡ z
   ˘trans y≡x y≡z = trans (sym y≡x) y≡z
+
+module _ {a} {A : Set a} {b} {B : Set b} {x y : A} where
+  cong˘ : (f : A → B) → y ≡ x → f x ≡ f y
+  cong˘ f y≡x = cong f (sym y≡x)
+
+module _ {a} {A : Set a} {b} where
+  subst˘ : (B : A → Set b) {x y : A} → y ≡ x → B x → B y
+  subst˘ B y≡x b = subst B (sym y≡x) b
 
 module _ {a} {b} {c} where
   dcong₂ : ∀ {A : Set a} {B : A → Set b} {C : Set c}
@@ -23,6 +31,13 @@ module _ {a} {b} {c} {d} where
          → (p : x₁ ≡ x₂) → subst B p y₁ ≡ y₂ → subst C p z₁ ≡ z₂
          → f x₁ y₁ z₁ ≡ f x₂ y₂ z₂
   dcong₃ _f refl refl refl = refl
+
+module _ {a} {b} {c} {d} {e} where
+  idcong₄ : ∀ {A : Set a} {B : Set b} {C : A → Set c} {D : A → B → Set d} {E : Set e}
+            (f : {x : A} → {y : B} → C x → D x y → E) {w₁ w₂ x₁ x₂ y₁ y₂ z₁ z₂}
+          → (p : w₁ ≡ w₂) → (q : x₁ ≡ x₂) → subst C p y₁ ≡ y₂ → subst₂ D p q z₁ ≡ z₂
+          → f {w₁} {x₁} y₁ z₁ ≡ f {w₂} {x₂} y₂ z₂
+  idcong₄ _f refl refl refl refl = refl
 
 subst-application′ : ∀ {a b₁ b₂} {A : Set a}
                     (B₁ : A → Set b₁) {B₂ : A → Set b₂}

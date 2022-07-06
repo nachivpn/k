@@ -7,7 +7,9 @@ module IK.Term.Properties where
 
 open import Data.Product using (Σ ; ∃ ; _×_ ; _,_ ; proj₁ ; proj₂)
 
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; cong₂)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; cong₂ ; subst ; subst-application)
+
+open import PEUtil
 
 open import IK.Term.Base
 open import IK.Term.Reduction
@@ -200,13 +202,36 @@ substVarPresId (succ x) = trans (nat-substVar x idₛ fresh) (trans
   (cong (wkTm fresh) (substVarPresId x))
   (cong var (wkIncr x)))
 
-private
-  dropUnboxLemma : (e : LFExt Γ (ΓL #) ΓR) {t : Tm ΓL (□ a)}
-    → wkTm fresh[ b ] (unbox t e) ≡ unbox t (ext e)
-  dropUnboxLemma e with ←#IsPre# e | #→IsPost# e
-  dropUnboxLemma e | refl | refl = cong₂ unbox (trans
-    (cong₂ wkTm (sliceLeftId e) refl) (wkTmPresId _))
-    (cong ext (wkLFExtPresId e))
+module _ {e : LFExt Δ (Γ #) ΓR} {e' : LFExt Δ (Γ' #) ΓR'} where
+  cong-unbox≡ : (Γ≡Γ' : Γ ≡ Γ')
+    → (t≡t' : subst (λ Γ → Tm Γ (□ a)) Γ≡Γ' t ≡ t')
+    → unbox t e ≡ unbox t' e'
+  cong-unbox≡ Γ≡Γ' t≡t' =
+    idcong₄ unbox Γ≡Γ' (extRUniq′ (cong _# Γ≡Γ') e e') t≡t' (ExtIsProp _ _)
+
+cong-unbox≡1 : (Γ≡Γ' : Γ ≡ Γ')
+  → (t≡t' : subst (λ Γ → Tm Γ (□ a)) Γ≡Γ' t ≡ t')
+  → unbox t e ≡ unbox t' e'
+cong-unbox≡1 = cong-unbox≡
+
+cong-unbox≡2 : unbox t e ≡ unbox t e'
+cong-unbox≡2 = cong-unbox≡ refl refl
+
+module _ {Γ : Ctx} {a : Ty} where
+  unbox-natural : (t : Tm Γ (□ a))
+    → (e : LFExt Δ (Γ #) ΓR)
+    → (w : LFExt Δ' Δ ΔR)
+    → unbox t (e ∙Ext w) ≡ wkTm (LFExtToWk w) (unbox t e)
+  unbox-natural t e w with ←#IsPre# e | #→IsPost# e
+  unbox-natural t e w | refl | refl = cong-unbox≡ (←#IsPre# w)
+    (trans (cong˘ (subst (λ Γ → Tm Γ (□ a)) (←#IsPre# w)) (wkTmPresId t))
+      (trans (subst-application′ (Γ ⊆_) (λ w → wkTm w t) (←#IsPre# w))
+        (cong˘ (λ w → wkTm w t) (sliceLeftDrop e w))))
+
+unbox-universal : (t : Tm Γ (□ a))
+  → (e : LFExt Δ (Γ #) ΓR)
+  → unbox t e ≡ wkTm (LFExtToWk e) (unbox t new)
+unbox-universal t e = trans cong-unbox≡2 (unbox-natural t new e)
 
 substTmPresId : (t : Tm Γ a) → substTm idₛ t ≡ t
 substTmPresId (var x)       = substVarPresId x
@@ -216,9 +241,9 @@ substTmPresId (box t)       = cong box (substTmPresId t)
 substTmPresId (unbox t nil) = cong₂ unbox (substTmPresId t) refl
 substTmPresId {Γ = Γ `, a} (unbox t (ext e)) with ←#IsPre# e | #→IsPost# e | substTmPresId (unbox t e)
 ... | refl | refl | rec = trans (nat-subsTm (unbox t e) idₛ fresh)
-    (trans
+    (trans˘
       (cong (wkTm fresh) rec)
-      (dropUnboxLemma e))
+      (unbox-natural t e (ext nil)))
 
 -- NOTE: the `rec` here is a hack required for/after the 2.6.1 update
 -- c.f. "Termination checking" in http://hackage.haskell.org/package/Agda-2.6.1/changelog

@@ -65,16 +65,14 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
     + Equational theory (Fig. 7) → `src/IK/Term/Conversion.agda`
 
   - Section 3.1.2
-    + Evaluation function → function `eval` in lines 78-83 of `src/IK/Norm/NbE/Model.agda`
-      (Note that the interpretation of types in &lambda;<sub>IK</sub> in lines 32-35 differs from the generic one given in Section 2 of the paper for the type &square;A. These are however equivalent interpretations in the NbE model. That is, defining ⟦ &square;A ⟧<sub>Γ</sub> as Γ ≤ Γ' ⇒ Γ' ◁IK Γ'' ⇒ ⟦ A ⟧<sub>Γ''</sub> is equivalent to defining it as ⟦ A ⟧<sub>Γ,🔒</sub>. To observe this, we pick Γ for Γ' and Γ,🔒 for Γ'' in one direction, and apply the monotonicity lemma twice in the other since Γ' ◁IK Γ'' implies Γ'' ≤ Γ',🔒. The latter interpretation is given by the `Box` type in line 23.)
+    + Evaluation function → function `eval` in lines 80-85 of `src/IK/Norm/NbE/Model.agda` [1]
     + Soundness of evaluation (Theorem 2) → lines 321-331 in `src/IK/Norm/Properties/Completeness.agda`
 
   - Section 3.1.3
     + Normal and neutral forms (Fig 8.) → datatypes `Nf` and `Ne` in `src/IK/Term/NormalForm/Base.agda`
     + `reify` and `reflect` → `src/IK/Norm/NbE/Reification.agda`
     + `quote` and identity environment `freshEnv` (***called `id_s` in the code***) → `src/IK/Norm/Base.agda` (lines 17-18) and `src/IK/Norm/NbE/Reification.agda` (lines 29-32)
-    + Logical relation (Fig. 9) and fundamental theorem (Proposition 3) → lines 25-39 and 160-192 in `src/IK/Norm/Properties/Soundness/Trace.agda`, respectively
-      (Note that the logical relation for &lambda;<sub>IK</sub> in the code is actually set up so that the fundamental theorem implies the stronger adequacy statement `t ⟶* norm t` that terms `t` are reducible to their normal form `norm t` (cf. line 195). This immediately implies the weaker adequacy statement `t ≈ norm t` that terms `t` are equivalent to their normal form `norm t`. Recall that the equational theory `_≈_` can (and is in the code) equivalently be defined as the reflexive&ndash;transitive&ndash;symmetric closure of the "reduction" relation `_⟶_` (`_⟶*_` denotes the merely reflexive&ndash;transitive closure of `_⟶_`). The reduction relation is not defined in the paper and the logical relation for &lambda;<sub>IS4</sub> below is only set up to prove the weaker adequacy statement.)
+    + Logical relation (Fig. 9) and fundamental theorem (Proposition 3) → lines 27-41 and 157-194 in `src/IK/Norm/Properties/Soundness/Trace.agda`, respectively [2]
     + Completeness and adequacy of normalization (Theorem 4) → Completeness is called `norm-complete` in lines 369-370 of `src/IK/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 31-36 of `src/IK/Norm/Properties/Soundness/Soundness.agda`
 
 + Section 3.2 (&lambda;<sub>IS4</sub>)
@@ -93,6 +91,32 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
     + Normal and neutral forms → datatypes `Nf` and `Ne` in `src/IS4/Term/NormalForm/Base.agda`
     + `reify` and `reflect` → `src/IS4/Norm/NbE/Reification.agda`
     + Completeness and adequacy of normalization (Theorem 7) → Completeness is called `norm-complete` in `src/IS4/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 297-298 of `src/IS4/Norm/Properties/Soundness.agda`
+
+#### Notes:
+
+[1]: The interpretation of types in &lambda;<sub>IK</sub> in
+  lines 32-35 differs from the generic one given in Section 2 of the
+  paper for the type &square;A. These are however equivalent
+  interpretations in the NbE model. That is, defining ⟦ &square;A
+  ⟧<sub>Γ</sub> as Γ ≤ Γ' ⇒ Γ' ◁IK Γ'' ⇒ ⟦ A ⟧<sub>Γ''</sub> is
+  equivalent to defining it as ⟦ A ⟧<sub>Γ,🔒</sub>. To observe this, we
+  pick Γ for Γ' and Γ,🔒 for Γ'' in one direction, and apply the
+  monotonicity lemma twice in the other since Γ' ◁IK Γ'' implies Γ'' ≤
+  Γ',🔒. The latter interpretation is given by the `Box` type in line
+  23.
+
+[2]: The logical relation for &lambda;<sub>IK</sub> in the
+  code is actually set up so that the fundamental theorem implies the
+  stronger adequacy statement `t ⟶* norm t` that terms `t` are reducible
+  to their normal form `norm t` (cf. line 195). This immediately implies
+  the weaker adequacy statement `t ≈ norm t` that terms `t` are
+  equivalent to their normal form `norm t`. Recall that the equational
+  theory `_≈_` can (and is in the code) equivalently be defined as the
+  reflexive&ndash;transitive&ndash;symmetric closure of the "reduction"
+  relation `_⟶_` (`_⟶*_` denotes the merely reflexive&ndash;transitive
+  closure of `_⟶_`). The reduction relation is not defined in the paper
+  and the logical relation for &lambda;<sub>IS4</sub> below is only set
+  up to prove the weaker adequacy statement.
 
 ### Structure of the repository
 

@@ -103,7 +103,7 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
   ⟧<sub>Γ''</sub> is equivalent to defining it as ⟦ A
   ⟧<sub>Γ,🔒</sub>. To observe this, we pick Γ for Γ' and Γ,🔒 for
   Γ'' in one direction, and apply the monotonicity lemma twice in the
-  other since Γ' ◁IK Γ'' implies Γ'' ≤ Γ',🔒. The latter
+  other since Γ' ◁IK Γ'' implies Γ',🔒 ≤ Γ''. The latter
   interpretation is given by the `Box` type in line 23.
 
 [2]: The logical relation for &lambda;<sub>IK</sub> in the

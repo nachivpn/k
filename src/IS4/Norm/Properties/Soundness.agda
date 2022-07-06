@@ -149,14 +149,6 @@ private
               (≈ₛ-trans (≈ₛ-reflexive (coh-trimSub-wkSub s idₛ w)) (≈ₛ-sym (rightIdSub _))))
             ≈-refl))))
 
-  unboxPresRt : {t : Tm Γ (□ a)} {x : (Tm'- (□ a)) Γ}
-    → (e : CExt Γ' Γ ΓR)
-    → (e' : CExt Γ' Γ ΓR)
-    → Rt t x
-    → Rt (unbox t e) (unbox' {a = a} x e')
-  unboxPresRt {t = t} {bx} e e' r rewrite ExtIsProp e' e
-    = Rt-cast (cong₂ unbox (sym (wkTmPresId t)) refl) refl (r idWk e)
-
 -- The Fundamental theorem, for terms
 
 

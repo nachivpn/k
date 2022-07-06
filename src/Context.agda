@@ -793,7 +793,6 @@ factorExtAbsorbsUpLFExt _ _ = ExtIsProp _ _
 -- Substitutions (parameterized by terms `Tm` and modal accessibility relation `Acc`)
 -------------------------------------------------------------------------------------
 
--- TODO_ARTIFACT: Explain what is this and what it has to do with substitutions
 module Substitution
   (Tm          : (Γ : Ctx) → (a : Ty) → Set)
   (var         : {Γ : Ctx} → {a : Ty} → (v : Var Γ a) → Tm Γ a)

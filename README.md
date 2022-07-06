@@ -108,16 +108,18 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 
 [2]: The logical relation for &lambda;<sub>IK</sub> in the
   code is actually set up so that the fundamental theorem implies the
-  stronger adequacy statement `t ⟶* norm t` that terms `t` are reducible
-  to their normal form `norm t` (cf. line 195). This immediately implies
-  the weaker adequacy statement `t ≈ norm t` that terms `t` are
-  equivalent to their normal form `norm t`. Recall that the equational
-  theory `_≈_` can (and is in the code) equivalently be defined as the
-  reflexive&ndash;transitive&ndash;symmetric closure of the "reduction"
-  relation `_⟶_` (`_⟶*_` denotes the merely reflexive&ndash;transitive
-  closure of `_⟶_`). The reduction relation is not defined in the paper
-  and the logical relation for &lambda;<sub>IS4</sub> below is only set
-  up to prove the weaker adequacy statement.
+  stronger adequacy statement `t ⟶* norm t` that terms `t` are
+  reducible to their normal form `norm t` (cf. line 197 of
+  `src/IK/Norm/Properties/Soundness/Trace.agda`). This immediately
+  implies the weaker adequacy statement `t ≈ norm t` that terms `t`
+  are equivalent to their normal form `norm t`. Recall that the
+  equational theory `_≈_` can (and is in the code) equivalently be
+  defined as the reflexive&ndash;transitive&ndash;symmetric closure
+  of the "reduction" relation `_⟶_` (`_⟶*_` denotes the merely
+  reflexive&ndash;transitive closure of `_⟶_`). The reduction
+  relation is not defined in the paper and the logical relation for
+  &lambda;<sub>IS4</sub> below is only set up to prove the weaker
+  adequacy statement.
 
 ### Structure of the repository
 

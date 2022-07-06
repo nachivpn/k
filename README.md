@@ -60,8 +60,8 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 + Section 3.1 (&lambda;<sub>IK</sub>)
 
   - Section 3.1.1
-    + Modal accessibility relation (Fig. 4) → lines 242-243 in `src/Context.agda`
-    + Substitutions (Fig. 6) → lines 766-769 in `src/Context.agda`
+    + Modal accessibility relation (Fig. 4) → lines 259-260 and 246-249 in `src/Context.agda`
+    + Substitutions (Fig. 6) → lines 796-883 in `src/Context.agda`
     + Intrinsically typed syntax (Fig. 5), weakening and substitution → `src/IK/Term/Base.agda`
     + Equational theory (Fig. 7) → `src/IK/Term/Conversion.agda`
 
@@ -72,26 +72,26 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
   - Section 3.1.3
     + Normal and neutral forms (Fig 8.) → datatypes `Nf` and `Ne` in `src/IK/Term/NormalForm/Base.agda`
     + `reify` and `reflect` → `src/IK/Norm/NbE/Reification.agda`
-    + `quote` and identity environment `freshEnv` (***called `id_s` in the code***) → `src/IK/Norm/Base.agda` (lines 17-18) and `src/IK/Norm/NbE/Reification.agda` (lines 29-32)
+    + `quote` and identity environment → `src/IK/Norm/Base.agda` (lines 17-18) and `src/IK/Norm/NbE/Reification.agda` (lines 29-32)
     + Logical relation (Fig. 9) and fundamental theorem (Proposition 3) → lines 27-41 and 157-194 in `src/IK/Norm/Properties/Soundness/Trace.agda`, respectively [2]
     + Completeness and adequacy of normalization (Theorem 4) → Completeness is called `norm-complete` in lines 369-370 of `src/IK/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 31-36 of `src/IK/Norm/Properties/Soundness/Soundness.agda`
 
 + Section 3.2 (&lambda;<sub>IS4</sub>)
 
   - Section 3.2.1
-    + Modal accessibility relation (Fig. 10) → lines 246-247 in `src/Context.agda`
-    + Substitutions (Fig. 11.) → lines 766-769 in `src/Context.agda`
+    + Modal accessibility relation (Fig. 10) → lines 267-268 and 246-249 in `src/Context.agda`
+    + Substitutions (Fig. 11.) → lines 796-883 in `src/Context.agda`
     + Intrinsically typed syntax (Fig. 11), weakening and substitution → `src/IS4/Term.agda`
     + Equational theory (Fig. 12) → `src/IS4/Term/Conversion.agda`
 
   - Section 3.2.2
     + Evaluation function → lines 74-93 in `src/Semantics/Clouston/Evaluation/IML/Base.agda` and lines 61-81 in `src/Semantics/Clouston/Evaluation/IS4/Base.agda` (instantiated by `src/Semantics/Presheaf/Evaluation/IS4.agda`)
-    + Soundness of evaluation (Theorem 6) → line 523 in `src/Semantics/Clouston/Evaluation/IS4/Properties.agda` (instantiated by `src/Semantics/Presheaf/Evaluation/IS4/Properties.agda`)
+    + Soundness of evaluation (Theorem 6) → lines 521-526 in `src/Semantics/Clouston/Evaluation/IS4/Properties.agda` (instantiated by `src/Semantics/Presheaf/Evaluation/IS4/Properties.agda`)
 
   - Section 3.2.3
     + Normal and neutral forms → datatypes `Nf` and `Ne` in `src/IS4/Term/NormalForm/Base.agda`
     + `reify` and `reflect` → `src/IS4/Norm/NbE/Reification.agda`
-    + Completeness and adequacy of normalization (Theorem 7) → Completeness is called `norm-complete` in `src/IS4/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 297-298 of `src/IS4/Norm/Properties/Soundness.agda`
+    + Completeness and adequacy of normalization (Theorem 7) → Completeness is called `norm-complete` in `src/IS4/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 298-299 of `src/IS4/Norm/Properties/Soundness.agda`
 
 #### Notes:
 

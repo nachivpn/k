@@ -66,7 +66,7 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
     + Equational theory (Fig. 7) → `src/IK/Term/Conversion.agda`
 
   - Section 3.1.2
-    + Evaluation function → function `eval` in lines 80-85 of `src/IK/Norm/NbE/Model.agda` [1]
+    + Evaluation function → function `eval` in lines 79-84 of `src/IK/Norm/NbE/Model.agda` [1]
     + Soundness of evaluation (Theorem 2) → lines 321-331 in `src/IK/Norm/Properties/Completeness.agda`
 
   - Section 3.1.3
@@ -96,15 +96,15 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 #### Notes:
 
 [1]: The interpretation of types in &lambda;<sub>IK</sub> in
-  lines 32-35 differs from the generic one given in Section 2 of the
-  paper for the type &square;A. These are however equivalent
-  interpretations in the NbE model. That is, defining ⟦ &square;A
-  ⟧<sub>Γ</sub> as Γ ≤ Γ' ⇒ Γ' ◁IK Γ'' ⇒ ⟦ A ⟧<sub>Γ''</sub> is
-  equivalent to defining it as ⟦ A ⟧<sub>Γ,🔒</sub>. To observe this, we
-  pick Γ for Γ' and Γ,🔒 for Γ'' in one direction, and apply the
-  monotonicity lemma twice in the other since Γ' ◁IK Γ'' implies Γ'' ≤
-  Γ',🔒. The latter interpretation is given by the `Box` type in line
-  23.
+  lines 33-36 of `src/IK/Norm/NbE/Model.agda` differs from the generic
+  one given in Section 2 of the paper for the type &square;A. These
+  are however equivalent interpretations in the NbE model. That is,
+  defining ⟦ &square;A ⟧<sub>Γ</sub> as Γ ≤ Γ' ⇒ Γ' ◁IK Γ'' ⇒ ⟦ A
+  ⟧<sub>Γ''</sub> is equivalent to defining it as ⟦ A
+  ⟧<sub>Γ,🔒</sub>. To observe this, we pick Γ for Γ' and Γ,🔒 for
+  Γ'' in one direction, and apply the monotonicity lemma twice in the
+  other since Γ' ◁IK Γ'' implies Γ'' ≤ Γ',🔒. The latter
+  interpretation is given by the `Box` type in line 23.
 
 [2]: The logical relation for &lambda;<sub>IK</sub> in the
   code is actually set up so that the fundamental theorem implies the

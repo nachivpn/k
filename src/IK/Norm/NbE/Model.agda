@@ -30,7 +30,6 @@ data Lock (A : Ctx → Set) : Ctx → Set where
   -- equivalently, `lock : #-free Γ' → A Γ → Lock A (Γ # ,, Γ')`
 
 -- interpretation of types
-
 Tm' : Ctx → Ty → Set
 Tm' Γ ι       = Nf Γ ι
 Tm' Γ (a ⇒ b) = {Γ' : Ctx} → Γ ⊆ Γ' → (Tm' Γ' a → Tm' Γ' b)

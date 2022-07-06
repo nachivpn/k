@@ -8,6 +8,8 @@ open import Data.Product
 
 open import Relation.Binary.PropositionalEquality
 
+open import PEUtil
+
 open import IK.Norm.Base
 
 open import IK.Norm.NbE.Model
@@ -22,95 +24,95 @@ quotTm x = embNf (reify x)
 -- Logical Relations --
 -----------------------
 
-Rt : {a : Ty} {Γ : Ctx} → (t : Tm Γ a) → (x : Tm' Γ a) → Set
-Rt {ι}         t x =
-  t ⟶* quotTm x
-Rt {a ⇒ b} {Γ} t f =
-  {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (e : Γ ⊆ Γ') → Rt u x → Rt (app (wkTm e t) u) (f e x)
-Rt {□ a}       t (box x) =
-  ∃ λ u → Rt u x × t ⟶* box u
+L : (t : Tm Γ a) → (x : Tm' Γ a) → Set
+L {a = ι}         t n       =
+  t ⟶* quotTm n
+L {Γ} {a = a ⇒ b} t f       =
+  ∀ {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
+    → (w : Γ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f w x)
+L {a = □ a}       t (box x) =
+  ∃ λ u → L u x × t ⟶* box u
 
-data Rs : Sub Γ Δ → Sub' Γ Δ → Set where
-  []   : Rs {Γ} [] tt
-  _`,_ : {s : Sub Γ Δ} {s' : Sub' Γ Δ} {t : Tm Γ a} {x : Tm' Γ a}
-       → Rs s s' → Rt t x → Rs (s `, t)  (s' , x)
-  lock : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-    → Rs s s' → (e : LFExt Δ' (Δ #) (ΔR)) → Rs (lock s e) (lock s' e)
+data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
+  []   : Lₛ [] tt
+  _`,_ : {s : Sub Γ Δ} {δ : Sub' Γ Δ} {t : Tm Γ a} {x : Tm' Γ a}
+           → (sLδ : Lₛ s δ) → (tLx : L t x) → Lₛ (s `, t)  (δ , x)
+  lock : {s : Sub Γ' Δ} {δ : Sub' Γ' Δ}
+           → (sLδ : Lₛ s δ) → (e : LFExt Γ (Γ' #) ΓR) → Lₛ (lock s e) (lock δ e)
 
 ----------------------------
 -- Standard LR properties --
 ----------------------------
 
--- prepend a reduction trace to the "trace builder" Rt
-Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
-  → t ⟶* u
-  → Rt u x
-  → Rt t x
-Rt-prepend {a = ι} r uRx
-  = multi r uRx
-Rt-prepend {a = a ⇒ b} r uRx
-  = λ w uRy → Rt-prepend (cong-app1* (wkTmPres⟶* w r)) (uRx w uRy)
-Rt-prepend {a = □ a} {t = t} {u} {x = box x} r (t' , t'Rx , r')
-  = t' , t'Rx , multi r r'
+-- prepend a reduction trace to the "trace builder" L
+L-prepend : {t : Tm Γ a} {x : Tm' Γ a}
+  → (t⟶*u : t ⟶* u)
+  → (uLx : L u x)
+  → L t x
+L-prepend {a = ι}                 t⟶*u uLn
+  = multi t⟶*u uLn
+L-prepend {a = a ⇒ b}             t⟶*u uLf
+  = λ w uRy → L-prepend (cong-app1* (wkTmPres⟶* w t⟶*u)) (uLf w uRy)
+L-prepend {a = □ a}   {x = box x} t⟶*u (v , vRx , u⟶*bv)
+  = v , vRx , multi t⟶*u u⟶*bv
 
--- reduction-free version of Rt-prepend
-Rt-cast : {t u : Tm Γ a} {x : Tm' Γ a}
-  → t ≡ u
-  → Rt u x
-  → Rt t x
-Rt-cast refl uRx = uRx
+-- reduction-free version of L-prepend
+L-cast : {t u : Tm Γ a} {x : Tm' Γ a}
+  → (t≡u : t ≡ u)
+  → (uLx : L u x)
+  → L t x
+L-cast refl uLx = uLx
 
--- extract reduction trace from Rt
-Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
-  → Rt t x → t ⟶* quotTm x
+-- extract reduction trace from L
+L-build : {t : Tm Γ a} {x : Tm' Γ a}
+  → (tLx : L t x) → t ⟶* quotTm x
 -- a neutral element is related to its reflection
-Rt-reflect : (n : Ne Γ a)
-  → Rt (embNe n) (reflect n)
+L-reflect : (n : Ne Γ a)
+  → L (embNe n) (reflect n)
 
-Rt-build {a = ι}                 r
-  = r
-Rt-build {a = a ⇒ b}             tRx
-  = ⟶-multi exp-fun (cong-lam* (Rt-build (tRx _ (Rt-reflect (var zero)))))
-Rt-build {a = □ a}   {x = box x} (u , uR- , r)
-  = multi r (cong-box* (Rt-build uR-))
+L-build {a = ι}                 tLn
+  = tLn
+L-build {a = a ⇒ b}             tLf
+  = ⟶-multi exp-fun (cong-lam* (L-build (tLf fresh (L-reflect (var zero)))))
+L-build {a = □ a}   {x = box x} (u , uRx , t⟶*bu)
+  = multi t⟶*bu (cong-box* (L-build uRx))
 
-Rt-reflect {a = ι}     n
+L-reflect {a = ι}     n
   = ⟶*-refl
-Rt-reflect {a = a ⇒ b} n
-  = λ e y → Rt-prepend (cong-app≡* (nat-embNe _ _) (Rt-build y)) (Rt-reflect _ )
-Rt-reflect {a = □ a}   n
-  = unbox (embNe n) nil , Rt-reflect (unbox n nil) , single exp-box
+L-reflect {a = a ⇒ b} n {_Γ'} {_t} {x}
+  = λ w y → L-prepend (cong-app≡* (nat-embNe w n) (L-build y)) (L-reflect (app (wkNe w n) (reify x)))
+L-reflect {a = □ a}   n
+  = unbox (embNe n) nil , L-reflect (unbox n nil) , single exp-box
 
--- Rt is invariant under weakening
-invRt : {t : Tm Γ a} {x : Tm' Γ a}
-  → (w : Γ ⊆ Δ)
-  → Rt t x
-  → Rt (wkTm w t) (wkTm' w x)
-invRt {a = ι}  {x = x}       w tRx =
-  multi-≡ (wkTmPres⟶* _ tRx) (nat-embNf _ (reify x))
-invRt {a = a ⇒ b}            w tRx =
-  λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) (tRx (w ∙ w') y)
-invRt {a = □ a} {x = box x}  e (u , uRx , r) =
-  wkTm (keep# e) u , invRt (keep# e) uRx , wkTmPres⟶* e r
+-- L is invariant under weakening
+invL : {t : Tm Γ a} {x : Tm' Γ a}
+  → (w : Γ ⊆ Γ')
+  → (tLx : L t x)
+  → L (wkTm w t) (wkTm' w x)
+invL {a = ι}     {x = x}     w tLn =
+  multi-≡ (wkTmPres⟶* w tLn) (nat-embNf w (reify x))
+invL {a = a ⇒ b} {t = t}     w tLf =
+  λ w' y → L-cast (cong₂ app (wkTmPres∙ w w' t) refl) (tLf (w ∙ w') y)
+invL {a = □ a}   {x = box x} w (u , uLx , t⟶*bu) =
+  wkTm (keep# w) u , invL (keep# w) uLx , wkTmPres⟶* w t⟶*bu
 
--- Rs is invariant under weakening
-invRs : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-  → (w : Δ ⊆ Δ')
-  → Rs s s'
-  → Rs (wkSub w s) (wkSub' w s')
-invRs {Γ = []}     {s = []}      {tt}     w sRs'          =
+-- Lₛ is invariant under weakening
+invLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+  → (w : Γ ⊆ Γ')
+  → (sLδ : Lₛ s δ)
+  → Lₛ (wkSub w s) (wkSub' w δ)
+invLₛ {Δ = []}       w []           =
   []
-invRs {Γ = Γ `, _} {s = s `, t} {s' , x} w (sRs' `, tRx)  =
-  invRs {Γ = Γ} w sRs' `, invRt w tRx
-invRs {Γ = Γ #} {s = lock s e} {lock s' .e} w (lock x .e) =
-  lock (invRs (sliceLeft e w) x) (wkLFExt e w)
+invLₛ {Δ = _Δ `, _a} w (sLδ `, tLx) =
+  invLₛ w sLδ `, invL w tLx
+invLₛ {Δ = _Δ #}     w (lock sLδ e) =
+  lock (invLₛ (sliceLeft e w) sLδ) (wkLFExt e w)
 
 -- syntactic identity is related to semantic identity
-idRs : Rs {Γ} idₛ idₛ'
-idRs {[]}     = []
-idRs {Γ `, x} = invRs fresh idRs `, Rt-reflect (var zero)
-idRs {Γ #}    = lock idRs nil
+idLₛ : Lₛ {Δ} idₛ idₛ'
+idLₛ {[]}      = []
+idLₛ {_Δ `, a} = invLₛ fresh[ a ] idLₛ `, L-reflect {a = a} (var zero)
+idLₛ {_Δ #}    = lock idLₛ nil
 
 -----------------------------
 -- The Fundamental Theorem --
@@ -118,24 +120,21 @@ idRs {Γ #}    = lock idRs nil
 
 -- local lemmas for the proof of fundamental theorem
 private
+  substVarPresL : (v : Var Δ a) {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+    → (sLδ : Lₛ s δ)
+    → L (substVar s v) (substVar' v δ)
+  substVarPresL zero     (_sLδ `, tLx)  = tLx
+  substVarPresL (succ v) (sLδ  `, _tLx) = substVarPresL v sLδ
 
-  substVarPresRt : (x : Var Γ a) {s : Sub Δ Γ} {s'  : Sub' Δ Γ}
-    → Rs s s'
-    → Rt (substVar s x) (substVar' x s')
-  substVarPresRt zero {_ `, x} {_ , x'} (_ `, xRx')
-    = xRx'
-  substVarPresRt (succ x) {s `, _} {s' , _} (sRs' `, _)
-    = substVarPresRt x sRs'
-
-  beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
+  beta-lemma : (w : Γ ⊆ Γ') (s : Sub Γ Δ) (t : Tm (Δ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ⟶* substTm (wkSub w s `, u) t
   beta-lemma w s t u = ≡-single-≡
-    (cong₂ app (cong lam (trans
+    (cong1 app (cong lam (trans
       (sym (nat-subsTm t (keepₛ s) (keep w)))
       (cong (λ p → substTm (p `, var zero) t)
         (trans
           (wkSubPres∙ fresh (keep w) s)
-          (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl)
+          (cong1 wkSub (cong drop (leftIdWk w))))))))
     red-fun
     (trans
       (substTmPres∙ _ _ t )
@@ -143,54 +142,54 @@ private
         (sym (coh-trimSub-wkSub s _ _))
         (trans (coh-trimSub-wkSub s idₛ w) (rightIdSub _)))))
 
-  unboxPresRt : {t : Tm Γ (□ a)} {x : Box (Tm'- a) Γ}
-    → (e : LFExt Γ' (Γ #) ΓR)
-    → Rt t x
-    → Rt (unbox t e) (unbox' x e)
-  unboxPresRt {t = t} {box x} e (u , uRx , r) =
-    Rt-prepend (multi-⟶ (cong-unbox* r) red-box) (invRt (LFExtToWk e) uRx)
+  unboxPresL : {t : Tm Γ (□ a)} {b : Box (Tm'- a) Γ}
+    → (e : LFExt Δ (Γ #) ΓR)
+    → (tLb : L t b)
+    → L (unbox t e) (unbox' b e)
+  unboxPresL {b = box x} e (u , uLx , t⟶*bu) =
+    L-prepend (multi-⟶ (cong-unbox* t⟶*bu) red-box) (invL (LFExtToWk e) uLx)
 
 -- The Fundamental theorem, for terms
 
-Fund : Tm Γ a → (Sub'- Γ →̇ Tm'- a) → Set
-Fund {Γ} t f = ∀ {Δ} {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-    → Rs s s'
-    → Rt (substTm s t) (f s')
+Fund : Tm Δ a → Set
+Fund {Δ} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+               → (sLδ : Lₛ s δ)
+               → L (substTm s t) (eval t δ)
 
-fund : (t : Tm Γ a) → Fund t (eval t)
-fund (var x)     {s = s} {s'} sRs'
-  = substVarPresRt x sRs'
-fund (lam t)     {s = s} {s'} sRs' {u = u}
-  = λ w uRx → Rt-prepend (beta-lemma w s t u)
-  (fund t {s = wkSub w s `, u} (invRs w sRs' `, uRx))
-fund (app t u)   {s = s} {s'} sRs'
-  = Rt-cast (cong₂ app (sym (wkTmPresId _)) refl)
-            (fund t sRs' idWk (fund u sRs'))
-fund (box t)     {s = s} {s'} sRs'
-  = substTm (lock s nil) t , fund t (lock sRs' nil) , ⟶*-refl
-fund (unbox t nil) {s = lock s e} {lock s' .e} (lock sRs' .e)
-  = unboxPresRt e (fund t sRs')
-fund (unbox t (ext e)) {s = s `, _} {s' , _} (sRs' `, _)
-  = fund (unbox t e) sRs'
+fund : (t : Tm Δ a) → Fund t
+fund (var v)              sLδ
+  = substVarPresL v sLδ
+fund (lam t)     {_Γ} {s} sLδ {_Γ'} {u}
+  = λ w uLx → L-prepend (beta-lemma w s t u)
+      (fund t {s = wkSub w s `, u} (invLₛ w sLδ `, uLx))
+fund (app t u)   {_Γ} {s} sLδ
+  = L-cast (cong1 app (sym (wkTmPresId (substTm s t))))
+      (fund t sLδ idWk (fund u sLδ))
+fund (box t)     {_Γ} {s} sLδ
+  = substTm (lock s nil) t , fund t (lock sLδ nil) , ⟶*-refl
+fund (unbox t nil)        (lock sLδ e)
+  = unboxPresL e (fund t sLδ)
+fund (unbox t (ext e))    (sLδ `, _b)
+  = fund (unbox t e) sLδ
 
 -- The Fundamental theorem, extended to substitutions
 -- (not needed for tracing reduction of terms)
 
-Fundₛ : Sub Γ Δ → (Sub'- Γ →̇ Sub'- Δ) → Set
-Fundₛ {Γ} s₀ f = ∀ {Δ'} {s : Sub Δ' Γ} {s' : Sub' Δ' Γ}
-    → Rs s s'
-    → Rs (s₀ ∙ₛ s) (f s')
+Fundₛ : (S : Sub Δ Θ) → Set
+Fundₛ {Δ} S = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+                → (sLδ : Lₛ s δ)
+                → Lₛ (S ∙ₛ s) (evalₛ S δ)
 
-fundₛ : (s : Sub Γ Δ) → Fundₛ s (evalₛ s)
-fundₛ []               sRs'
+fundₛ : (S : Sub Δ Θ) → Fundₛ S
+fundₛ []               sLδ
   = []
-fundₛ (s₀ `, t)         sRs'
-  = (fundₛ s₀ sRs') `, fund t sRs'
-fundₛ (lock s₀ (ext e)) (sRs' `, _)
-  = fundₛ (lock s₀ e) sRs'
-fundₛ (lock s₀ nil)     (lock sRs' e)
-  = lock (fundₛ s₀ sRs') e
+fundₛ (S `, t)         sLδ
+  = fundₛ S sLδ `, fund t sLδ
+fundₛ (lock S nil)     (lock sLδ e)
+  = lock (fundₛ S sLδ) e
+fundₛ (lock S (ext e)) (sLδ `, _a)
+  = fundₛ (lock S e) sLδ
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ⟶* embNf (norm t)
-trace t = Rt-build (Rt-cast (sym (substTmPresId t)) (fund t {s = idₛ} {s' = idₛ'} idRs))
+trace t = L-build (L-cast (sym (substTmPresId t)) (fund t idLₛ))

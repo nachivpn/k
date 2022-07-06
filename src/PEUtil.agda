@@ -19,6 +19,20 @@ module _ {a} {A : Set a} {b} where
   subst˘ B y≡x b = subst B (sym y≡x) b
 
 module _ {a} {b} {c} where
+  cong1 : ∀ {A : Set a} {B : Set b} {C : Set c}
+           (f : A → B → C) {x₁ x₂ y}
+         → (p : x₁ ≡ x₂)
+         → f x₁ y ≡ f x₂ y
+  cong1 _f refl = refl
+
+module _ {a} {b} {c} where
+  cong2 : ∀ {A : Set a} {B : Set b} {C : Set c}
+           (f : A → B → C) {x y₁ y₂}
+         → (p : y₁ ≡ y₂)
+         → f x y₁ ≡ f x y₂
+  cong2 _f refl = refl
+
+module _ {a} {b} {c} where
   dcong₂ : ∀ {A : Set a} {B : A → Set b} {C : Set c}
            (f : (x : A) → B x → C) {x₁ x₂ y₁ y₂}
          → (p : x₁ ≡ x₂) → subst B p y₁ ≡ y₂

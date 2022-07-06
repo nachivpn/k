@@ -8,6 +8,7 @@ open import Relation.Binary.PropositionalEquality
   using (_≡_ ; refl ; sym ; trans ; subst ; subst₂ ; cong ; cong₂ ; module ≡-Reasoning)
 
 open import HEUtil
+open import PEUtil
 
 open import IS4.Norm.Base
 
@@ -23,97 +24,97 @@ quotTm x = embNf (reify _ x)
 -- Logical Relations --
 -----------------------
 
-Rt : {a : Ty} {Γ : Ctx} → (t : Tm Γ a) → (x : Tm' Γ a) → Set
-Rt {ι}          t x =
+L : (t : Tm Γ a) → (x : Tm' Γ a) → Set
+L {a = ι}     t x =
   t ≈ quotTm x
-Rt {a ⇒ b} {Γ}  t f =
-  {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (e : Γ ⊆ Γ') → Rt u x → Rt (app (wkTm e t) u) (f .apply e x)
-Rt {□ a}  {ΓL} t bx =
-  {ΓL' Γ ΓR : Ctx}
-    → (w : ΓL ⊆ ΓL') → (e : CExt Γ ΓL' ΓR) → Rt (unbox (wkTm w t) e) (bx .apply w (-, e))
+L {a = a ⇒ b} t f =
+  ∀ {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
+    → (w : _ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f .apply w x)
+L {a = □ a}   t b =
+  ∀ {Γ' Δ ΓR' : Ctx}
+    → (w : _ ⊆ Γ') → (e : CExt Δ Γ' ΓR') → L (unbox (wkTm w t) e) (b .apply w (-, e))
 
-data Rs : Sub Γ Δ → Sub' Γ Δ → Set where
-  []   : Rs {Γ} [] tt
-  _`,_ : {s : Sub Δ Γ} {s' : Sub' Δ Γ} {t : Tm Δ a} {x : Tm' Δ a}
-       → Rs s s' → Rt t x → Rs (s `, t)  (elem (s' , x))
-  lock : {s : Sub ΔL Γ} {s' : Sub' ΔL Γ}
-    → Rs s s' → (e : CExt Δ ΔL (ΔR)) → Rs (lock s e) (elem (ΔL , (ΔR , e) , s'))
+data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
+  []   : Lₛ [] tt
+  _`,_ : {s : Sub Γ Δ} {δ : Sub' Γ Δ} {t : Tm Γ a} {x : Tm' Γ a}
+           → (sLδ : Lₛ s δ) → (tLx : L t x) → Lₛ (s `, t)  (elem (δ , x))
+  lock : {s : Sub Γ' Δ} {δ : Sub' Γ' Δ}
+           → (sLδ : Lₛ s δ) → (e : CExt Γ Γ' ΓR') → Lₛ (lock s e) (elem (Γ' , (ΓR' , e) , δ))
 
 ----------------------------
 -- Standard LR properties --
 ----------------------------
 
--- prepend a reduction trace to the "trace builder" Rt
-Rt-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
-  → t ≈ u
-  → Rt u x
-  → Rt t x
-Rt-prepend {a = ι} r uRx
-  = ≈-trans r uRx
-Rt-prepend {a = a ⇒ b} r uRx
-  = λ w uRy → Rt-prepend (cong-app≈ (wkTmPres≈ w r) ≈-refl) (uRx w uRy)
-Rt-prepend {a = □ a} {t = t} {u} {x = bx} r uRbx
-  = λ w e → Rt-prepend (cong-unbox≈ (wkTmPres≈ w r)) (uRbx w e)
+-- prepend a reduction trace to the "trace builder" L
+L-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
+  → (t≈u : t ≈ u)
+  → (uLx : L u x)
+  → L t x
+L-prepend {a = ι}     t≈u uLn
+  = ≈-trans t≈u uLn
+L-prepend {a = a ⇒ b} t≈u uLf
+  = λ w uRy → L-prepend (cong-app≈ (wkTmPres≈ w t≈u) ≈-refl) (uLf w uRy)
+L-prepend {a = □ a}   t≈u uLb
+  = λ w e → L-prepend (cong-unbox≈ (wkTmPres≈ w t≈u)) (uLb w e)
 
--- reduction-free version of Rt-prepend
-Rt-cast : {t u : Tm Γ a} {x y : Tm' Γ a}
-  → t ≡ u
-  → y ≡ x
-  → Rt u x
-  → Rt t y
-Rt-cast p refl uRx = Rt-prepend (≈-reflexive p) uRx
+-- reduction-free version of L-prepend
+L-cast : {t u : Tm Γ a} {x y : Tm' Γ a}
+  → (t≡u : t ≡ u)
+  → (x≡y : x ≡ y)
+  → (uLy : L u y)
+  → L t x
+L-cast refl refl uLy = uLy
 
--- extract reduction trace from Rt
-Rt-build : {t : Tm Γ a} {x : Tm' Γ a}
-  → Rt t x → t ≈ quotTm x
+-- extract reduction trace from L
+L-build : {t : Tm Γ a} {x : Tm' Γ a}
+  → (tLx : L t x) → t ≈ quotTm x
 -- a neutral element is related to its reflection
-Rt-reflect : (n : Ne Γ a)
-  → Rt (embNe n) (reflect a n)
+L-reflect : (n : Ne Γ a)
+  → L (embNe n) (reflect a n)
 
-Rt-build {a = ι}     r
-  = r
-Rt-build {a = a ⇒ b} tRx
-  = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (Rt-build (tRx _ (Rt-reflect (var zero)))))
-Rt-build {a = □ a}  tRx
-  = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (Rt-build (Rt-cast (cong₂ unbox (sym (wkTmPresId _)) refl) refl (tRx idWk new))))
+L-build {a = ι}     tLn
+  = tLn
+L-build {a = a ⇒ b} tLf
+  = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (L-build (tLf _ (L-reflect (var zero)))))
+L-build {a = □ a}   tLb
+  = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (L-build (L-cast (cong1 unbox (sym (wkTmPresId _))) refl (tLb idWk new))))
 
-Rt-reflect {a = ι}     n
+L-reflect {a = ι}     n
   = ≈-refl
-Rt-reflect {a = a ⇒ b} n
-  = λ w y → Rt-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (Rt-build y)) (Rt-reflect _ )
-Rt-reflect {a = □ a}   n
-  = λ w e → Rt-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _))) (Rt-reflect _)
+L-reflect {a = a ⇒ b} n
+  = λ w y → L-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (L-build y)) (L-reflect _ )
+L-reflect {a = □ a}   n
+  = λ w e → L-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _))) (L-reflect _)
 
--- Rt is invariant under weakening
-wkTmPresRt : {t : Tm Γ a} {x : Tm' Γ a}
-  → (w : Γ ⊆ Δ)
-  → Rt t x
-  → Rt (wkTm w t) (wkTm' a w x)
-wkTmPresRt {a = ι}  {x = x}       w tRx
-  = ≈-trans (wkTmPres≈ _ tRx) (≈-reflexive (nat-embNf _ (reify _ x)))
-wkTmPresRt {a = a ⇒ b}            w tRx
-  = λ w' y → Rt-cast (cong₂ app (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') y)
-wkTmPresRt {a = □ a} w tRx
-  = λ w' e → Rt-cast (cong₂ unbox (wkTmPres∙ _ _ _) refl) refl (tRx (w ∙ w') e)
+-- L is invariant under weakening
+wkTmPresL : {t : Tm Γ a} {x : Tm' Γ a}
+  → (w : Γ ⊆ Γ')
+  → (tLx : L t x)
+  → L (wkTm w t) (wkTm' a w x)
+wkTmPresL {a = ι}     {x = x} w tLn
+  = ≈-trans (wkTmPres≈ _ tLn) (≈-reflexive (nat-embNf _ (reify _ x)))
+wkTmPresL {a = a ⇒ b}         w tLf
+  = λ w' y → L-cast (cong1 app (wkTmPres∙ _ _ _)) refl (tLf (w ∙ w') y)
+wkTmPresL {a = □ a}           w tLb
+  = λ w' e → L-cast (cong1 unbox (wkTmPres∙ _ _ _)) refl (tLb (w ∙ w') e)
 
--- Rs is invariant under weakening
-wkSubPresRs : {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-  → (w : Δ ⊆ Δ')
-  → Rs s s'
-  → Rs (wkSub w s) (wkSub' Γ w s')
-wkSubPresRs {Γ = []}     {s = []}      {tt}     w sRs'
+-- Lₛ is invariant under weakening
+wkSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+  → (w : Γ ⊆ Γ')
+  → (sLδ : Lₛ s δ)
+  → Lₛ (wkSub w s) (wkSub' Δ w δ)
+wkSubPresLₛ {Δ = []}       w []
   = []
-wkSubPresRs {Γ = Γ `, _} {s = s `, t} {elem (s' , x)} w (sRs' `, tRx)
-  = wkSubPresRs {Γ = Γ} w sRs' `, wkTmPresRt w tRx
-wkSubPresRs {Γ = Γ #} {s = lock s e} {elem (ΓL , (ΓR , .e) , s')} w (lock x .e)
-  = lock (wkSubPresRs (factorWk e w) x) (factorExt e w)
+wkSubPresLₛ {Δ = _Δ `, _a} w (sLδ `, tLx)
+  = wkSubPresLₛ w sLδ `, wkTmPresL w tLx
+wkSubPresLₛ {Δ = _Δ #}     w (lock sLδ e)
+  = lock (wkSubPresLₛ (factorWk e w) sLδ) (factorExt e w)
 
 -- syntactic identity is related to semantic identity
-idRs : Rs {Γ} idₛ (idₛ' Γ)
-idRs {[]}     = []
-idRs {Γ `, x} = wkSubPresRs fresh idRs `, Rt-reflect (var zero)
-idRs {Γ #}    = lock idRs new
+idLₛ : Lₛ {Δ} idₛ (idₛ' Δ)
+idLₛ {[]}      = []
+idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect (var zero)
+idLₛ {_Δ #}    = lock idLₛ new
 
 -----------------------------
 -- The Fundamental Theorem --
@@ -121,23 +122,20 @@ idRs {Γ #}    = lock idRs new
 
 -- local lemmas for the proof of fundamental theorem
 private
+  substVarPresL : (v : Var Δ a) {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+    → (sLδ : Lₛ s δ)
+    → L (substVar s v) (substVar' v δ)
+  substVarPresL zero     (_ `, tLx)  = tLx
+  substVarPresL (succ v) (sLδ `, _b) = substVarPresL v sLδ
 
-  substVarPresRt : (x : Var Γ a) {s : Sub Δ Γ} {s'  : Sub' Δ Γ}
-    → Rs s s'
-    → Rt (substVar s x) (substVar' x s')
-  substVarPresRt zero     {_ `, x} {elem (_ , x')} (_ `, xRx')
-    = xRx'
-  substVarPresRt (succ x) {s `, _} {elem (s' , _)} (sRs' `, _)
-    = substVarPresRt x sRs'
-
-  beta-lemma : (w : Δ ⊆ Γ')  (s : Sub Δ Γ) (t : Tm (Γ `, a) b) (u : Tm Γ' a)
+  beta-lemma : (w : Γ ⊆ Γ') (s : Sub Γ Δ) (t : Tm (Δ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ≈ substTm (wkSub w s `, u) t
-  beta-lemma w s t u = ≈-trans (≈-reflexive (cong₂ app (cong lam (trans
+  beta-lemma w s t u = ≈-trans (≈-reflexive (cong1 app (cong lam (trans
     (sym (nat-substTm t (keepₛ s) (keep w)))
     (cong (λ p → substTm (p `, var zero) t)
       (trans
-        (wkSubPres∙ (fresh) (keep w) s)
-        (cong₂ wkSub (cong drop (leftIdWk w)) refl))))) refl))
+        (wkSubPres∙ fresh (keep w) s)
+        (cong1 wkSub (cong drop (leftIdWk w)))))))))
     (≈-trans
       (⟶-to-≈ (red-fun _ _))
       (≈-trans
@@ -149,150 +147,153 @@ private
               (≈ₛ-trans (≈ₛ-reflexive (coh-trimSub-wkSub s idₛ w)) (≈ₛ-sym (rightIdSub _))))
             ≈-refl))))
 
-  unboxPresRt : {t : Tm Γ (□ a)} {x : (Tm'- (□ a)) Γ}
-    → (e : CExt Γ' Γ ΓR)
-    → (e' : CExt Γ' Γ ΓR)
-    → Rt t x
-    → Rt (unbox t e) (unbox' {a = a} x e')
-  unboxPresRt {t = t} {bx} e e' r rewrite ExtIsProp e' e
-    = Rt-cast (cong₂ unbox (sym (wkTmPresId t)) refl) refl (r idWk e)
+  lCtxₛ'∼lCtxₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+    → (e : CExt Δ ΔL ΔR)
+    → (sLδ : Lₛ s δ)
+    → lCtxₛ' e δ ≡ lCtxₛ e s
+  lCtxₛ'∼lCtxₛ nil       _sLδ           = refl
+  lCtxₛ'∼lCtxₛ (ext   e) (sLδ `, _a)    = lCtxₛ'∼lCtxₛ e sLδ
+  lCtxₛ'∼lCtxₛ (ext#- e) (lock sLδ _e') = lCtxₛ'∼lCtxₛ e sLδ
+
+  rCtxₛ'∼rCtxₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+    → (e : CExt Δ ΔL ΔR)
+    → (sLδ : Lₛ s δ)
+    → rCtxₛ' e δ ≡ rCtxₛ e s
+  rCtxₛ'∼rCtxₛ nil       _sLδ           = refl
+  rCtxₛ'∼rCtxₛ (ext   e) (sLδ `, _a)    = rCtxₛ'∼rCtxₛ e sLδ
+  rCtxₛ'∼rCtxₛ (ext#- e) (lock sLδ _e') = cong (_,, _) (rCtxₛ'∼rCtxₛ e sLδ)
+
+  factorSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+    → (e : CExt Δ ΔL ΔR)
+    → (sLδ : Lₛ s δ)
+    → Lₛ (factorSubₛ e s) (subst (λ Γ → Sub' Γ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
+  factorSubPresLₛ nil       sLδ            = sLδ
+  factorSubPresLₛ (ext e)   (sLδ `, _a)    = factorSubPresLₛ e sLδ
+  factorSubPresLₛ (ext#- e) (lock sLδ _e') = factorSubPresLₛ e sLδ
+
+  factorExtₛ'∼factorExtₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+    → (e : CExt Δ ΔL ΔR)
+    → (sLδ : Lₛ s δ)
+    → factorExtₛ e s ≡ subst₂ (CExt Γ) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)
+  factorExtₛ'∼factorExtₛ _e _sLδ = ExtIsProp _ _
+
+  module _ (w : Γ ⊆ Γ') (s : Sub Γ Δ) (e : CExt Θ Γ' ΓR') where
+    lockLemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≈ₛ lock (wkSub w s) e
+    lockLemma = ≈ₛ-trans
+      (cong-lock≈ₛ (≈ₛ-sym (rightIdSub _)))
+      (≈ₛ-reflexive
+        (trans
+          (cong2 lock extLeftUnit)
+          (≅-to-≡ (≅-cong (CExt _ _) ,,-leftUnit (lock _) (≡-subst-removable (CExt _ _) _ e)))))
+
+    module _ (t : Tm (Δ #) a) where
+      unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ≈ substTm (lock (wkSub w s) e) t
+      unbox-box-reduces = begin
+        unbox (wkTm w (substTm s (box t))) e
+          ≡⟨⟩
+        unbox (box (wkTm (keep# w) (substTm (lock s new) t))) e
+          ≈⟨ ⟶-to-≈ (red-box _ _) ⟩
+        substTm (lock idₛ e) (wkTm (keep# w) (substTm (lock s new) t))
+          ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
+        substTm (lock idₛ e) (substTm (wkSub (keep# w) (lock s new)) t)
+          ≡⟨ substTmPres∙ _ _ t ⟩
+        substTm ((wkSub (keep# w) (lock s new)) ∙ₛ (lock idₛ e) ) t
+          ≡⟨⟩
+        substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
+          ≈⟨ substTmPres≈ t lockLemma ⟩
+        substTm (lock (wkSub w s) e) t ∎
+        where
+          open import Relation.Binary.Reasoning.Setoid (Tm-setoid Θ a)
+
+  module _ (e : CExt Δ ΔL ΔR) (s : Sub Γ Δ) (δ : Sub' Γ Δ) (sLδ : Lₛ s δ) where
+    remSubstFromIdWk : subst₂ _⊆_ (lCtxₛ'∼lCtxₛ e sLδ) (lCtxₛ'∼lCtxₛ e sLδ) idWk[ lCtxₛ' e δ ] ≡ idWk[ lCtxₛ e s ]
+    remSubstFromIdWk rewrite lCtxₛ'∼lCtxₛ {s = s} {δ} e sLδ = refl
+
+    module _ (t : Tm ΔL (□ a)) where
+      sameEval : eval t _ .apply _ _ ≡ eval t _ .apply _ _
+      sameEval = begin
+        eval t
+          (factorSubₛ' e δ)
+          .apply
+          idWk[ lCtxₛ' e δ ]
+          (-, factorExtₛ' e δ)
+          -- add substs
+          ≅⟨ evalt-cong≅ (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ)
+            (≡-subst-addable _ _ _)
+            (≡-subst₂-addable _ _ _ _)
+            (≡-subst₂-addable _ _ _ _) ⟩
+        eval t
+          (subst (λ Δ₁ → Sub' Δ₁ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
+          .apply
+          (subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sLδ) (lCtxₛ'∼lCtxₛ e sLδ) idWk[ lCtxₛ' e δ ])
+          (-, subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ))
+          -- remove subst₂ from idWk
+          ≡⟨ evalt-cong≡ refl remSubstFromIdWk refl ⟩
+        eval t
+          (subst (λ Δ₁ → Sub' Δ₁ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
+          .apply
+          idWk[ lCtxₛ e s ]
+          (-, subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)) ∎
+        where
+          open ≡-Reasoning
+
+          -- ≅-congruence for `eval t`
+          evalt-cong≅ : {Δ ΔL1 ΔL2 ΔR1 ΔR2 : Ctx}
+            → (_ : ΔL1 ≡ ΔL2)       (_ : ΔR1 ≡ ΔR2)
+            → {s1 : Sub' ΔL1 ΔL}    {s2 : Sub' ΔL2 ΔL}
+            → {w1 : ΔL1 ⊆ ΔL1}      {w2 : ΔL2 ⊆ ΔL2}
+            → {e1 : CExt Δ ΔL1 ΔR1} {e2 : CExt Δ ΔL2 ΔR2} →
+            s1 ≅ s2 →
+            w1 ≅ w2 →
+            e1 ≅ e2 →
+            eval t s1 .apply w1 (-, e1) ≅ eval t s2 .apply w2 (-, e2)
+          evalt-cong≅ refl refl ≅-refl ≅-refl ≅-refl = ≅-refl
+
+          -- ≡-congruence for `eval t`
+          evalt-cong≡ : {Δ ΔL1 ΔR : Ctx}
+            → {s1 s2 : Sub' ΔL1 ΔL}
+            → {w1 w2 : ΔL1 ⊆ ΔL1}
+            → {e1 e2 : CExt Δ ΔL1 ΔR}
+            → s1 ≡ s2
+            → w1 ≡ w2
+            → e1 ≡ e2
+            → eval t s1 .apply w1 (-, e1) ≡ eval t s2 .apply w2 (-, e2)
+          evalt-cong≡ refl refl refl = refl
 
 -- The Fundamental theorem, for terms
 
+Fund : Tm Δ a → Set
+Fund {Δ} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+               → (sLδ : Lₛ s δ)
+               → L (substTm s t) (eval t δ)
 
-Fund : Tm Γ a → (Sub'- Γ →̇ Tm'- a) → Set
-Fund {Γ} t f = ∀ {Δ} {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-    → Rs s s'
-    → Rt (substTm s t) (f s')
-
-lCtxₛ'∼lCtxₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ} → Rs s s' → lCtxₛ' e s' ≡ lCtxₛ e s
-lCtxₛ'∼lCtxₛ nil       sRs'          = refl
-lCtxₛ'∼lCtxₛ (ext e)   (sRs' `, _)   = lCtxₛ'∼lCtxₛ e sRs'
-lCtxₛ'∼lCtxₛ (ext#- e) (lock sRs' _) = lCtxₛ'∼lCtxₛ e sRs'
-
-rCtxₛ'∼rCtxₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ} → Rs s s' →  rCtxₛ' e s' ≡ rCtxₛ e s
-rCtxₛ'∼rCtxₛ nil       sRs'          = refl
-rCtxₛ'∼rCtxₛ (ext e)   (sRs' `, x)   = rCtxₛ'∼rCtxₛ e sRs'
-rCtxₛ'∼rCtxₛ (ext#- e) (lock sRs' _) = cong (_,, _) (rCtxₛ'∼rCtxₛ e sRs')
-
-factorSubPresRs : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-    → (sRs' : Rs s s')
-    → Rs (factorSubₛ e s) (subst (λ ΔL → Sub' ΔL ΓL) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
-factorSubPresRs nil       sRs'          = sRs'
-factorSubPresRs (ext e)   (sRs' `, _)   = factorSubPresRs e sRs'
-factorSubPresRs (ext#- e) (lock sRs' _) = factorSubPresRs e sRs'
-
-factorExtₛ'∼factorExtₛ : (e : CExt Γ ΓL ΓR) {s : Sub Δ Γ} {s' : Sub' Δ Γ}
-  → (sRs' : Rs s s')
-  → factorExtₛ e s ≡ subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')
-factorExtₛ'∼factorExtₛ _ _ = ExtIsProp _ _
-
-fund : (t : Tm Γ a) → Fund t (eval t)
-fund (var x)     {s = s} {s'} sRs'
-  = substVarPresRt x sRs'
-fund (lam t)     {s = s} {s'} sRs' {u = u}
-  = λ w uRx → Rt-prepend (beta-lemma w s t u)
-  (fund t {s = wkSub w s `, u} (wkSubPresRs w sRs' `, uRx))
-fund (app t u)   {s = s} {s'} sRs'
-  = Rt-cast
-      (cong₂ app (sym (wkTmPresId _)) refl)
+fund : (t : Tm Γ a) → Fund t
+fund (var v)                       sLδ
+  = substVarPresL v sLδ
+fund (lam t)           {_Γ} {s} sLδ {_Γ'} {u}
+  = λ w uLx → L-prepend (beta-lemma w s t u)
+      (fund t {s = wkSub w s `, u} (wkSubPresLₛ w sLδ `, uLx))
+fund (app t u)                     sLδ
+  = L-cast
+      (cong1 app (sym (wkTmPresId _)))
       refl
-      (fund t sRs' idWk (fund u sRs'))
-fund {Γ = Γ} (box {a = a} t)    {s = s} {s'} sRs' {Γ = Γ'} {ΓR = ΓR} w e
-  = Rt-prepend unbox-box-reduces (fund t (lock (wkSubPresRs w sRs') e))
-  where
-  --
-  lockLemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≈ₛ lock (wkSub w s) e
-  lockLemma = ≈ₛ-trans
-    (cong-lock≈ₛ (≈ₛ-sym (rightIdSub _)))
-    (≈ₛ-reflexive
-      (trans
-        (cong₂ lock refl extLeftUnit)
-        (≅-to-≡ (≅-cong (CExt _ _) ,,-leftUnit (lock _) (≡-subst-removable (CExt _ _) _ e)))))
-  --
-  unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ≈ substTm (lock (wkSub w s) e) t
-  unbox-box-reduces = begin
-    unbox (wkTm w (substTm s (box t))) e
-      ≡⟨⟩
-    unbox (box (wkTm (keep# w) (substTm (lock s new) t))) e
-      ≈⟨ ⟶-to-≈ (red-box _ _) ⟩
-    substTm (lock idₛ e) (wkTm (keep# w) (substTm (lock s new) t))
-      ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
-    substTm (lock idₛ e) (substTm (wkSub (keep# w) (lock s new)) t)
-      ≡⟨ substTmPres∙ _ _ t ⟩
-    substTm ((wkSub (keep# w) (lock s new)) ∙ₛ (lock idₛ e) ) t
-      ≡⟨⟩
-    substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
-      ≈⟨ substTmPres≈ t lockLemma ⟩
-    substTm (lock (wkSub w s) e) t ∎
-    where
-    open import Relation.Binary.Reasoning.Setoid (Tm-setoid Γ' a)
-
-fund (unbox {ΓL = ΓL} t e) {s = s} {s'} sRs'
-  = Rt-cast
-      (cong₂ unbox (sym (wkTmPresId _)) (factorExtₛ'∼factorExtₛ e sRs'))
-      sameEval
+      (fund t sLδ idWk (fund u sLδ))
+fund (box t)          {_Γ} {s}     sLδ
+  = λ w e → L-prepend (unbox-box-reduces w s e t) (fund t (lock (wkSubPresLₛ w sLδ) e))
+fund (unbox {ΔL} t e) {_Γ} {s} {δ} sLδ
+  = L-cast
+      (cong₂ unbox (sym (wkTmPresId _)) (factorExtₛ'∼factorExtₛ e sLδ))
+      (sameEval e s δ sLδ t)
       (fund t
         {s = factorSubₛ e s}
-        {s' = subst (λ Δ → Sub' Δ ΓL) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s')}
-        (factorSubPresRs e sRs')
+        {δ = subst (λ Δ → Sub' Δ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ)}
+        (factorSubPresLₛ e sLδ)
         idWk[ lCtxₛ e s ]
-        (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')))
-    where
-    --
-    sameEval : eval t _ .apply _ _ ≡ eval t _ .apply _ _
-    sameEval = begin
-      eval t
-        (factorSubₛ' e s')
-        .apply
-        idWk[ lCtxₛ' e s' ]
-        (-, factorExtₛ' e s')
-        -- add substs
-        ≅⟨ evalt-cong≅ (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs')
-          (≡-subst-addable _ _ _)
-          (≡-subst₂-addable _ _ _ _)
-          (≡-subst₂-addable _ _ _ _) ⟩
-      eval t
-        (subst (λ Δ₁ → Sub' Δ₁ ΓL) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
-        .apply
-        (subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sRs') (lCtxₛ'∼lCtxₛ e sRs') idWk[ lCtxₛ' e s' ])
-        (-, subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s'))
-        -- remove subst₂ from idWk
-        ≡⟨ evalt-cong≡ refl remSubstFromIdWk refl ⟩
-      eval t
-        (subst (λ Δ₁ → Sub' Δ₁ ΓL) (lCtxₛ'∼lCtxₛ e sRs') (factorSubₛ' e s'))
-        .apply
-        idWk[ lCtxₛ e s ]
-        (-, subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sRs') (rCtxₛ'∼rCtxₛ e sRs') (factorExtₛ' e s')) ∎
-      where
-      open ≡-Reasoning
-      --
-      remSubstFromIdWk : subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sRs') (lCtxₛ'∼lCtxₛ e sRs') idWk[ lCtxₛ' e s' ] ≡ idWk[ lCtxₛ e s ]
-      remSubstFromIdWk rewrite lCtxₛ'∼lCtxₛ e {s} {s'} sRs' = refl
-      -- ≅-congruence for `eval t`
-      evalt-cong≅ :  {ΔL1 ΔL2 ΔR1 ΔR2 : Ctx} →
-        ΔL1 ≡ ΔL2 → ΔR1 ≡ ΔR2 →
-        {s1 : Sub' ΔL1 ΓL} {s2 : Sub' ΔL2 ΓL}
-        {w1 : ΔL1 ⊆ ΔL1} {w2 : ΔL2 ⊆ ΔL2}
-        {e1 : CExt Δ ΔL1 ΔR1} {e2 : CExt Δ ΔL2 ΔR2} →
-        s1 ≅ s2 →
-        w1 ≅ w2 →
-        e1 ≅ e2 →
-        eval t s1 .apply w1 (-, e1) ≅ eval t s2 .apply w2 (-, e2)
-      evalt-cong≅ refl refl ≅-refl ≅-refl ≅-refl = ≅-refl
-      -- ≡-congruence for `eval t`
-      evalt-cong≡ :  {ΔL ΔR : Ctx} →
-        {s1 s2 : Sub' ΔL ΓL} {w1 w2 : ΔL ⊆ ΔL}
-        {e1 e2 : CExt Δ ΔL ΔR} →
-        s1 ≡ s2 →
-        w1 ≡ w2 →
-        e1 ≡ e2 →
-        eval t s1 .apply w1 (-, e1) ≡ eval t s2 .apply w2 (-, e2)
-      evalt-cong≡ refl refl refl = refl
+        (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)))
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ≈ embNf (norm t)
-trace {Γ} t = Rt-build (Rt-prepend (substTmPresId t) (fund t {s = idₛ} {s' = idₛ' Γ} idRs))
+trace t = L-build (L-prepend (substTmPresId t) (fund t idLₛ))
 
 norm-sound : norm t ≡ norm u → t ≈ u
 norm-sound {t = t} {u} t'≡u' = ≈-trans (trace t) (≡-≈-trans˘ (cong embNf t'≡u') (trace u))

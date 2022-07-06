@@ -62,10 +62,8 @@ leftWkTm (box t)     = box (leftWkTm t)
 leftWkTm (unbox t e) = unbox (leftWkTm t) (leftWkLFExt e)
 
 -- extension that "generates a new context frame"
-new : LFExt (Γ #) (Γ #) [] -- Γ R Γ #
-new = nil
-
-new[_] = λ Γ → new {Γ}
+pattern new      = nil
+pattern new[_] Γ = nil {Γ}
 
 open Substitution Tm var wkTm (λ Γ ΓL ΓR → LFExt Γ (ΓL #) ΓR) new (λ {Δ' = Δ'} _e _w → ←# Δ') sliceLeft (λ {Δ' = Δ'} _e _w → #→ Δ') wkLFExt public
   renaming (module Composition to SubstitutionComposition)

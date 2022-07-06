@@ -86,7 +86,7 @@ Ctx-Decidable (Γ #)   (Δ #)     with Ctx-Decidable Γ Δ
 ... | yes Γ≡Δ                   = yes (cong _# Γ≡Δ)
 ... | no  ¬Γ≡Δ                  = no  λ { refl → ¬Γ≡Δ refl }
 
-open Decidable⇒K Ctx-Decidable using () renaming (K to Ctx-K) public
+open Decidable⇒K Ctx-Decidable using () renaming (K to Ctx-K ; ≡-irrelevant to Ctx-irrelevant) public
 
 -------------
 -- Weakenings
@@ -113,9 +113,8 @@ data _⊆_  : Ctx → Ctx → Set where
 
 -}
 
-drop[_] = λ {Γ} {Δ} a → drop {Γ} {Δ} {a}
-
-keep[_] = λ {Γ} {Δ} a → keep {Γ} {Δ} {a}
+pattern drop[_] a w = drop {a = a} w
+pattern keep[_] a w = keep {a = a} w
 
 variable
   w w' w'' : Γ ⊆ Γ'
@@ -249,9 +248,8 @@ data Ext (θ : Flag) : Ctx → Ctx → Ctx → Set where
   ext  : (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ `, a) ΓL (ΓR `, a)
   ext# : WL θ → (e : Ext θ Γ ΓL ΓR) → Ext θ (Γ #) ΓL (ΓR #)
 
-nil[_] = λ {θ} Γ → nil {θ} {Γ}
-
-ext[_] = λ {θ} {Γ} {ΓL} {ΓR} a → ext {θ} {Γ} {ΓL} {ΓR} {a}
+pattern nil[_] Γ   = nil {Γ = Γ}
+pattern ext[_] a w = ext {a = a} w
 
 -- Lock-free context extension (w/o locks, Ext flag set to ff)
 --
@@ -391,6 +389,9 @@ private
 extRUniq : Ext θ Γ ΓL ΓR → Ext θ Γ ΓL ΓR' → ΓR ≡ ΓR'
 extRUniq e e' = ,,-injective-right (trans (sym (extIs,, e)) (extIs,, e'))
 
+extRUniq′ : ΓL ≡ ΓL' → Ext θ Γ ΓL ΓR → Ext θ Γ ΓL' ΓR' → ΓR ≡ ΓR'
+extRUniq′ refl = extRUniq
+
 ExtIsProp′ : (e : Ext θ Γ ΓL ΓR) → (e' : Ext θ Γ ΓL ΓR') → subst (Ext θ Γ ΓL) (extRUniq e e') e ≡ e'
 ExtIsProp′ _ _ = ExtIsProp _ _
 
@@ -430,6 +431,8 @@ extRAssoc el nil         = el
 extRAssoc el (ext er)    = ext (extRAssoc el er)
 extRAssoc el (ext# x er) = ext# x (extRAssoc el er)
 
+_∙Ext_ = extRAssoc
+
 ,,-assoc : (ΓLL ,, ΓLR) ,, ΓR ≡ ΓLL ,, (ΓLR ,, ΓR)
 ,,-assoc {ΓLL} {ΓLR} {ΓR} = extIs,, {θ = tt} {ΓR = ΓLR ,, ΓR} (extRAssoc {ΓLR = ΓLR} ,,IsExt ,,IsExt)
 
@@ -446,10 +449,10 @@ extLeftUnit = ExtIsProp _ _
 -------------------------------------
 
 -- weaken the extension of a context
-wkLFExt : (e : LFExt Γ (ΓL #) ΓR) → Γ ⊆ Γ' → LFExt Γ' ((←# Γ') #) (#→ Γ')
-wkLFExt e       (drop w)  = ext (wkLFExt e w)
+wkLFExt : (e : LFExt Γ (ΓL #) ΓR) → (w : Γ ⊆ Γ') → LFExt Γ' ((←# Γ') #) (#→ Γ')
+wkLFExt e       (drop  w) = ext (wkLFExt e w)
 wkLFExt nil     (keep# w) = nil
-wkLFExt (ext e) (keep w)  = ext (wkLFExt e w)
+wkLFExt (ext e) (keep  w) = ext (wkLFExt e w)
 
 -- left weaken the (lock-free) extension of a context
 leftWkLFExt : (e : LFExt Γ ΓL ΓR) → LFExt (Δ ,, Γ) (Δ ,, ΓL) ΓR
@@ -464,24 +467,30 @@ leftUnwkLFExt {Δ} {Γ} {ΓL} {ΓR} e = subst (λ Γ → LFExt Γ ΓL ΓR) obs (
     obs = ,,-injective-right (sym (extIs,, (extRAssoc ,,IsExt (upLFExt e))))
 
 -- slice a weakening to the left of a lock
-sliceLeft : (e : LFExt Γ (ΓL #) ΓR) → Γ ⊆ Γ' → ΓL ⊆ (←# Γ')
-sliceLeft e       (drop w)  = sliceLeft e w
+sliceLeft : (e : LFExt Γ (ΓL #) ΓR) → (w : Γ ⊆ Γ') → ΓL ⊆ ←# Γ'
+sliceLeft e       (drop  w) = sliceLeft e w
+sliceLeft (ext e) (keep  w) = sliceLeft e w
 sliceLeft nil     (keep# w) = w
-sliceLeft (ext e) (keep w)  = sliceLeft e w
 
 -- slice a weakening to the right of a lock
-sliceRight : (e : LFExt Γ (ΓL #) ΓR) → Γ ⊆ Γ' → (←# Γ') # ⊆ Γ'
+sliceRight : (e : LFExt Γ (ΓL #) ΓR) → (w : Γ ⊆ Γ') → ←# Γ' # ⊆ Γ'
 sliceRight e w = LFExtToWk (wkLFExt e w)
 
--- the operation ←# returns the context to the left of #
-←#IsPre# : LFExt Γ (ΓL #) ΓR → ΓL ≡ (←# Γ)
+-- the operation ←# returns the context to the left of # so applying
+-- it to a lock-free extension does not change the result; special
+-- case: if LFExt Γ (ΓL #) ΓR then ←# Γ ≡ ΓL
+←#IsPre# : (e : LFExt Γ ΓL ΓR) → ←# ΓL ≡ ←# Γ
 ←#IsPre# nil     = refl
 ←#IsPre# (ext e) = ←#IsPre# e
 
 -- the operation #→ returns the context to the right of #
-#→isPost# : LFExt Γ (ΓL #) ΓR → ΓR ≡ (#→ Γ)
-#→isPost# nil     = refl
-#→isPost# (ext e) = cong (_`, _) (#→isPost# e)
+private
+  #→IsPost#' : (e : LFExt Γ ΓL ΓR) → #→ ΓL ,, ΓR ≡ #→ Γ
+  #→IsPost#' nil     = refl
+  #→IsPost#' (ext e) = cong (_`, _) (#→IsPost#' e)
+
+#→IsPost# : (e : LFExt Γ (ΓL #) ΓR) → ΓR ≡ #→ Γ
+#→IsPost# {Γ} e = subst (_≡ #→ Γ) ,,-leftUnit (#→IsPost#' e)
 
 LFExtToWkPresTrans : (e : LFExt ΓL ΓLL ΓLR) (e' : LFExt Γ ΓL ΓR)
   → LFExtToWk (extRAssoc e e') ≡ LFExtToWk e ∙ LFExtToWk e'
@@ -492,20 +501,20 @@ LFExtToWkPresTrans e (ext e') = cong drop (LFExtToWkPresTrans e e')
 -- Slicing laws for lock-free extensions
 ----------------------------------------
 
-wkLFExtPres∙ : (w' : Γ' ⊆ Δ) (w  : Γ ⊆ Γ') (e : LFExt Γ (ΓL #) ΓR)
+wkLFExtPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (e : LFExt Γ (ΓL #) ΓR)
   → wkLFExt (wkLFExt e w) w' ≡ wkLFExt e (w ∙ w')
 wkLFExtPres∙ _ _ _ = ExtIsProp _ _
 
-sliceLeftPres∙ : (w' : Γ' ⊆ Δ) (w  : Γ ⊆ Γ') (e : LFExt Γ (ΓL #) ΓR)
+sliceLeftPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (e : LFExt Γ (ΓL #) ΓR)
   → (sliceLeft e w ∙ sliceLeft (wkLFExt e w) w') ≡ sliceLeft e (w ∙ w')
-sliceLeftPres∙ (drop w')  (drop w)  nil     = sliceLeftPres∙ w' (drop w) nil
-sliceLeftPres∙ (drop w')  (drop w)  (ext e) = sliceLeftPres∙ w' (drop w) (ext e)
-sliceLeftPres∙ (keep w')  (drop w)  nil     = sliceLeftPres∙ w' w nil
-sliceLeftPres∙ (keep w')  (drop w)  (ext e) = sliceLeftPres∙ w' w (ext e)
-sliceLeftPres∙ (drop w')  (keep w)  (ext e) = sliceLeftPres∙ w' (keep w) (ext e)
-sliceLeftPres∙ (keep w')  (keep w)  (ext e) = sliceLeftPres∙ w' w e
-sliceLeftPres∙ (drop w')  (keep# w) nil     = sliceLeftPres∙ w' (keep# w) nil
-sliceLeftPres∙ (keep# w') (keep# w) nil     = refl
+sliceLeftPres∙ (drop  w) (drop  w') nil     = sliceLeftPres∙ (drop  w) w' nil
+sliceLeftPres∙ (drop  w) (drop  w') (ext e) = sliceLeftPres∙ (drop  w) w' (ext e)
+sliceLeftPres∙ (drop  w) (keep  w') nil     = sliceLeftPres∙ w         w' nil
+sliceLeftPres∙ (drop  w) (keep  w') (ext e) = sliceLeftPres∙ w         w' (ext e)
+sliceLeftPres∙ (keep  w) (drop  w') (ext e) = sliceLeftPres∙ (keep  w) w' (ext e)
+sliceLeftPres∙ (keep  w) (keep  w') (ext e) = sliceLeftPres∙ w         w' e
+sliceLeftPres∙ (keep# w) (drop  w') nil     = sliceLeftPres∙ (keep# w) w' nil
+sliceLeftPres∙ (keep# w) (keep# w') nil     = refl
 
 -- roughly, slicing a weakening into two weakenings, one to left of the lock,
 -- and the other to right, must not change its composition.
@@ -517,19 +526,30 @@ slicingLemma (keep w)  (ext e) = cong drop (slicingLemma w e)
 slicingLemma (keep# w) nil     = cong keep# (trans (leftIdWk w) (sym (rightIdWk w)))
 
 private
-  sliceLeftId' : (e : LFExt Γ ΓL ΓR) → (pl : ΓL ≡ ←# Γ #) → (pr : ΓR ≡ #→ Γ) → sliceLeft (subst₂ (LFExt Γ) pl pr e) idWk ≡ idWk
-  sliceLeftId' {Γ = _Γ #}    nil      pl   pr with Ctx-K pl
-  ... | refl with Ctx-K pr
-  ... | refl = refl
-  sliceLeftId' {Γ = _Γ `, _a} (ext e) refl pr with `,-injective-left pr
-  ... | refl with Ctx-K pr
-  ... | refl = sliceLeftId' e refl refl
+  sliceLeftId' : (e : LFExt Γ (ΓL #) ΓR)
+    → sliceLeft e idWk[ Γ ] ≡ subst (ΓL ⊆_) (←#IsPre# e) idWk[ ΓL ]
+  sliceLeftId' {Γ = _Γ #}     nil     = refl
+  sliceLeftId' {Γ = _Γ `, _a} (ext e) = sliceLeftId' e
 
-sliceLeftId : (e : LFExt Γ (←# Γ #) (#→ Γ)) → sliceLeft e idWk ≡ idWk
-sliceLeftId e = sliceLeftId' e refl refl
+  sliceLeftDrop' : (e : LFExt Γ (ΓL #) ΓR) → (w : LFExt Γ' Γ ΓR')
+    → sliceLeft e (LFExtToWk w) ≡ subst (ΓL ⊆_) (←#IsPre# (e ∙Ext w)) idWk[ ΓL ]
+  sliceLeftDrop' e         nil     = sliceLeftId'   e
+  sliceLeftDrop' e@nil     (ext w) = sliceLeftDrop' e w
+  sliceLeftDrop' e@(ext _) (ext w) = sliceLeftDrop' e w
 
-wkLFExtPresId :  (e : LFExt Γ (←# Γ #) (#→ Γ)) → wkLFExt e idWk ≡ e
-wkLFExtPresId _ = ExtIsProp _ _
+sliceLeftDrop : (e : LFExt Γ (←# Γ #) ΓR) → (w : LFExt Γ' Γ ΓR')
+  → sliceLeft e (LFExtToWk w) ≡ subst (←# Γ ⊆_) (←#IsPre# w) idWk[ ←# Γ ]
+sliceLeftDrop e w rewrite Ctx-irrelevant (←#IsPre# w) (←#IsPre# (e ∙Ext w)) = sliceLeftDrop' e w
+
+sliceLeftId : (e : LFExt Γ (←# Γ #) ΓR) → sliceLeft e idWk[ Γ ] ≡ idWk[ ←# Γ ]
+sliceLeftId e = sliceLeftDrop e nil
+
+wkLFExtDrop : (e : LFExt Γ (←# Γ #) (#→ Γ)) → (w : LFExt Γ' Γ ΓR)
+  → wkLFExt e (LFExtToWk w) ≡ subst₂ (λ ΓL ΓR → LFExt Γ' (ΓL #) ΓR) (←#IsPre# w) (#→IsPost#' w) (e ∙Ext w)
+wkLFExtDrop _e _w = ExtIsProp _ _
+
+wkLFExtPresId : (e : LFExt Γ (←# Γ #) (#→ Γ)) → wkLFExt e idWk ≡ e
+wkLFExtPresId e = wkLFExtDrop e nil
 
 sliceRightId : (e : LFExt Γ (←# Γ #) (#→ Γ)) → sliceRight e idWk ≡ LFExtToWk e
 sliceRightId e rewrite wkLFExtPresId e = refl

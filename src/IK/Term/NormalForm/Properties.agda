@@ -10,9 +10,9 @@ open import IK.Term.NormalForm.Base
 wkNePresId : (n : Ne Γ a) → wkNe idWk n ≡ n
 wkNfPresId : (n : Nf Γ a) → wkNf idWk n ≡ n
 
-wkNePresId (var x)     = cong var (wkVarPresId x)
-wkNePresId (app n m)   = cong₂ app (wkNePresId n) (wkNfPresId m)
-wkNePresId (unbox n e) with ←#IsPre# e | #→isPost# e
+wkNePresId (var   v)   = cong  var (wkVarPresId v)
+wkNePresId (app   n m) = cong₂ app (wkNePresId  n) (wkNfPresId m)
+wkNePresId (unbox n e) with ←#IsPre# e | #→IsPost# e
 ... | refl | refl = cong₂ unbox
   (trans (cong₂ wkNe (sliceLeftId e) refl) (wkNePresId n))
   (wkLFExtPresId e)
@@ -26,10 +26,10 @@ wkNePres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (n : Ne Γ a)
 wkNfPres∙ : (w : Γ ⊆ Γ') (w' : Γ' ⊆ Δ) (n : Nf Γ a)
   → wkNf w' (wkNf w n) ≡ wkNf (w ∙ w') n
 
-wkNePres∙ w w' (var x)     = cong var (wkVarPres∙ w w' x)
-wkNePres∙ w w' (app n m)   = cong₂ app (wkNePres∙ w w' n) (wkNfPres∙ w w' m)
+wkNePres∙ w w' (var   v)   = cong  var (wkVarPres∙ w w' v)
+wkNePres∙ w w' (app   n m) = cong₂ app (wkNePres∙  w w' n) (wkNfPres∙ w w' m)
 wkNePres∙ w w' (unbox n e) = cong₂ unbox
-  (trans (wkNePres∙ _ _ _) (cong₂ wkNe (sliceLeftPres∙ w' w e) refl)) (wkLFExtPres∙ w' w e)
+  (trans (wkNePres∙ _ _ _) (cong₂ wkNe (sliceLeftPres∙ w w' e) refl)) (wkLFExtPres∙ w w' e)
 
 wkNfPres∙ w w' (up  n) = cong up  (wkNePres∙ w w' n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep w) (keep w') n)

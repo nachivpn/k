@@ -10,7 +10,7 @@ Fitch-style modal lambda calculi feature necessity modalities in a typed lambda 
     ICFP 2022 (to appear)    
     Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas
   
-* Semantic Analysis of Normalization by Evaluation for Fitch-Style Modal Calculi (extended abstract) ([pdf](https://nachivpn.me/types21.pdf))    
+* Semantic Analysis of Normalization by Evaluation for Fitch-Style Modal Calculi (extended abstract) ([pdf](https://nachivpn.me/types21.pdf), [video](https://www.youtube.com/watch?v=2OJBBWLYTQA))    
     [TYPES 2021](https://types21.liacs.nl/)        
     Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas
 

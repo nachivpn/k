@@ -29,8 +29,8 @@ _≋_ {Γ} {a = a ⇒ b}  f       g
   = {Γ' : Ctx} (w : Γ ⊆ Γ') → {x y : Tm' Γ' a}
     → Psh x → Psh y
     → x ≋ y → f w x ≋ g w y
-_≋_ {Γ} {a = □ a}    (box x) (box y)
-  = x ≋ y
+_≋_ {Γ} {a = □ a}    b       c
+  = let box' x = b ; box' y = c in x ≋ y
 
 -- soundness relation on semantic substitutions
 data _≋ₛ_ : Sub' Γ Δ → Sub' Γ Δ → Set where
@@ -48,24 +48,24 @@ data _≋ₛ_ : Sub' Γ Δ → Sub' Γ Δ → Set where
 -- ≋ is symmetric
 sym-≋ : {x y : Tm' Γ a}
       → x ≋ y → y ≋ x
-sym-≋ {a = ι}     x≡y
-  = sym x≡y
-sym-≋ {a = a ⇒ b} x≋y
-  = λ w px' py' x'≋y' → sym-≋ {a = b} (x≋y w py' px' (sym-≋ {a = a} x'≋y'))
-sym-≋ {a = □ a} {box x} {box y} x≋y
-  = sym-≋ {a = a} x≋y
+sym-≋ {a = ι}     n≡m
+  = sym n≡m
+sym-≋ {a = a ⇒ b} f≋g
+  = λ w px' py' x'≋y' → sym-≋ {a = b} (f≋g w py' px' (sym-≋ {a = a} x'≋y'))
+sym-≋ {a = □ a}   b≋c
+  = sym-≋ {a = a} b≋c
 
 -- ≋ is transitive
 trans-≋ : {x y z : Tm' Γ a}
   → x ≋ y → y ≋ z → x ≋ z
-trans-≋ {a = ι}     x≡y y≡z
-  = trans x≡y y≡z
-trans-≋ {a = a ⇒ b} {x} {y} {z} x≋y y≋z w {x = x'} {y = y'} px' py' x'≋y'
+trans-≋ {a = ι}                 n≡m m≡o
+  = trans n≡m m≡o
+trans-≋ {a = a ⇒ b} {f} {g} {h} f≋g g≋h w {x = x} {y = y} px py x≋y
   = trans-≋ {a = b}
-      (x≋y w px' py' x'≋y')
-      (y≋z w py' py' ((trans-≋ {a = a} (sym-≋ {a = a} x'≋y') x'≋y')))
-trans-≋ {a = □ a} {box x} {box y} {box z} x≋y y≋z
-  = trans-≋ {x = x} x≋y y≋z
+      (f≋g w px py x≋y)
+      (g≋h w py py ((trans-≋ {a = a} (sym-≋ {a = a} x≋y) x≋y)))
+trans-≋ {a = □ a}               b≋c c≋d
+  = trans-≋ {a = a} b≋c c≋d
 
 -- WTH should this thing be called?
 pseudo-refl-≋ : {x y : Tm' Γ a}
@@ -102,12 +102,12 @@ wkTm'Pres≋ : {x : Tm' Γ a} {y : Tm' Γ a}
   → (w : Γ ⊆ Δ)
   → x ≋ y
   → wkTm' w x ≋ wkTm' w y
-wkTm'Pres≋ {a = ι}                           w x≡y
-  = cong (wkNf w) x≡y
-wkTm'Pres≋ {a = a ⇒ b} {x = f} {y = g}       w f≋g
+wkTm'Pres≋ {a = ι}                     w n≡m
+  = cong (wkNf w) n≡m
+wkTm'Pres≋ {a = a ⇒ b} {x = f} {y = g} w f≋g
   = λ w' px py x≋y → f≋g (w ∙ w') px py x≋y
-wkTm'Pres≋ {a = □ a} {x = box x} {y = box y} w x≋y
-  = wkTm'Pres≋ {a = a} (keep# w) x≋y
+wkTm'Pres≋ {a = □ a}                   w b≋c
+  = wkTm'Pres≋ {a = a} (keep# w) b≋c
 
 -- wkSub' preserves the relation _≋_
 wkSub'Pres≋ : {s s' : Sub' Γ Δ}
@@ -135,12 +135,12 @@ private
   substVar'Pres≋ (succ x) {s = s , _} {s' = s' , _} (s≋s' `, _)
     = substVar'Pres≋ x s≋s'
 
-  unbox'Pres≋ : {x y : Box (Tm'- a) Γ}
+  unbox'Pres≋ : {b c : Box (Tm'- a) Γ}
     → (e : LFExt Γ' (Γ #) ΓR)
-    → x ≋ y
-    → unbox' x e ≋ unbox' y e
-  unbox'Pres≋ {a = a} {x = box x} {y = box y} e x≋y
-    = wkTm'Pres≋ {a = a} (LFExtToWk e) x≋y
+    → b ≋ c
+    → unbox' b e ≋ unbox' c e
+  unbox'Pres≋ {a = a} e b≋c
+    = wkTm'Pres≋ {a = a} (LFExtToWk e) b≋c
 
 --
 fund :  (t : Tm Γ a) {s s' : Sub' Δ Γ}
@@ -158,7 +158,7 @@ fund (app t u) {s = s} {s' = s'} ps ps' s≋s'
 fund (box t) ps ps' s≋s'
   = fund t ps ps' (lock s≋s' nil)
 fund (unbox t nil) {s = lock s e} {s' = lock s' .e} ps ps' (lock s≋s' .e)
-  = unbox'Pres≋ {x = eval t s} e (fund t ps ps' s≋s')
+  = unbox'Pres≋ {b = eval t s} e (fund t ps ps' s≋s')
 fund (unbox t (ext e)) (ps , _) (ps' , _) (s≋s' `, _)
   = fund (unbox t e) ps ps' s≋s'
 
@@ -221,7 +221,7 @@ coh-substTm-evalₛ (unbox t (ext e)) (s₀ `, _) ps ps' s≋s'
 coh-substTm-evalₛ (unbox t nil) (lock s₀ (ext e)) (ps , _) (ps' , _) (s≋s' `, _)
   = coh-substTm-evalₛ (unbox t nil) (lock s₀ e) ps ps' s≋s'
 coh-substTm-evalₛ (unbox t nil) (lock s₀ nil) {s = lock s e} {s' = lock s' e'} ps ps' (lock s≋s' e')
-  = unbox'Pres≋ {x = eval t (evalₛ s₀ s')} e' (coh-substTm-evalₛ t s₀ ps ps' s≋s')
+  = unbox'Pres≋ {b = eval t (evalₛ s₀ s')} e' (coh-substTm-evalₛ t s₀ ps ps' s≋s')
 
 private
   lemma1 : {t : Tm (ΓL #) a} (e : LFExt Γ (ΓL #) ΓR) {s s' : Sub' Δ Γ}
@@ -250,11 +250,11 @@ private
   lemma1 {t = t} (ext e) (s  , _) (s' , _) (s≋s' `, _)
     = lemma1 {t = t} e s s' s≋s'
 
-  lemma2 : {x y : Tm' Γ (□ a)}
-    → x ≋ y
-    → x ≋ box (unbox' y nil)
-  lemma2 {x = box x} {box y} x≋y rewrite wkTm'PresId y
-      = x≋y
+  lemma2 : {b c : Tm' Γ (□ a)}
+    → b ≋ c
+    → b ≋ box' (unbox' c new)
+  lemma2 {c = c} b≋c rewrite let box' y = c in wkTm'PresId y
+      = b≋c
 
 -- soundness of evaluation wrt single-step reduction
 eval-sound-red : {t t' : Tm Γ a} {s s' : Sub' Δ Γ}
@@ -287,7 +287,7 @@ eval-sound-red {t = unbox (box t) e} {s = s} {s' = s'} red-box ps ps' s≋s'
   rewrite coh-trimSub'-wkTm (LFExtToWk e) s' t
   = lemma1 {t = t} e ps ps' s≋s'
 eval-sound-red {t = t} {s = s} {s'} exp-box ps ps' s≋s'
-  = lemma2 {x = eval t s} (fund t ps ps' s≋s')
+  = lemma2 {b = eval t s} (fund t ps ps' s≋s')
 eval-sound-red {t = t} {s = s} {s'} (cong-lam r) ps ps' s≋s' w {x = x} px py x≋y
   = eval-sound-red r
       (wkSub'PresPsh w s ps , px)
@@ -304,7 +304,7 @@ eval-sound-red {t = app t u} {t' = app t' u'} {s = s} {s' = s'} (cong-app2 r) ps
 eval-sound-red (cong-box r) ps ps' s≋s'
   = eval-sound-red r ps ps' (lock s≋s' nil)
 eval-sound-red {s = lock s e} {s' = lock s' .e} (cong-unbox {t = t} {e = nil} r) ps ps' (lock s≋s' e)
-  = unbox'Pres≋ {x = eval t s} e (eval-sound-red r ps ps' s≋s')
+  = unbox'Pres≋ {b = eval t s} e (eval-sound-red r ps ps' s≋s')
 eval-sound-red {s = s , _} {s' = s' , _} (cong-unbox {t = t} {e = ext e} r) (ps , _) (ps' , _) (s≋s' `, _)
   = eval-sound-red (cong-unbox {e = e} r) ps ps' s≋s'
 
@@ -339,13 +339,13 @@ unique-reify : {x y : Tm' Γ a}
 sound-reflect : {n n' : Ne Γ a}
   → n ≡ n' → reflect n ≋ reflect n'
 
-unique-reify {a = ι}      x≡y = x≡y
-unique-reify {a = a ⇒ b}  x≋y = cong lam
+unique-reify {a = ι}     n≡m = n≡m
+unique-reify {a = a ⇒ b} f≋g = cong lam
   (unique-reify
-    (x≋y fresh (psh-reflect {a = a} (var zero)) (psh-reflect {a = a} (var zero))
+    (f≋g fresh (psh-reflect {a = a} (var zero)) (psh-reflect {a = a} (var zero))
     (sound-reflect {a = a} refl)))
-unique-reify {a = □ a} {box x} {box y} x≋y
-  = cong box (unique-reify x≋y)
+unique-reify {a = □ a}   b≋c
+  = cong box (unique-reify b≋c)
 
 sound-reflect {a = ι}      n≡n'
   = cong up n≡n'

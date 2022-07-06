@@ -25,13 +25,13 @@ quotTm x = embNf (reify x)
 -----------------------
 
 L : (t : Tm Γ a) → (x : Tm' Γ a) → Set
-L {a = ι}         t n       =
+L {a = ι}         t n =
   t ⟶* quotTm n
-L {Γ} {a = a ⇒ b} t f       =
+L {Γ} {a = a ⇒ b} t f =
   ∀ {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (w : Γ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f w x)
-L {a = □ a}       t (box x) =
-  ∃ λ u → L u x × t ⟶* box u
+    → (w : _ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f w x)
+L {a = □ a}       t b = let box' x = b in
+  L (unbox t new) x
 
 data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
   []   : Lₛ [] tt
@@ -49,12 +49,12 @@ L-prepend : {t : Tm Γ a} {x : Tm' Γ a}
   → (t⟶*u : t ⟶* u)
   → (uLx : L u x)
   → L t x
-L-prepend {a = ι}                 t⟶*u uLn
+L-prepend {a = ι}     t⟶*u uLn
   = multi t⟶*u uLn
-L-prepend {a = a ⇒ b}             t⟶*u uLf
+L-prepend {a = a ⇒ b} t⟶*u uLf
   = λ w uRy → L-prepend (cong-app1* (wkTmPres⟶* w t⟶*u)) (uLf w uRy)
-L-prepend {a = □ a}   {x = box x} t⟶*u (v , vRx , u⟶*bv)
-  = v , vRx , multi t⟶*u u⟶*bv
+L-prepend {a = □ a}   t⟶*u uLb
+  = L-prepend (cong-unbox* t⟶*u) uLb
 
 -- reduction-free version of L-prepend
 L-cast : {t u : Tm Γ a} {x : Tm' Γ a}
@@ -70,43 +70,43 @@ L-build : {t : Tm Γ a} {x : Tm' Γ a}
 L-reflect : (n : Ne Γ a)
   → L (embNe n) (reflect n)
 
-L-build {a = ι}                 tLn
+L-build {a = ι}         tLn
   = tLn
-L-build {a = a ⇒ b}             tLf
-  = ⟶-multi exp-fun (cong-lam* (L-build (tLf fresh (L-reflect (var zero)))))
-L-build {a = □ a}   {x = box x} (u , uRx , t⟶*bu)
-  = multi t⟶*bu (cong-box* (L-build uRx))
+L-build {a = a ⇒ b}     tLf
+  = ⟶-multi exp-fun (cong-lam* (L-build (tLf fresh (L-reflect {a = a} (var zero)))))
+L-build {a = □ a}       tLb
+  = ⟶-multi exp-box (cong-box* (L-build tLb))
 
 L-reflect {a = ι}     n
   = ⟶*-refl
 L-reflect {a = a ⇒ b} n {_Γ'} {_t} {x}
   = λ w y → L-prepend (cong-app≡* (nat-embNe w n) (L-build y)) (L-reflect (app (wkNe w n) (reify x)))
 L-reflect {a = □ a}   n
-  = unbox (embNe n) nil , L-reflect (unbox n nil) , single exp-box
+  = L-reflect (unbox n new)
 
 -- L is invariant under weakening
 invL : {t : Tm Γ a} {x : Tm' Γ a}
   → (w : Γ ⊆ Γ')
   → (tLx : L t x)
   → L (wkTm w t) (wkTm' w x)
-invL {a = ι}     {x = x}     w tLn =
-  multi-≡ (wkTmPres⟶* w tLn) (nat-embNf w (reify x))
-invL {a = a ⇒ b} {t = t}     w tLf =
-  λ w' y → L-cast (cong₂ app (wkTmPres∙ w w' t) refl) (tLf (w ∙ w') y)
-invL {a = □ a}   {x = box x} w (u , uLx , t⟶*bu) =
-  wkTm (keep# w) u , invL (keep# w) uLx , wkTmPres⟶* w t⟶*bu
+invL {a = ι}     {x = x} w tLn
+  = multi-≡ (wkTmPres⟶* w tLn) (nat-embNf w (reify x))
+invL {a = a ⇒ b} {t = t} w tLf
+  = λ w' y → L-cast (cong₂ app (wkTmPres∙ w w' t) refl) (tLf (w ∙ w') y)
+invL {a = □ a}           w tLb
+  = invL {a = a} (keep# w) tLb
 
 -- Lₛ is invariant under weakening
 invLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
   → (w : Γ ⊆ Γ')
   → (sLδ : Lₛ s δ)
   → Lₛ (wkSub w s) (wkSub' w δ)
-invLₛ {Δ = []}       w []           =
-  []
-invLₛ {Δ = _Δ `, _a} w (sLδ `, tLx) =
-  invLₛ w sLδ `, invL w tLx
-invLₛ {Δ = _Δ #}     w (lock sLδ e) =
-  lock (invLₛ (sliceLeft e w) sLδ) (wkLFExt e w)
+invLₛ {Δ = []}      w []
+  = []
+invLₛ {Δ = _Δ `, a} w (sLδ `, tLx)
+  = invLₛ w sLδ `, invL {a = a} w tLx
+invLₛ {Δ = _Δ #}    w (lock sLδ e)
+  = lock (invLₛ (sliceLeft e w) sLδ) (wkLFExt e w)
 
 -- syntactic identity is related to semantic identity
 idLₛ : Lₛ {Δ} idₛ idₛ'
@@ -142,12 +142,15 @@ private
         (sym (coh-trimSub-wkSub s _ _))
         (trans (coh-trimSub-wkSub s idₛ w) (rightIdSub _)))))
 
-  unboxPresL : {t : Tm Γ (□ a)} {b : Box (Tm'- a) Γ}
-    → (e : LFExt Δ (Γ #) ΓR)
-    → (tLb : L t b)
-    → L (unbox t e) (unbox' b e)
-  unboxPresL {b = box x} e (u , uLx , t⟶*bu) =
-    L-prepend (multi-⟶ (cong-unbox* t⟶*bu) red-box) (invL (LFExtToWk e) uLx)
+  box-beta-lemma : (t : Tm (Γ #) a) → unbox (box t) new ⟶* t
+  box-beta-lemma t = single-≡ red-box (wkTmPresId t)
+
+  module _ {t : Tm Γ (□ a)} {b : Box (Tm'- a) Γ} where
+    unboxPresL : (tLb : L t b)
+      → (e : LFExt Δ (Γ #) ΓR)
+      → L (unbox t e) (unbox' b e)
+    unboxPresL tLb e =
+      L-cast (unbox-universal t e) (invL {a = a} (LFExtToWk e) tLb)
 
 -- The Fundamental theorem, for terms
 
@@ -159,18 +162,18 @@ Fund {Δ} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
 fund : (t : Tm Δ a) → Fund t
 fund (var v)              sLδ
   = substVarPresL v sLδ
-fund (lam t)     {_Γ} {s} sLδ {_Γ'} {u}
+fund (lam t)       {_Γ} {s} sLδ {_Γ'} {u}
   = λ w uLx → L-prepend (beta-lemma w s t u)
       (fund t {s = wkSub w s `, u} (invLₛ w sLδ `, uLx))
-fund (app t u)   {_Γ} {s} sLδ
+fund (app t u)     {_Γ} {s} sLδ
   = L-cast (cong1 app (sym (wkTmPresId (substTm s t))))
       (fund t sLδ idWk (fund u sLδ))
-fund (box t)     {_Γ} {s} sLδ
-  = substTm (lock s nil) t , fund t (lock sLδ nil) , ⟶*-refl
-fund (unbox t nil)        (lock sLδ e)
-  = unboxPresL e (fund t sLδ)
-fund (unbox t (ext e))    (sLδ `, _b)
-  = fund (unbox t e) sLδ
+fund (box t)       {_Γ} {s}        sRδ
+  = L-prepend (box-beta-lemma (substTm (keep#ₛ s) t)) (fund t (lock sRδ new))
+fund (unbox t nil) {_Γ} {lock s e} (lock sRδ e)
+  = unboxPresL {t = substTm s t} (fund t sRδ) e
+fund (unbox t (ext e))             (sRδ `, _uRx)
+  = fund (unbox t e) sRδ
 
 -- The Fundamental theorem, extended to substitutions
 -- (not needed for tracing reduction of terms)

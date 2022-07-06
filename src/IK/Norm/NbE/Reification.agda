@@ -18,12 +18,12 @@ reflect : Ne Γ a  → Tm' Γ a
 -- interpretation of neutrals
 reflect {a = ι}     n = up n
 reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
-reflect {a = □ a}   n = box (reflect (unbox n new))
+reflect {a = □ a}   n = box' (reflect (unbox n new))
 
 -- reify values to normal forms
-reify {a = ι}     x       = x
-reify {a = a ⇒ b} x       = lam (reify (x (drop idWk) (reflect (var zero))))
-reify {a = □ a}   (box x) = box (reify x)
+reify {a = ι}     n = n
+reify {a = a ⇒ b} f = lam (reify (f (drop idWk) (reflect (var zero))))
+reify {a = □ a}   b = let box' x = b in box (reify x)
 
 -- identity substitution
 idₛ' : Sub' Γ Γ
@@ -43,7 +43,7 @@ nat-reflect : (w : Γ ⊆ Γ') (n : Ne Γ a) → reflect (wkNe w n) ≡ wkTm' w 
 nat-reflect {a = ι}     w n = refl
 nat-reflect {a = a ⇒ b} w n = funexti' (λ _ → funext (λ _ → funext (λ _
   → cong (λ z → reflect (app z (reify _))) (wkNePres∙ w _ n))))
-nat-reflect {a = □ a}   w n = cong box (nat-reflect (keep# w) (unbox n nil))
+nat-reflect {a = □ a}   w n = cong box' (nat-reflect (keep# w) (unbox n nil))
 
 -- image of reflect is in Psh
 psh-reflect : (n : Ne Γ a) → Psh (reflect n)
@@ -74,8 +74,8 @@ nat-reify {Γ} {a = a ⇒ b} w f   pf
             (nat-reflect (keep w) (var zero)))
           (nf (keep w))))
       (nat-reify (keep w) (f fresh (reflect (var zero))) pfx))
-nat-reify {a = □ a} w  (box x) px
-  = cong box (nat-reify (keep# w) x px)
+nat-reify {a = □ a}       w  b  pb
+  = let box' x = b in cong box (nat-reify (keep# w) x pb)
 
 -- idₛ' is in Pshₛ
 psh-idₛ' : Pshₛ (idₛ' {Γ})

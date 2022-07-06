@@ -85,33 +85,33 @@ L-reflect {a = □ a}   n
   = L-reflect (unbox n new)
 
 -- L is invariant under weakening
-invL : {t : Tm Γ a} {x : Tm' Γ a}
+wkTmPresL : {t : Tm Γ a} {x : Tm' Γ a}
   → (w : Γ ⊆ Γ')
   → (tLx : L t x)
   → L (wkTm w t) (wkTm' w x)
-invL {a = ι}     {x = x} w tLn
+wkTmPresL {a = ι}     {x = x} w tLn
   = multi-≡ (wkTmPres⟶* w tLn) (nat-embNf w (reify x))
-invL {a = a ⇒ b} {t = t} w tLf
+wkTmPresL {a = a ⇒ b} {t = t} w tLf
   = λ w' y → L-cast (cong₂ app (wkTmPres∙ w w' t) refl) (tLf (w ∙ w') y)
-invL {a = □ a}           w tLb
-  = invL {a = a} (keep# w) tLb
+wkTmPresL {a = □ a}           w tLb
+  = wkTmPresL {a = a} (keep# w) tLb
 
 -- Lₛ is invariant under weakening
-invLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+wkSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
   → (w : Γ ⊆ Γ')
   → (sLδ : Lₛ s δ)
   → Lₛ (wkSub w s) (wkSub' w δ)
-invLₛ {Δ = []}      w []
+wkSubPresLₛ {Δ = []}      w []
   = []
-invLₛ {Δ = _Δ `, a} w (sLδ `, tLx)
-  = invLₛ w sLδ `, invL {a = a} w tLx
-invLₛ {Δ = _Δ #}    w (lock sLδ e)
-  = lock (invLₛ (sliceLeft e w) sLδ) (wkLFExt e w)
+wkSubPresLₛ {Δ = _Δ `, a} w (sLδ `, tLx)
+  = wkSubPresLₛ w sLδ `, wkTmPresL {a = a} w tLx
+wkSubPresLₛ {Δ = _Δ #}    w (lock sLδ e)
+  = lock (wkSubPresLₛ (sliceLeft e w) sLδ) (wkLFExt e w)
 
 -- syntactic identity is related to semantic identity
 idLₛ : Lₛ {Δ} idₛ idₛ'
 idLₛ {[]}      = []
-idLₛ {_Δ `, a} = invLₛ fresh[ a ] idLₛ `, L-reflect {a = a} (var zero)
+idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect {a = a} (var zero)
 idLₛ {_Δ #}    = lock idLₛ nil
 
 -----------------------------
@@ -150,7 +150,7 @@ private
       → (e : LFExt Δ (Γ #) ΓR)
       → L (unbox t e) (unbox' b e)
     unboxPresL tLb e =
-      L-cast (unbox-universal t e) (invL {a = a} (LFExtToWk e) tLb)
+      L-cast (unbox-universal t e) (wkTmPresL {a = a} (LFExtToWk e) tLb)
 
 -- The Fundamental theorem, for terms
 
@@ -164,7 +164,7 @@ fund (var v)              sLδ
   = substVarPresL v sLδ
 fund (lam t)       {_Γ} {s} sLδ {_Γ'} {u}
   = λ w uLx → L-prepend (beta-lemma w s t u)
-      (fund t {s = wkSub w s `, u} (invLₛ w sLδ `, uLx))
+      (fund t {s = wkSub w s `, u} (wkSubPresLₛ w sLδ `, uLx))
 fund (app t u)     {_Γ} {s} sLδ
   = L-cast (cong1 app (sym (wkTmPresId (substTm s t))))
       (fund t sLδ idWk (fund u sLδ))

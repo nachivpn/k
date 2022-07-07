@@ -24,21 +24,21 @@ quotTm x = embNf (reify x)
 -- Logical Relations --
 -----------------------
 
-L : (t : Tm Γ a) → (x : Tm' Γ a) → Set
-L     {a = ι}     t n =
+L : (a : Ty) → (t : Tm Γ a) → (x : Tm' Γ a) → Set
+L     ι       t n =
   t ⟶* quotTm n
-L {Γ} {a = a ⇒ b} t f =
+L {Γ} (a ⇒ b) t f =
   ∀ {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (w : Γ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f w x)
-L     {a = □ a}   t b = let box' x = b in
-  L (unbox t new) x
+    → (w : Γ ⊆ Γ') → (uLx : L a u x) → L b (app (wkTm w t) u) (f w x)
+L (□ a)       t b = let box' x = b in
+  L a (unbox t new) x
 
-data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
-  []   : Lₛ [] tt
+data Lₛ {Γ : Ctx} : (Δ : Ctx) → Sub Γ Δ → Sub' Γ Δ → Set where
+  []   : Lₛ [] [] tt
   _`,_ : {s : Sub Γ Δ} {δ : Sub' Γ Δ} {t : Tm Γ a} {x : Tm' Γ a}
-           → (sLδ : Lₛ s δ) → (tLx : L t x) → Lₛ (s `, t)  (δ , x)
+           → (sLδ : Lₛ Δ s δ) → (tLx : L a t x) → Lₛ (Δ `, a) (s `, t)  (δ , x)
   lock : {s : Sub Γ' Δ} {δ : Sub' Γ' Δ}
-           → (sLδ : Lₛ s δ) → (e : LFExt Γ (Γ' #) ΓR) → Lₛ (lock s e) (lock δ e)
+           → (sLδ : Lₛ Δ s δ) → (e : LFExt Γ (Γ' #) ΓR) → Lₛ (Δ #) (lock s e) (lock δ e)
 
 ----------------------------
 -- Standard LR properties --
@@ -47,8 +47,8 @@ data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
 -- prepend a reduction trace to the "trace builder" L
 L-prepend : {t : Tm Γ a} {x : Tm' Γ a}
   → (t⟶*u : t ⟶* u)
-  → (uLx : L u x)
-  → L t x
+  → (uLx : L a u x)
+  → L a t x
 L-prepend {a = ι}     t⟶*u uLn
   = multi t⟶*u uLn
 L-prepend {a = a ⇒ b} t⟶*u uLf
@@ -59,16 +59,16 @@ L-prepend {a = □ a}   t⟶*u uLb
 -- reduction-free version of L-prepend
 L-cast : {t u : Tm Γ a} {x : Tm' Γ a}
   → (t≡u : t ≡ u)
-  → (uLx : L u x)
-  → L t x
+  → (uLx : L a u x)
+  → L a t x
 L-cast refl uLx = uLx
 
 -- extract reduction trace from L
 L-build : {t : Tm Γ a} {x : Tm' Γ a}
-  → (tLx : L t x) → t ⟶* quotTm x
+  → (tLx : L a t x) → t ⟶* quotTm x
 -- a neutral element is related to its reflection
 L-reflect : (n : Ne Γ a)
-  → L (embNe n) (reflect n)
+  → L a (embNe n) (reflect n)
 
 L-build {a = ι}     tLn
   = tLn
@@ -89,8 +89,8 @@ L-reflect {a = □ a}   n
 -- L is invariant under weakening
 wkTmPresL : {t : Tm Γ a} {x : Tm' Γ a}
   → (w : Γ ⊆ Γ')
-  → (tLx : L t x)
-  → L (wkTm w t) (wkTm' w x)
+  → (tLx : L a t x)
+  → L a (wkTm w t) (wkTm' w x)
 wkTmPresL {a = ι}     {x = x} w tLn
   = multi-≡ (wkTmPres⟶* w tLn) (nat-embNf w (reify x))
 wkTmPresL {a = a ⇒ b} {t = t} w tLf
@@ -101,8 +101,8 @@ wkTmPresL {a = □ a}           w tLb
 -- Lₛ is invariant under weakening
 wkSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
   → (w : Γ ⊆ Γ')
-  → (sLδ : Lₛ s δ)
-  → Lₛ (wkSub w s) (wkSub' w δ)
+  → (sLδ : Lₛ Δ s δ)
+  → Lₛ Δ (wkSub w s) (wkSub' w δ)
 wkSubPresLₛ {Δ = []}      w []
   = []
 wkSubPresLₛ {Δ = _Δ `, a} w (sLδ `, tLx)
@@ -111,7 +111,7 @@ wkSubPresLₛ {Δ = _Δ #}    w (lock sLδ e)
   = lock (wkSubPresLₛ (sliceLeft e w) sLδ) (wkLFExt e w)
 
 -- syntactic identity is related to semantic identity
-idLₛ : Lₛ {Δ} idₛ idₛ'
+idLₛ : Lₛ Δ idₛ idₛ'
 idLₛ {[]}      = []
 idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect {a = a} var0
 idLₛ {_Δ #}    = lock idLₛ nil
@@ -123,8 +123,8 @@ idLₛ {_Δ #}    = lock idLₛ nil
 -- local lemmas for the proof of fundamental theorem
 private
   substVarPresL : (v : Var Δ a) {s : Sub Γ Δ} {δ : Sub' Γ Δ}
-    → (sLδ : Lₛ s δ)
-    → L (substVar s v) (substVar' v δ)
+    → (sLδ : Lₛ Δ s δ)
+    → L a (substVar s v) (substVar' v δ)
   substVarPresL zero     (_sLδ `, tLx)  = tLx
   substVarPresL (succ v) (sLδ  `, _tLx) = substVarPresL v sLδ
 
@@ -148,18 +148,18 @@ private
   box-beta-lemma t = single-≡ red-box (wkTmPresId t)
 
   module _ {t : Tm Γ (□ a)} {b : Box (Tm'- a) Γ} where
-    unboxPresL : (tLb : L t b)
+    unboxPresL : (tLb : L (□ a) t b)
       → (e : LFExt Δ (Γ #) ΓR)
-      → L (unbox t e) (unbox' b e)
+      → L a (unbox t e) (unbox' b e)
     unboxPresL tLb e =
       L-cast (unbox-universal t e) (wkTmPresL {a = a} (LFExtToWk e) tLb)
 
 -- The Fundamental theorem, for terms
 
 Fund : Tm Δ a → Set
-Fund {Δ} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
-               → (sLδ : Lₛ s δ)
-               → L (substTm s t) (eval t δ)
+Fund {Δ} {a} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+                   → (sLδ : Lₛ Δ s δ)
+                   → L a (substTm s t) (eval t δ)
 
 fund : (t : Tm Δ a) → Fund t
 fund (var v)              sLδ
@@ -181,9 +181,9 @@ fund (unbox t (ext e))             (sRδ `, _uRx)
 -- (not needed for tracing reduction of terms)
 
 Fundₛ : (S : Sub Δ Θ) → Set
-Fundₛ {Δ} S = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
-                → (sLδ : Lₛ s δ)
-                → Lₛ (S ∙ₛ s) (evalₛ S δ)
+Fundₛ {Δ} {Θ} S = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+                    → (sLδ : Lₛ Δ s δ)
+                    → Lₛ Θ (S ∙ₛ s) (evalₛ S δ)
 
 fundₛ : (S : Sub Δ Θ) → Fundₛ S
 fundₛ []               sLδ

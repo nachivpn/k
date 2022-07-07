@@ -15,6 +15,9 @@ open import IK.Term
 reify   : Tm' Γ a → Nf Γ a
 reflect : Ne Γ a  → Tm' Γ a
 
+var0' : Tm' (Γ `, a) a
+var0' = reflect (var zero)
+
 -- interpretation of neutrals
 reflect {a = ι}     n = up n
 reflect {a = a ⇒ b} n = λ e x → reflect (app (wkNe e n) (reify x))
@@ -22,13 +25,13 @@ reflect {a = □ a}   n = box' (reflect (unbox n new))
 
 -- reify values to normal forms
 reify {a = ι}     n = n
-reify {a = a ⇒ b} f = lam (reify (f (drop idWk) (reflect (var zero))))
+reify {a = a ⇒ b} f = lam (reify (f (drop idWk) var0'))
 reify {a = □ a}   b = let box' x = b in box (reify x)
 
 -- identity substitution
 idₛ' : Sub' Γ Γ
 idₛ' {[]}     = tt
-idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , reflect (var zero)
+idₛ' {Γ `, x} = wkSub' (drop idWk) idₛ' , var0'
 idₛ' {Γ #}    = lock (idₛ' {Γ}) new
 
 ------------------------------------------------
@@ -64,7 +67,7 @@ psh-reflect {a = □ a}  n = psh-reflect (unbox n nil)
 nat-reify {a = ι}         w x   pn
   = refl
 nat-reify {Γ} {a = a ⇒ b} w f   pf
-  = let (nf , pfx) = pf fresh (reflect (var zero)) (psh-reflect {Γ = _ `, a} var0)
+  = let (nf , pfx) = pf fresh var0' (psh-reflect {Γ = _ `, a} var0)
   in cong lam
     (trans
       (cong reify
@@ -73,7 +76,7 @@ nat-reify {Γ} {a = a ⇒ b} w f   pf
             (cong drop (trans (rightIdWk _) (sym (leftIdWk _))))
             (nat-reflect (keep w) var0))
           (nf (keep w))))
-      (nat-reify (keep w) (f fresh (reflect (var zero))) pfx))
+      (nat-reify (keep w) (f fresh var0') pfx))
 nat-reify {a = □ a}       w  b  pb
   = let box' x = b in cong box (nat-reify (keep# w) x pb)
 

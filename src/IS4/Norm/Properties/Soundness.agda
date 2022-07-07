@@ -25,14 +25,14 @@ quotTm x = embNf (reify _ x)
 -----------------------
 
 L : (t : Tm Γ a) → (x : Tm' Γ a) → Set
-L {a = ι}     t x =
-  t ≈ quotTm x
-L {a = a ⇒ b} t f =
+L     {a = ι}     t n =
+  t ≈ quotTm n
+L {Γ} {a = a ⇒ b} t f =
   ∀ {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (w : _ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f .apply w x)
-L {a = □ a}   t b =
+    → (w : Γ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f .apply w x)
+L {Γ} {a = □ a}   t b =
   ∀ {Γ' Δ ΓR' : Ctx}
-    → (w : _ ⊆ Γ') → (e : CExt Δ Γ' ΓR') → L (unbox (wkTm w t) e) (b .apply w (-, e))
+    → (w : Γ ⊆ Γ') → (e : CExt Δ Γ' ΓR') → L (unbox (wkTm w t) e) (b .apply w (-, e))
 
 data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
   []   : Lₛ [] tt
@@ -72,19 +72,27 @@ L-build : {t : Tm Γ a} {x : Tm' Γ a}
 L-reflect : (n : Ne Γ a)
   → L (embNe n) (reflect a n)
 
-L-build {a = ι}     tLn
+L-build {a = ι}         tLn
   = tLn
-L-build {a = a ⇒ b} tLf
-  = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (L-build (tLf _ (L-reflect (var zero)))))
-L-build {a = □ a}   tLb
-  = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (L-build (L-cast (cong1 unbox (sym (wkTmPresId _))) refl (tLb idWk new))))
+L-build {a = a ⇒ b}     tLf
+  = ≈-trans
+      (⟶-to-≈ (exp-fun _))
+      (cong-lam≈ (L-build (tLf fresh[ a ] (L-reflect var0))))
+L-build {a = □ a}   {t} tLb
+  = ≈-trans
+      (⟶-to-≈ (exp-box _))
+      (cong-box≈ (L-build (L-cast (cong1 unbox (sym (wkTmPresId t))) refl (tLb idWk new))))
 
 L-reflect {a = ι}     n
   = ≈-refl
-L-reflect {a = a ⇒ b} n
-  = λ w y → L-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (L-build y)) (L-reflect _ )
+L-reflect {a = a ⇒ b} n {_Γ'} {_t} {x}
+  = λ w tLx → L-prepend
+                (cong-app≈ (≈-reflexive (nat-embNe w n)) (L-build tLx))
+                (L-reflect (app (wkNe w n) (reify a x)))
 L-reflect {a = □ a}   n
-  = λ w e → L-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _))) (L-reflect _)
+  = λ w e → L-prepend
+              (cong-unbox≈ (≈-reflexive (nat-embNe w n)))
+              (L-reflect (unbox (wkNe w n) e))
 
 -- L is invariant under weakening
 wkTmPresL : {t : Tm Γ a} {x : Tm' Γ a}
@@ -92,11 +100,11 @@ wkTmPresL : {t : Tm Γ a} {x : Tm' Γ a}
   → (tLx : L t x)
   → L (wkTm w t) (wkTm' a w x)
 wkTmPresL {a = ι}     {x = x} w tLn
-  = ≈-trans (wkTmPres≈ _ tLn) (≈-reflexive (nat-embNf _ (reify _ x)))
-wkTmPresL {a = a ⇒ b}         w tLf
-  = λ w' y → L-cast (cong1 app (wkTmPres∙ _ _ _)) refl (tLf (w ∙ w') y)
-wkTmPresL {a = □ a}           w tLb
-  = λ w' e → L-cast (cong1 unbox (wkTmPres∙ _ _ _)) refl (tLb (w ∙ w') e)
+  = ≈-trans (wkTmPres≈ w tLn) (≈-reflexive (nat-embNf w (reify ι x)))
+wkTmPresL {a = a ⇒ b} {t = t} w tLf
+  = λ w' y → L-cast (cong1 app (wkTmPres∙ w w' t)) refl (tLf (w ∙ w') y)
+wkTmPresL {a = □ a}   {t = t} w tLb
+  = λ w' e → L-cast (cong1 unbox (wkTmPres∙ w w' t)) refl (tLb (w ∙ w') e)
 
 -- Lₛ is invariant under weakening
 wkSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
@@ -113,7 +121,7 @@ wkSubPresLₛ {Δ = _Δ #}     w (lock sLδ e)
 -- syntactic identity is related to semantic identity
 idLₛ : Lₛ {Δ} idₛ (idₛ' Δ)
 idLₛ {[]}      = []
-idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect (var zero)
+idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect var0
 idLₛ {_Δ #}    = lock idLₛ new
 
 -----------------------------
@@ -125,14 +133,14 @@ private
   substVarPresL : (v : Var Δ a) {s : Sub Γ Δ} {δ : Sub' Γ Δ}
     → (sLδ : Lₛ s δ)
     → L (substVar s v) (substVar' v δ)
-  substVarPresL zero     (_ `, tLx)  = tLx
-  substVarPresL (succ v) (sLδ `, _b) = substVarPresL v sLδ
+  substVarPresL zero     (_sLδ `,  tLx) = tLx
+  substVarPresL (succ v) ( sLδ `, _tLx) = substVarPresL v sLδ
 
   beta-lemma : (w : Γ ⊆ Γ') (s : Sub Γ Δ) (t : Tm (Δ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ≈ substTm (wkSub w s `, u) t
   beta-lemma w s t u = ≈-trans (≈-reflexive (cong1 app (cong lam (trans
     (sym (nat-substTm t (keepₛ s) (keep w)))
-    (cong (λ p → substTm (p `, var zero) t)
+    (cong (λ p → substTm (p `, var0) t)
       (trans
         (wkSubPres∙ fresh (keep w) s)
         (cong1 wkSub (cong drop (leftIdWk w)))))))))
@@ -152,7 +160,7 @@ private
     → (sLδ : Lₛ s δ)
     → lCtxₛ' e δ ≡ lCtxₛ e s
   lCtxₛ'∼lCtxₛ nil       _sLδ           = refl
-  lCtxₛ'∼lCtxₛ (ext   e) (sLδ `, _a)    = lCtxₛ'∼lCtxₛ e sLδ
+  lCtxₛ'∼lCtxₛ (ext   e) (sLδ `, _tLx)  = lCtxₛ'∼lCtxₛ e sLδ
   lCtxₛ'∼lCtxₛ (ext#- e) (lock sLδ _e') = lCtxₛ'∼lCtxₛ e sLδ
 
   rCtxₛ'∼rCtxₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
@@ -160,7 +168,7 @@ private
     → (sLδ : Lₛ s δ)
     → rCtxₛ' e δ ≡ rCtxₛ e s
   rCtxₛ'∼rCtxₛ nil       _sLδ           = refl
-  rCtxₛ'∼rCtxₛ (ext   e) (sLδ `, _a)    = rCtxₛ'∼rCtxₛ e sLδ
+  rCtxₛ'∼rCtxₛ (ext   e) (sLδ `, _tLx)  = rCtxₛ'∼rCtxₛ e sLδ
   rCtxₛ'∼rCtxₛ (ext#- e) (lock sLδ _e') = cong (_,, _) (rCtxₛ'∼rCtxₛ e sLδ)
 
   factorSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
@@ -168,7 +176,7 @@ private
     → (sLδ : Lₛ s δ)
     → Lₛ (factorSubₛ e s) (subst (λ Γ → Sub' Γ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
   factorSubPresLₛ nil       sLδ            = sLδ
-  factorSubPresLₛ (ext e)   (sLδ `, _a)    = factorSubPresLₛ e sLδ
+  factorSubPresLₛ (ext e)   (sLδ `, _tLx)  = factorSubPresLₛ e sLδ
   factorSubPresLₛ (ext#- e) (lock sLδ _e') = factorSubPresLₛ e sLδ
 
   factorExtₛ'∼factorExtₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
@@ -270,26 +278,26 @@ Fund {Δ} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
 fund : (t : Tm Γ a) → Fund t
 fund (var v)                       sLδ
   = substVarPresL v sLδ
-fund (lam t)           {_Γ} {s} sLδ {_Γ'} {u}
+fund (lam t)          {_Γ} {s}     sLδ {_Γ'} {u}
   = λ w uLx → L-prepend (beta-lemma w s t u)
       (fund t {s = wkSub w s `, u} (wkSubPresLₛ w sLδ `, uLx))
-fund (app t u)                     sLδ
+fund (app t u)        {_Γ} {s}     sLδ
   = L-cast
-      (cong1 app (sym (wkTmPresId _)))
+      (cong1 app (sym (wkTmPresId (substTm s t))))
       refl
       (fund t sLδ idWk (fund u sLδ))
 fund (box t)          {_Γ} {s}     sLδ
   = λ w e → L-prepend (unbox-box-reduces w s e t) (fund t (lock (wkSubPresLₛ w sLδ) e))
-fund (unbox {ΔL} t e) {_Γ} {s} {δ} sLδ
+fund (unbox {ΔL} t e) {Γ}  {s} {δ} sLδ
   = L-cast
-      (cong₂ unbox (sym (wkTmPresId _)) (factorExtₛ'∼factorExtₛ e sLδ))
+      (cong₂ unbox (sym (wkTmPresId (substTm (factorSubₛ e s) t))) (factorExtₛ'∼factorExtₛ e sLδ))
       (sameEval e s δ sLδ t)
       (fund t
         {s = factorSubₛ e s}
         {δ = subst (λ Δ → Sub' Δ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ)}
         (factorSubPresLₛ e sLδ)
         idWk[ lCtxₛ e s ]
-        (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)))
+        (subst₂ (CExt Γ) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)))
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ≈ embNf (norm t)

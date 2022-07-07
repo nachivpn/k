@@ -121,18 +121,18 @@ variable
 
 -- weakening is reflexive
 idWk[_] : (Γ : Ctx) → Γ ⊆ Γ
-idWk[_] []       = base
-idWk[_] (Γ `, x) = keep idWk[ Γ ]
-idWk[_] (Γ #)    = keep# idWk[ Γ ]
+idWk[_] []        = base
+idWk[_] (Γ `, _a) = keep  idWk[ Γ ]
+idWk[_] (Γ #)     = keep# idWk[ Γ ]
 
 idWk = λ {Γ} → idWk[ Γ ]
 
 -- weakening is transitive (or can be composed)
 _∙_ : Θ ⊆ Δ → Δ ⊆ Γ → Θ ⊆ Γ
 w       ∙ base     = w
-w       ∙ drop w'  = drop (w ∙ w')
-drop w  ∙ keep w'  = drop (w ∙ w')
-keep w  ∙ keep w'  = keep (w ∙ w')
+w       ∙ drop  w' = drop (w ∙ w')
+drop  w ∙ keep  w' = drop (w ∙ w')
+keep  w ∙ keep  w' = keep (w ∙ w')
 keep# w ∙ keep# w' = keep# (w ∙ w')
 
 -- weakening that "generates a fresh variable"
@@ -827,14 +827,14 @@ module Substitution
 
   -- apply substitution to a variable
   substVar : Sub Γ Δ → Var Δ a → Tm Γ a
-  substVar (s `, t) zero     = t
-  substVar (s `, t) (succ x) = substVar s x
+  substVar (s `, t)  zero     = t
+  substVar (s `, _t) (succ v) = substVar s v
 
   -- weaken a substitution
   wkSub : Γ ⊆ Γ' → Sub Γ Δ → Sub Γ' Δ
-  wkSub w []          = []
-  wkSub w (s `, t)    = (wkSub w s) `, wkTm w t
-  wkSub w (lock s e)  = lock (wkSub (factorWk e w) s) (factorExt e w)
+  wkSub w []         = []
+  wkSub w (s `, t)   = wkSub w s `, wkTm w t
+  wkSub w (lock s e) = lock (wkSub (factorWk e w) s) (factorExt e w)
 
   -- NOTE: composition requires parallel substitution for terms
 
@@ -853,8 +853,8 @@ module Substitution
   -- embed a weakening to substitution
   embWk : Δ ⊆ Γ → Sub Γ Δ
   embWk base      = []
-  embWk (drop w)  = dropₛ (embWk w)
-  embWk (keep w)  = keepₛ (embWk w)
+  embWk (drop  w) = dropₛ  (embWk w)
+  embWk (keep  w) = keepₛ  (embWk w)
   embWk (keep# w) = keep#ₛ (embWk w)
 
   -- identity substitution

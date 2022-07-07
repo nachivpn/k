@@ -61,17 +61,17 @@ psh-reflect {a = a ⇒ b} n = λ w x px
 psh-reflect {a = □ a}  n = psh-reflect (unbox n nil)
 
 -- nat-reify
-nat-reify {a = ι}         w x   px
+nat-reify {a = ι}         w x   pn
   = refl
 nat-reify {Γ} {a = a ⇒ b} w f   pf
-  = let (nf , pfx) = pf fresh (reflect (var zero)) (psh-reflect {Γ = _ `, a} (var zero))
+  = let (nf , pfx) = pf fresh (reflect (var zero)) (psh-reflect {Γ = _ `, a} var0)
   in cong lam
     (trans
       (cong reify
         (trans
           (cong₂ f
             (cong drop (trans (rightIdWk _) (sym (leftIdWk _))))
-            (nat-reflect (keep w) (var zero)))
+            (nat-reflect (keep w) var0))
           (nf (keep w))))
       (nat-reify (keep w) (f fresh (reflect (var zero))) pfx))
 nat-reify {a = □ a}       w  b  pb
@@ -80,5 +80,5 @@ nat-reify {a = □ a}       w  b  pb
 -- idₛ' is in Pshₛ
 psh-idₛ' : Pshₛ (idₛ' {Γ})
 psh-idₛ' {[]}     = tt
-psh-idₛ' {Γ `, a} = wkSub'PresPsh fresh (idₛ' {Γ}) (psh-idₛ' {Γ}) , psh-reflect {Γ `, a} (var zero)
+psh-idₛ' {Γ `, a} = wkSub'PresPsh fresh (idₛ' {Γ}) (psh-idₛ' {Γ}) , psh-reflect {Γ `, a} var0
 psh-idₛ' {Γ #}    = psh-idₛ' {Γ}

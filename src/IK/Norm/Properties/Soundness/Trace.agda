@@ -25,12 +25,12 @@ quotTm x = embNf (reify x)
 -----------------------
 
 L : (t : Tm Γ a) → (x : Tm' Γ a) → Set
-L {a = ι}         t n =
+L     {a = ι}     t n =
   t ⟶* quotTm n
 L {Γ} {a = a ⇒ b} t f =
   ∀ {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (w : _ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f w x)
-L {a = □ a}       t b = let box' x = b in
+    → (w : Γ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f w x)
+L     {a = □ a}   t b = let box' x = b in
   L (unbox t new) x
 
 data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
@@ -70,17 +70,19 @@ L-build : {t : Tm Γ a} {x : Tm' Γ a}
 L-reflect : (n : Ne Γ a)
   → L (embNe n) (reflect n)
 
-L-build {a = ι}         tLn
+L-build {a = ι}     tLn
   = tLn
-L-build {a = a ⇒ b}     tLf
-  = ⟶-multi exp-fun (cong-lam* (L-build (tLf fresh (L-reflect {a = a} (var zero)))))
-L-build {a = □ a}       tLb
+L-build {a = a ⇒ b} tLf
+  = ⟶-multi exp-fun (cong-lam* (L-build (tLf fresh (L-reflect {a = a} var0))))
+L-build {a = □ a}   tLb
   = ⟶-multi exp-box (cong-box* (L-build tLb))
 
 L-reflect {a = ι}     n
   = ⟶*-refl
 L-reflect {a = a ⇒ b} n {_Γ'} {_t} {x}
-  = λ w y → L-prepend (cong-app≡* (nat-embNe w n) (L-build y)) (L-reflect (app (wkNe w n) (reify x)))
+  = λ w tLx → L-prepend
+                (cong-app≡* (nat-embNe w n) (L-build tLx))
+                (L-reflect (app (wkNe w n) (reify x)))
 L-reflect {a = □ a}   n
   = L-reflect (unbox n new)
 
@@ -111,7 +113,7 @@ wkSubPresLₛ {Δ = _Δ #}    w (lock sLδ e)
 -- syntactic identity is related to semantic identity
 idLₛ : Lₛ {Δ} idₛ idₛ'
 idLₛ {[]}      = []
-idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect {a = a} (var zero)
+idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect {a = a} var0
 idLₛ {_Δ #}    = lock idLₛ nil
 
 -----------------------------
@@ -131,7 +133,7 @@ private
   beta-lemma w s t u = ≡-single-≡
     (cong1 app (cong lam (trans
       (sym (nat-subsTm t (keepₛ s) (keep w)))
-      (cong (λ p → substTm (p `, var zero) t)
+      (cong (λ p → substTm (p `, var0) t)
         (trans
           (wkSubPres∙ fresh (keep w) s)
           (cong1 wkSub (cong drop (leftIdWk w))))))))

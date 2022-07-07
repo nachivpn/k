@@ -45,7 +45,6 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 | Judgements                                     | `_⊢Var_`, `_⊢_`, `_⊢ₛ_`, `_⊢Ne_`, `_⊢Nf_` | `Var`, `Tm`, `Sub`, `Ne`, `Nf` |
 | Equational theory                              | `_∼_`                                     | `_≈_`                          |
 | Evaluation functions                           | `⟦_⟧`                                     | `Tm'`, `Sub'`, `eval`, `evalₛ` |
-| Identity environment                           | `freshEnv`                                | `idₛ'`                         |
 
 (nonexhaustive)
 

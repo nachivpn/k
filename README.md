@@ -71,7 +71,7 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
   - Section 3.1.3
     + Normal and neutral forms (Fig 8.) → datatypes `Nf` and `Ne` in `src/IK/Term/NormalForm/Base.agda`
     + `reify` and `reflect` → `src/IK/Norm/NbE/Reification.agda`
-    + `quote` and identity environment → `src/IK/Norm/Base.agda` (lines 17-18) and `src/IK/Norm/NbE/Reification.agda` (lines 29-32)
+    + `quote` and identity environment `freshEnv` (called `idₛ` in the code, `fresh` is called `var0'`) → `src/IK/Norm/Base.agda` (lines 17-18) and `src/IK/Norm/NbE/Reification.agda` (lines 29-32)
     + Logical relation (Fig. 9) and fundamental theorem (Proposition 3) → lines 27-41 and 157-194 in `src/IK/Norm/Properties/Soundness/Trace.agda`, respectively<sup><a name="footnote-2-up"><a href="#footnote-2">2</a></a></sup>
     + Completeness and adequacy of normalization (Theorem 4) → Completeness is called `norm-complete` in lines 369-370 of `src/IK/Norm/Properties/Completeness.agda` and adequacy is called `norm-sound` in lines 31-36 of `src/IK/Norm/Properties/Soundness/Soundness.agda`
 

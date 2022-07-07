@@ -24,22 +24,22 @@ quotTm x = embNf (reify _ x)
 -- Logical Relations --
 -----------------------
 
-L : (t : Tm Γ a) → (x : Tm' Γ a) → Set
-L {a = ι}     t x =
-  t ≈ quotTm x
-L {a = a ⇒ b} t f =
+L : (a : Ty) → (t : Tm Γ a) → (x : Tm' Γ a) → Set
+L     ι       t n =
+  t ≈ quotTm n
+L {Γ} (a ⇒ b) t f =
   ∀ {Γ' : Ctx} {u : Tm Γ' a} {x : Tm' Γ' a}
-    → (w : _ ⊆ Γ') → (uLx : L u x) → L (app (wkTm w t) u) (f .apply w x)
-L {a = □ a}   t b =
+    → (w : Γ ⊆ Γ') → (uLx : L a u x) → L b (app (wkTm w t) u) (f .apply w x)
+L {Γ} (□ a)   t b =
   ∀ {Γ' Δ ΓR' : Ctx}
-    → (w : _ ⊆ Γ') → (e : CExt Δ Γ' ΓR') → L (unbox (wkTm w t) e) (b .apply w (-, e))
+    → (w : Γ ⊆ Γ') → (e : CExt Δ Γ' ΓR') → L a (unbox (wkTm w t) e) (b .apply w (-, e))
 
-data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
-  []   : Lₛ [] tt
+data Lₛ {Γ : Ctx} : (Δ : Ctx) → Sub Γ Δ → Sub' Γ Δ → Set where
+  []   : Lₛ [] [] tt
   _`,_ : {s : Sub Γ Δ} {δ : Sub' Γ Δ} {t : Tm Γ a} {x : Tm' Γ a}
-           → (sLδ : Lₛ s δ) → (tLx : L t x) → Lₛ (s `, t)  (elem (δ , x))
+           → (sLδ : Lₛ Δ s δ) → (tLx : L a t x) → Lₛ (Δ `, a) (s `, t) (elem (δ , x))
   lock : {s : Sub Γ' Δ} {δ : Sub' Γ' Δ}
-           → (sLδ : Lₛ s δ) → (e : CExt Γ Γ' ΓR') → Lₛ (lock s e) (elem (Γ' , (ΓR' , e) , δ))
+           → (sLδ : Lₛ Δ s δ) → (e : CExt Γ Γ' ΓR') → Lₛ (Δ #) (lock s e) (elem (Γ' , (ΓR' , e) , δ))
 
 ----------------------------
 -- Standard LR properties --
@@ -48,8 +48,8 @@ data Lₛ {Γ : Ctx} : Sub Γ Δ → Sub' Γ Δ → Set where
 -- prepend a reduction trace to the "trace builder" L
 L-prepend : {t u : Tm Γ a} {x : Tm' Γ a}
   → (t≈u : t ≈ u)
-  → (uLx : L u x)
-  → L t x
+  → (uLx : L a u x)
+  → L a t x
 L-prepend {a = ι}     t≈u uLn
   = ≈-trans t≈u uLn
 L-prepend {a = a ⇒ b} t≈u uLf
@@ -61,48 +61,56 @@ L-prepend {a = □ a}   t≈u uLb
 L-cast : {t u : Tm Γ a} {x y : Tm' Γ a}
   → (t≡u : t ≡ u)
   → (x≡y : x ≡ y)
-  → (uLy : L u y)
-  → L t x
+  → (uLy : L a u y)
+  → L a t x
 L-cast refl refl uLy = uLy
 
 -- extract reduction trace from L
 L-build : {t : Tm Γ a} {x : Tm' Γ a}
-  → (tLx : L t x) → t ≈ quotTm x
+  → (tLx : L a t x) → t ≈ quotTm x
 -- a neutral element is related to its reflection
 L-reflect : (n : Ne Γ a)
-  → L (embNe n) (reflect a n)
+  → L a (embNe n) (reflect a n)
 
-L-build {a = ι}     tLn
+L-build {a = ι}         tLn
   = tLn
-L-build {a = a ⇒ b} tLf
-  = ≈-trans (⟶-to-≈ (exp-fun _)) (cong-lam≈ (L-build (tLf _ (L-reflect (var zero)))))
-L-build {a = □ a}   tLb
-  = ≈-trans (⟶-to-≈ (exp-box _)) (cong-box≈ (L-build (L-cast (cong1 unbox (sym (wkTmPresId _))) refl (tLb idWk new))))
+L-build {a = a ⇒ b}     tLf
+  = ≈-trans
+      (⟶-to-≈ (exp-fun _))
+      (cong-lam≈ (L-build (tLf fresh[ a ] (L-reflect var0))))
+L-build {a = □ a}   {t} tLb
+  = ≈-trans
+      (⟶-to-≈ (exp-box _))
+      (cong-box≈ (L-build (L-cast (cong1 unbox (sym (wkTmPresId t))) refl (tLb idWk new))))
 
 L-reflect {a = ι}     n
   = ≈-refl
-L-reflect {a = a ⇒ b} n
-  = λ w y → L-prepend (cong-app≈ (≈-reflexive (nat-embNe _ _)) (L-build y)) (L-reflect _ )
+L-reflect {a = a ⇒ b} n {_Γ'} {_t} {x}
+  = λ w tLx → L-prepend
+                (cong-app≈ (≈-reflexive (nat-embNe w n)) (L-build tLx))
+                (L-reflect (app (wkNe w n) (reify a x)))
 L-reflect {a = □ a}   n
-  = λ w e → L-prepend (cong-unbox≈ (≈-reflexive (nat-embNe _ _))) (L-reflect _)
+  = λ w e → L-prepend
+              (cong-unbox≈ (≈-reflexive (nat-embNe w n)))
+              (L-reflect (unbox (wkNe w n) e))
 
 -- L is invariant under weakening
 wkTmPresL : {t : Tm Γ a} {x : Tm' Γ a}
   → (w : Γ ⊆ Γ')
-  → (tLx : L t x)
-  → L (wkTm w t) (wkTm' a w x)
+  → (tLx : L a t x)
+  → L a (wkTm w t) (wkTm' a w x)
 wkTmPresL {a = ι}     {x = x} w tLn
-  = ≈-trans (wkTmPres≈ _ tLn) (≈-reflexive (nat-embNf _ (reify _ x)))
-wkTmPresL {a = a ⇒ b}         w tLf
-  = λ w' y → L-cast (cong1 app (wkTmPres∙ _ _ _)) refl (tLf (w ∙ w') y)
-wkTmPresL {a = □ a}           w tLb
-  = λ w' e → L-cast (cong1 unbox (wkTmPres∙ _ _ _)) refl (tLb (w ∙ w') e)
+  = ≈-trans (wkTmPres≈ w tLn) (≈-reflexive (nat-embNf w (reify ι x)))
+wkTmPresL {a = a ⇒ b} {t = t} w tLf
+  = λ w' y → L-cast (cong1 app (wkTmPres∙ w w' t)) refl (tLf (w ∙ w') y)
+wkTmPresL {a = □ a}   {t = t} w tLb
+  = λ w' e → L-cast (cong1 unbox (wkTmPres∙ w w' t)) refl (tLb (w ∙ w') e)
 
 -- Lₛ is invariant under weakening
 wkSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
   → (w : Γ ⊆ Γ')
-  → (sLδ : Lₛ s δ)
-  → Lₛ (wkSub w s) (wkSub' Δ w δ)
+  → (sLδ : Lₛ Δ s δ)
+  → Lₛ Δ (wkSub w s) (wkSub' Δ w δ)
 wkSubPresLₛ {Δ = []}       w []
   = []
 wkSubPresLₛ {Δ = _Δ `, _a} w (sLδ `, tLx)
@@ -111,9 +119,9 @@ wkSubPresLₛ {Δ = _Δ #}     w (lock sLδ e)
   = lock (wkSubPresLₛ (factorWk e w) sLδ) (factorExt e w)
 
 -- syntactic identity is related to semantic identity
-idLₛ : Lₛ {Δ} idₛ (idₛ' Δ)
+idLₛ : Lₛ Δ idₛ (idₛ' Δ)
 idLₛ {[]}      = []
-idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect (var zero)
+idLₛ {_Δ `, a} = wkSubPresLₛ fresh[ a ] idLₛ `, L-reflect var0
 idLₛ {_Δ #}    = lock idLₛ new
 
 -----------------------------
@@ -123,16 +131,16 @@ idLₛ {_Δ #}    = lock idLₛ new
 -- local lemmas for the proof of fundamental theorem
 private
   substVarPresL : (v : Var Δ a) {s : Sub Γ Δ} {δ : Sub' Γ Δ}
-    → (sLδ : Lₛ s δ)
-    → L (substVar s v) (substVar' v δ)
-  substVarPresL zero     (_ `, tLx)  = tLx
-  substVarPresL (succ v) (sLδ `, _b) = substVarPresL v sLδ
+    → (sLδ : Lₛ Δ s δ)
+    → L a (substVar s v) (substVar' v δ)
+  substVarPresL zero     (_sLδ `,  tLx) = tLx
+  substVarPresL (succ v) ( sLδ `, _tLx) = substVarPresL v sLδ
 
   beta-lemma : (w : Γ ⊆ Γ') (s : Sub Γ Δ) (t : Tm (Δ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ≈ substTm (wkSub w s `, u) t
   beta-lemma w s t u = ≈-trans (≈-reflexive (cong1 app (cong lam (trans
     (sym (nat-substTm t (keepₛ s) (keep w)))
-    (cong (λ p → substTm (p `, var zero) t)
+    (cong (λ p → substTm (p `, var0) t)
       (trans
         (wkSubPres∙ fresh (keep w) s)
         (cong1 wkSub (cong drop (leftIdWk w)))))))))
@@ -149,31 +157,31 @@ private
 
   lCtxₛ'∼lCtxₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
     → (e : CExt Δ ΔL ΔR)
-    → (sLδ : Lₛ s δ)
+    → (sLδ : Lₛ Δ s δ)
     → lCtxₛ' e δ ≡ lCtxₛ e s
   lCtxₛ'∼lCtxₛ nil       _sLδ           = refl
-  lCtxₛ'∼lCtxₛ (ext   e) (sLδ `, _a)    = lCtxₛ'∼lCtxₛ e sLδ
+  lCtxₛ'∼lCtxₛ (ext   e) (sLδ `, _tLx)  = lCtxₛ'∼lCtxₛ e sLδ
   lCtxₛ'∼lCtxₛ (ext#- e) (lock sLδ _e') = lCtxₛ'∼lCtxₛ e sLδ
 
   rCtxₛ'∼rCtxₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
     → (e : CExt Δ ΔL ΔR)
-    → (sLδ : Lₛ s δ)
+    → (sLδ : Lₛ Δ s δ)
     → rCtxₛ' e δ ≡ rCtxₛ e s
   rCtxₛ'∼rCtxₛ nil       _sLδ           = refl
-  rCtxₛ'∼rCtxₛ (ext   e) (sLδ `, _a)    = rCtxₛ'∼rCtxₛ e sLδ
+  rCtxₛ'∼rCtxₛ (ext   e) (sLδ `, _tLx)  = rCtxₛ'∼rCtxₛ e sLδ
   rCtxₛ'∼rCtxₛ (ext#- e) (lock sLδ _e') = cong (_,, _) (rCtxₛ'∼rCtxₛ e sLδ)
 
   factorSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
     → (e : CExt Δ ΔL ΔR)
-    → (sLδ : Lₛ s δ)
-    → Lₛ (factorSubₛ e s) (subst (λ Γ → Sub' Γ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
+    → (sLδ : Lₛ Δ s δ)
+    → Lₛ ΔL (factorSubₛ e s) (subst (λ Γ → Sub' Γ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
   factorSubPresLₛ nil       sLδ            = sLδ
-  factorSubPresLₛ (ext e)   (sLδ `, _a)    = factorSubPresLₛ e sLδ
+  factorSubPresLₛ (ext e)   (sLδ `, _tLx)  = factorSubPresLₛ e sLδ
   factorSubPresLₛ (ext#- e) (lock sLδ _e') = factorSubPresLₛ e sLδ
 
   factorExtₛ'∼factorExtₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
     → (e : CExt Δ ΔL ΔR)
-    → (sLδ : Lₛ s δ)
+    → (sLδ : Lₛ Δ s δ)
     → factorExtₛ e s ≡ subst₂ (CExt Γ) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)
   factorExtₛ'∼factorExtₛ _e _sLδ = ExtIsProp _ _
 
@@ -205,7 +213,7 @@ private
         where
           open import Relation.Binary.Reasoning.Setoid (Tm-setoid Θ a)
 
-  module _ (e : CExt Δ ΔL ΔR) (s : Sub Γ Δ) (δ : Sub' Γ Δ) (sLδ : Lₛ s δ) where
+  module _ (e : CExt Δ ΔL ΔR) (s : Sub Γ Δ) (δ : Sub' Γ Δ) (sLδ : Lₛ Δ s δ) where
     remSubstFromIdWk : subst₂ _⊆_ (lCtxₛ'∼lCtxₛ e sLδ) (lCtxₛ'∼lCtxₛ e sLδ) idWk[ lCtxₛ' e δ ] ≡ idWk[ lCtxₛ e s ]
     remSubstFromIdWk rewrite lCtxₛ'∼lCtxₛ {s = s} {δ} e sLδ = refl
 
@@ -263,33 +271,33 @@ private
 -- The Fundamental theorem, for terms
 
 Fund : Tm Δ a → Set
-Fund {Δ} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
-               → (sLδ : Lₛ s δ)
-               → L (substTm s t) (eval t δ)
+Fund {Δ} {a} t = ∀ {Γ} {s : Sub Γ Δ} {δ : Sub' Γ Δ}
+                   → (sLδ : Lₛ Δ s δ)
+                   → L a (substTm s t) (eval t δ)
 
 fund : (t : Tm Γ a) → Fund t
 fund (var v)                       sLδ
   = substVarPresL v sLδ
-fund (lam t)           {_Γ} {s} sLδ {_Γ'} {u}
+fund (lam t)          {_Γ} {s}     sLδ {_Γ'} {u}
   = λ w uLx → L-prepend (beta-lemma w s t u)
       (fund t {s = wkSub w s `, u} (wkSubPresLₛ w sLδ `, uLx))
-fund (app t u)                     sLδ
+fund (app t u)        {_Γ} {s}     sLδ
   = L-cast
-      (cong1 app (sym (wkTmPresId _)))
+      (cong1 app (sym (wkTmPresId (substTm s t))))
       refl
       (fund t sLδ idWk (fund u sLδ))
 fund (box t)          {_Γ} {s}     sLδ
   = λ w e → L-prepend (unbox-box-reduces w s e t) (fund t (lock (wkSubPresLₛ w sLδ) e))
-fund (unbox {ΔL} t e) {_Γ} {s} {δ} sLδ
+fund (unbox {ΔL} t e) {Γ}  {s} {δ} sLδ
   = L-cast
-      (cong₂ unbox (sym (wkTmPresId _)) (factorExtₛ'∼factorExtₛ e sLδ))
+      (cong₂ unbox (sym (wkTmPresId (substTm (factorSubₛ e s) t))) (factorExtₛ'∼factorExtₛ e sLδ))
       (sameEval e s δ sLδ t)
       (fund t
         {s = factorSubₛ e s}
         {δ = subst (λ Δ → Sub' Δ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ)}
         (factorSubPresLₛ e sLδ)
         idWk[ lCtxₛ e s ]
-        (subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)))
+        (subst₂ (CExt Γ) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)))
 
 -- reduction trace for norm
 trace : (t : Tm Γ a) → t ≈ embNf (norm t)

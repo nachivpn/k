@@ -5,7 +5,9 @@ open import Data.Empty using (⊥)
 
 open import Relation.Binary using (Transitive)
 
-open import IK.Term
+open import IK.Term.Base
+
+open import IK.Term.NormalForm.Base
 
 infixr 3 _⊲_ _⊲ᶜ_
 

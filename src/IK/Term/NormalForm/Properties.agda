@@ -1,6 +1,8 @@
 {-# OPTIONS --safe --without-K #-}
 module IK.Term.NormalForm.Properties where
 
+open import Data.Product using (-,_)
+
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; trans ; cong ; cong₂)
 
 open import IK.Term.Base
@@ -56,3 +58,41 @@ nat-embNf w (box n) = cong box (nat-embNf (keep# w) n)
 nat-embNe w (var x)     = refl
 nat-embNe w (app n x)   = cong₂ app (nat-embNe w n) (nat-embNf w x)
 nat-embNe w (unbox n x) = cong₂ unbox (nat-embNe (sliceLeft x w) n) refl
+
+-------------
+-- Neutrality
+-------------
+
+infix 5 _R_ _RCtx_
+
+-- positive subformula that doesn't drop boxes
+data _R_ : (a : Ty) → (b : Ty) → Set where
+  ◻    :                   a R a
+  ⇒◻   : (aRb : a R b) →   a R c ⇒ b
+  □[◻] : (aRb : a R b) → □ a R □ b
+
+-- positive subformula under as many boxes as locks
+data _RCtx_ : (a : Ty) → (Γ : Ctx) → Set where
+  here   : (aRb  :   a R    b)                   → a RCtx Γ `, b
+  there  : (aRΓ  :   a RCtx Γ)                   → a RCtx Γ `, b
+  there◁ : (□aRΔ : □ a RCtx Δ) → (Δ◁Γ : Δ ◁IK Γ) → a RCtx Γ
+
+R-trans : (aRb : a R b) → (bRc : b R c) → a R c
+R-trans aRb        ◻          = aRb
+R-trans aRb        (⇒◻   bRc) = ⇒◻   (R-trans aRb bRc)
+R-trans ◻          (□[◻] bRc) = □[◻] bRc
+R-trans (□[◻] aRb) (□[◻] bRc) = □[◻] (R-trans aRb bRc)
+
+R-cons : (aRb : a R b) → (bRΓ : b RCtx Γ) → a RCtx Γ
+R-cons aRb (here   bRc)      = here   (R-trans aRb        bRc)
+R-cons aRb (there  bRΓ)      = there  (R-cons  aRb        bRΓ)
+R-cons aRb (there◁ □bRΔ Δ◁Γ) = there◁ (R-cons  (□[◻] aRb) □bRΔ) Δ◁Γ
+
+neutrality-var : (v : Var Γ a) → a RCtx Γ
+neutrality-var zero     = here  ◻
+neutrality-var (succ v) = there (neutrality-var v)
+
+neutrality : (n : Ne Γ a) → a RCtx Γ
+neutrality (var   v)   = neutrality-var v
+neutrality (app   n m) = R-cons (⇒◻ ◻) (neutrality n)
+neutrality (unbox n e) = there◁ (neutrality n) (-, e)

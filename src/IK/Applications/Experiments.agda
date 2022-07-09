@@ -3,8 +3,11 @@ module IK.Applications.Experiments where
 
 import Context
 
+open import IK.Term.Base
+
+open import IK.Term.NormalForm.Base
+
 open import IK.Norm.Base
-open import IK.Term
 
 open import IK.Applications.Neutrality
 

@@ -1,6 +1,8 @@
 {-# OPTIONS --safe --without-K #-}
 module IS4.Term.NormalForm.Properties where
 
+open import Data.Product using (-,_)
+
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; refl ; trans ; subst₂ ; cong ; cong₂ ; module ≡-Reasoning)
 
@@ -107,3 +109,41 @@ wkNePres∙ {Γ'' = Γ''} {a} w w' (unbox {ΓL} n e) = let open ≡-Reasoning in
 wkNfPres∙ w w' (up  n) = cong up  (wkNePres∙ w         w'         n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep  w) (keep  w') n)
 wkNfPres∙ w w' (box n) = cong box (wkNfPres∙ (keep# w) (keep# w') n)
+
+-------------
+-- Neutrality
+-------------
+
+infix 5 _R_ _RCtx_
+
+-- positive subformula that doesn't drop boxes
+data _R_ : (a : Ty) → (b : Ty) → Set where
+  ◻    :                   a R a
+  ⇒◻   : (aRb : a R b) →   a R c ⇒ b
+  □[◻] : (aRb : a R b) → □ a R □ b
+
+-- positive subformula under as many boxes as locks
+data _RCtx_ : (a : Ty) → (Γ : Ctx) → Set where
+  here   : (aRb  :   a R    b)                    → a RCtx Γ `, b
+  there  : (aRΓ  :   a RCtx Γ)                    → a RCtx Γ `, b
+  there◁ : (□aRΔ : □ a RCtx Δ) → (Δ◁Γ : Δ ◁IS4 Γ) → a RCtx Γ
+
+R-trans : (aRb : a R b) → (bRc : b R c) → a R c
+R-trans aRb        ◻          = aRb
+R-trans aRb        (⇒◻   bRc) = ⇒◻   (R-trans aRb bRc)
+R-trans ◻          (□[◻] bRc) = □[◻] bRc
+R-trans (□[◻] aRb) (□[◻] bRc) = □[◻] (R-trans aRb bRc)
+
+R-cons : (aRb : a R b) → (bRΓ : b RCtx Γ) → a RCtx Γ
+R-cons aRb (here   bRc)      = here   (R-trans aRb        bRc)
+R-cons aRb (there  bRΓ)      = there  (R-cons  aRb        bRΓ)
+R-cons aRb (there◁ □bRΔ Δ◁Γ) = there◁ (R-cons  (□[◻] aRb) □bRΔ) Δ◁Γ
+
+neutrality-var : (v : Var Γ a) → a RCtx Γ
+neutrality-var zero     = here  ◻
+neutrality-var (succ v) = there (neutrality-var v)
+
+neutrality : (n : Ne Γ a) → a RCtx Γ
+neutrality (var   v)   = neutrality-var v
+neutrality (app   n m) = R-cons (⇒◻ ◻) (neutrality n)
+neutrality (unbox n e) = there◁ (neutrality n) (-, e)

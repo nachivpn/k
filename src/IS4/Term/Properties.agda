@@ -13,7 +13,6 @@ import RUtil
 
 open import IS4.Term.Base
 open import IS4.Term.Conversion
-open import IS4.Term.NormalForm
 open import IS4.Term.Reduction
 
 ----------------------

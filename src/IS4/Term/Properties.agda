@@ -2,7 +2,7 @@
 module IS4.Term.Properties where
 
 open import Relation.Binary.PropositionalEquality
-  using    (_≡_ ; cong ; cong₂ ; subst ; subst₂ ; subst-subst ; subst-sym-subst ; module ≡-Reasoning)
+  using    (_≡_ ; cong ; cong₂ ; subst ; subst₂ ; subst-subst ; module ≡-Reasoning)
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
 import Relation.Binary.Reasoning.Setoid as SetoidReasoning
@@ -218,12 +218,6 @@ cong-lock≅ : {ΓL1 ΓL2 ΓR1 ΓR2 : Ctx} →
           lock s1 e1 ≅ lock s2 e2
 cong-lock≅ {Γ = Γ} ΓL1≡ΓL2 ΓR1≡ΓR2 s1≅s2 e1≅e2
   = xcong (λ ΓL → Sub ΓL _) (CExt Γ) {R = λ _ _ → Sub Γ _} ΓL1≡ΓL2 ΓR1≡ΓR2 lock s1≅s2 e1≅e2
-
-subst-sym : ∀ {A : Set} {x y : A} {P : A → Set} {p : P x} {q : P y} (x≡y : x ≡ y)
-  → subst P x≡y p ≡ q
-  → p ≡ subst P (≡-sym x≡y) q
-subst-sym {P = P} {p = p} x≡y q =
-  ≡-sym (subst (λ z → subst P (≡-sym x≡y) z ≡ p) q (subst-sym-subst x≡y))
 
 wkTmPresId : (t : Tm Γ a) → wkTm idWk t ≡ t
 wkTmPresId (var x)     = cong var (wkVarPresId x)

@@ -53,6 +53,13 @@ module _ {a} {b} {c} {d} {e} where
           → f {w₁} {x₁} y₁ z₁ ≡ f {w₂} {x₂} y₂ z₂
   idcong₄ _f refl refl refl refl = refl
 
+subst-sym : ∀ {a p} {A : Set a} {P : A → Set p}
+            {x₁ x₂ : A} {y₁ : P x₁} {y₂ : P x₂}
+            (eq : x₁ ≡ x₂)
+          → subst P eq y₁ ≡ y₂
+          → y₁ ≡ subst P (sym eq) y₂
+subst-sym refl y₁≡y₂ = y₁≡y₂
+
 subst-application′ : ∀ {a b₁ b₂} {A : Set a}
                     (B₁ : A → Set b₁) {B₂ : A → Set b₂}
                     {x₁ x₂ : A} {y : B₁ x₁}

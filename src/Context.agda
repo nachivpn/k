@@ -256,6 +256,11 @@ pattern ext[_] a w = ext {a = a} w
 -- The modal accessibility relation _◁_ for λ_IK defined in Figure 4
 -- in the paper can equivalently be defined by Δ ◁ Γ = ∃ ΔR. LFExt Γ
 -- (Δ #) ΔR.
+--
+-- Lock-free context extensions are also used to represent sequences
+-- w : Γ ⊆ Γ `, a₁ `, … `, aₙ of drops in the "shift-unbox" conversion
+-- rule unbox t (w · e) ≈ unbox (wkTm w t) e (cf. discussion below
+-- Theorem 7 in the paper).
 LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 

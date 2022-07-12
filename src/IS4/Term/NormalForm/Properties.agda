@@ -6,9 +6,33 @@ open import Relation.Binary.PropositionalEquality
   renaming (refl to ≡-refl ; sym to ≡-sym)
 
 open import HEUtil
+open import PEUtil
 
 open import IS4.Term.Base
 open import IS4.Term.NormalForm.Base
+
+private
+  module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where
+    cong-unbox≡′′ : {n : Ne Γ (□ a)} {n' : Ne Γ' (□ a)}
+      → (Γ≡Γ' : Γ ≡ Γ')
+      → (n≡n' : subst1 Ne Γ≡Γ' n ≡ n')
+      → unbox n e ≡[ Ne Δ a ] unbox n' e'
+    cong-unbox≡′′ Γ≡Γ' n≡n' =
+      idcong₄ unbox Γ≡Γ' (extRUniq′ Γ≡Γ' e e') n≡n' (ExtIsProp _ _)
+
+  cong-unbox≡ : {n : Ne Γ (□ a)} {n' : Ne Γ (□ a)}
+    → (n≡n' : n ≡ n')
+    → unbox n e ≡[ Ne _ a ] unbox n' e
+  cong-unbox≡ = cong-unbox≡′′ ≡-refl
+
+  cong-unbox≡2 : {n : Ne Γ (□ a)}
+    → unbox n e ≡[ Ne _ a ] unbox n e'
+  cong-unbox≡2 = cong-unbox≡′′ ≡-refl ≡-refl
+
+  cong-unbox≡′ : {n : Ne Γ (□ a)} {n' : Ne Γ (□ a)}
+    → (n≡n' : n ≡ n')
+    → unbox n e ≡[ Ne _ a ] unbox n' e'
+  cong-unbox≡′ = cong-unbox≡′′ ≡-refl
 
 ------------------------
 -- Naturality conditions

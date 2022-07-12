@@ -3,6 +3,8 @@ module PEUtil where
 
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; subst ; subst₂)
 
+≡[]-syntax = _≡_ ; syntax ≡[]-syntax {A = A} a b = a ≡[ A ] b
+
 module _ {a} {A : Set a} {x y z : A} where
   trans˘ : x ≡ y → z ≡ y → x ≡ z
   trans˘ x≡y z≡y = trans x≡y (sym z≡y)
@@ -31,6 +33,13 @@ module _ {a} {b} {c} where
          → (p : y₁ ≡ y₂)
          → f x y₁ ≡ f x y₂
   cong2 _f refl = refl
+
+module _ {a} {A : Set a} {b} {B : Set b} {r} (R : A → B → Set r) where
+  subst1 : ∀ {x₁ x₂ y} → x₁ ≡ x₂ → R x₁ y → R x₂ y
+  subst1 {_x₁} {_x₂} {y} = subst (λ x → R x y)
+
+  subst1˘ : ∀ {x₁ x₂ y} → x₂ ≡ x₁ → R x₁ y → R x₂ y
+  subst1˘ x₂≡x₁ = subst1 (sym x₂≡x₁)
 
 module _ {a} {b} {c} where
   dcong₂ : ∀ {A : Set a} {B : A → Set b} {C : Set c}

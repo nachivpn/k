@@ -201,6 +201,38 @@ trimSubId (keep# w) = cong₂ lock (trimSubId w) ≡-refl
 -- No good ever comes from proving these lemmas, but no
 -- good can happen without proving them.
 
+module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where
+  cong-unbox≡′′ : (Γ≡Γ' : Γ ≡ Γ')
+    → (t≡t' : subst1 Tm Γ≡Γ' t ≡ t')
+    → unbox t e ≡ unbox t' e'
+  cong-unbox≡′′ Γ≡Γ' t≡t' =
+    idcong₄ unbox Γ≡Γ' (extRUniq′ Γ≡Γ' e e') t≡t' (ExtIsProp _ _)
+
+cong-unbox≡ : (t≡t' : t ≡ t') → unbox t e ≡ unbox t' e
+cong-unbox≡ = cong-unbox≡′′ ≡-refl
+
+cong-unbox2≡ : unbox t e ≡ unbox t e'
+cong-unbox2≡ = cong-unbox≡′′ ≡-refl ≡-refl
+
+cong-unbox≡′ : (t≡t' : t ≡ t') → unbox t e ≡ unbox t' e'
+cong-unbox≡′ = cong-unbox≡′′ ≡-refl
+
+module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where
+  cong-lock≡′′ : (Γ≡Γ' : Γ ≡ Γ')
+    → (s≡s' : subst1 Sub Γ≡Γ' s ≡ s')
+    → lock s e ≡ lock s' e'
+  cong-lock≡′′ Γ≡Γ' s≡s' =
+    idcong₄ lock Γ≡Γ' (extRUniq′ Γ≡Γ' e e') s≡s' (ExtIsProp _ _)
+
+cong-lock≡ : (s≡s' : s ≡ s') → lock s e ≡ lock s' e
+cong-lock≡ = cong-lock≡′′ ≡-refl
+
+cong-lock2≡ : lock s e ≡ lock s e'
+cong-lock2≡ = cong-lock≡′′ ≡-refl ≡-refl
+
+cong-lock≡′ : (s≡s' : s ≡ s') → lock s e ≡ lock s' e'
+cong-lock≡′ = cong-lock≡′′ ≡-refl
+
 cong-unbox≅ : {ΓL1 ΓL2 ΓR1 ΓR2 : Ctx} →
            ΓL1 ≡ ΓL2 → ΓR1 ≡ ΓR2 →
           {t1 : Tm ΓL1 (□ a)} {t2 : Tm ΓL2 (□ a)} {e1 : CExt Γ ΓL1 ΓR1} {e2 : CExt Γ ΓL2 ΓR2} →

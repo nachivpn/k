@@ -820,6 +820,7 @@ module Substitution
   Sub- Δ Γ = Sub Γ Δ
 
   variable
+    s s' s'' : Sub Δ Γ
     σ σ' σ'' : Sub Δ Γ
     τ τ' τ'' : Sub Δ Γ
 

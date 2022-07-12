@@ -1,9 +1,8 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Term.NormalForm.Properties where
 
 open import Relation.Binary.PropositionalEquality
-  using    (_≡_ ; subst₂ ; cong ; cong₂ ; module ≡-Reasoning)
-  renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
+  using (_≡_ ; refl ; trans ; subst₂ ; cong ; cong₂ ; module ≡-Reasoning)
 
 open import PEUtil
 
@@ -22,16 +21,16 @@ private
   cong-unbox≡ : {n : Ne Γ (□ a)} {n' : Ne Γ (□ a)}
     → (n≡n' : n ≡ n')
     → unbox n e ≡[ Ne _ a ] unbox n' e
-  cong-unbox≡ = cong-unbox≡′′ ≡-refl
+  cong-unbox≡ = cong-unbox≡′′ refl
 
   cong-unbox≡2 : {n : Ne Γ (□ a)}
     → unbox n e ≡[ Ne _ a ] unbox n e'
-  cong-unbox≡2 = cong-unbox≡′′ ≡-refl ≡-refl
+  cong-unbox≡2 = cong-unbox≡′′ refl refl
 
   cong-unbox≡′ : {n : Ne Γ (□ a)} {n' : Ne Γ (□ a)}
     → (n≡n' : n ≡ n')
     → unbox n e ≡[ Ne _ a ] unbox n' e'
-  cong-unbox≡′ = cong-unbox≡′′ ≡-refl
+  cong-unbox≡′ = cong-unbox≡′′ refl
 
 ------------------------
 -- Naturality conditions
@@ -51,7 +50,7 @@ nat-embNf w (up  n) = nat-embNe w n
 nat-embNf w (lam n) = cong lam (nat-embNf (keep w) n)
 nat-embNf w (box n) = cong box (nat-embNf (keep# w) n)
 
-nat-embNe w (var   v)   = ≡-refl
+nat-embNe w (var   v)   = refl
 nat-embNe w (app   n m) = cong₂ app   (nat-embNe w n) (nat-embNf w m)
 nat-embNe w (unbox n e) = cong1 unbox (nat-embNe (factorWk e w) n)
 
@@ -66,7 +65,7 @@ wkNePresId (unbox n e) = let open ≡-Reasoning in begin
   unbox (wkNe (factorWk e idWk) n) (factorExt e idWk)
     ≡⟨ cong-unbox≡′′
          (lCtxPresId e)
-         (≡-trans
+         (trans
            (subst-application1′ wkNe (lCtxPresId e))
            (cong1 wkNe (factorWkPresId e)))
      ⟩
@@ -97,7 +96,7 @@ wkNePres∙ {Γ'' = Γ''} {a} w w' (unbox {ΓL} n e) = let open ≡-Reasoning in
     (factorExt (factorExt e w) w')
     ≡˘⟨ cong-unbox≡′′
          (lCtxPres∙ e w w')
-         (≡-trans
+         (trans
            (subst-application1′ wkNe (lCtxPres∙ e w w'))
            (cong1 wkNe (factorWkPres∙ e w w')))
       ⟩

@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Norm.NbE.Reification where
 
 open import Data.Unit    using (⊤; tt)          renaming ()

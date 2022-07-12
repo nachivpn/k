@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Norm.NbE.Model where
 
 open import Data.Product using (Σ ; ∃ ; _×_ ; _,_ ; -,_ ; proj₁ ; proj₂)

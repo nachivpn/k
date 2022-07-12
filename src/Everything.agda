@@ -1,4 +1,4 @@
-{-# OPTIONS --with-K #-}
+{-# OPTIONS --without-K #-}
 module Everything where
 
 import Type

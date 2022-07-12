@@ -1,13 +1,12 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Term.Properties where
 
 open import Relation.Binary.PropositionalEquality
-  using    (_≡_ ; cong ; cong₂ ; subst ; subst₂ ; subst-subst ; module ≡-Reasoning)
-  renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
+  using (_≡_ ; refl ; sym ; trans ; cong ; cong₂ ; subst-subst ; module ≡-Reasoning)
 
 import Relation.Binary.Reasoning.Setoid as SetoidReasoning
 
-open import PEUtil renaming (˘trans to ≡-˘trans ; trans˘ to ≡-trans˘)
+open import PEUtil
 import RUtil
 
 open import IS4.Term.Base
@@ -23,9 +22,9 @@ open import IS4.Term.Reduction
 -- Left context of applying and then weakening it
 lCtxₛ-wkSub-comm : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) (w : Δ ⊆ Δ')
   → lCtxₛ e (wkSub w s) ≡ lCtx (factorExtₛ e s) w
-lCtxₛ-wkSub-comm nil       _s          _w = ≡-refl
+lCtxₛ-wkSub-comm nil       _s          _w = refl
 lCtxₛ-wkSub-comm (ext   e) (s `, _t)   w  = lCtxₛ-wkSub-comm e s w
-lCtxₛ-wkSub-comm (ext#- e) (lock s e') w  = ≡-trans˘
+lCtxₛ-wkSub-comm (ext#- e) (lock s e') w  = trans˘
   (lCtxₛ-wkSub-comm e s (factorWk e' w))
   (lCtxPresTrans (factorExtₛ e _) e' _)
 
@@ -34,20 +33,20 @@ lCtxₛ-wkSub-comm (ext#- e) (lock s e') w  = ≡-trans˘
 -- Right context of applying and then weakening it
 rCtxₛ-wkSub-comm : (e : CExt Γ ΓL ΓR) (s  : Sub Δ Γ) (w : Δ ⊆ Δ')
   → rCtxₛ e (wkSub w s) ≡ rCtx (factorExtₛ e s) w
-rCtxₛ-wkSub-comm nil       _s          _w = ≡-refl
+rCtxₛ-wkSub-comm nil       _s          _w = refl
 rCtxₛ-wkSub-comm (ext   e) (s `, _t)   w  = rCtxₛ-wkSub-comm e s w
-rCtxₛ-wkSub-comm (ext#- e) (lock s e') w  = ≡-trans˘
+rCtxₛ-wkSub-comm (ext#- e) (lock s e') w  = trans˘
   (cong1 _,,_ (rCtxₛ-wkSub-comm e s (factorWk e' w)))
   (rCtxPresTrans (factorExtₛ e _) e' _)
 
 -- Weakening and factoring a subtitution can be achieved by factoring and then weakening it
 factorSubₛ-wkSub-comm : (e : CExt Γ ΓL ΓR) (s : Sub Δ Γ) (w : Δ ⊆ Δ')
   → subst1 Sub (lCtxₛ-wkSub-comm e s w) (factorSubₛ e (wkSub w s)) ≡ wkSub (factorWk (factorExtₛ e s) w) (factorSubₛ e s)
-factorSubₛ-wkSub-comm nil       _s          _w = ≡-refl
+factorSubₛ-wkSub-comm nil       _s          _w = refl
 factorSubₛ-wkSub-comm (ext   e) (s `, _t)   w  = factorSubₛ-wkSub-comm e s w
 factorSubₛ-wkSub-comm (ext#- e) (lock s e') w  = let open ≡-Reasoning in begin
   subst1 Sub
-    (≡-trans˘ (lCtxₛ-wkSub-comm e _ _) (lCtxPresTrans _ e' _))
+    (trans˘ (lCtxₛ-wkSub-comm e _ _) (lCtxPresTrans _ e' _))
     (factorSubₛ e (wkSub (factorWk e' w) s))
     -- split `subst _ (trans p q) ...` to `subst _ q (subst _ p ...)`
     ≡˘⟨ subst-subst (lCtxₛ-wkSub-comm e _ _) ⟩
@@ -74,7 +73,7 @@ factorSubₛ-wkSub-comm (ext#- e) (lock s e') w  = let open ≡-Reasoning in beg
 lCtxₛ-factorExt-trimSub-assoc : (e : CExt Γ ΓL ΓR) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
    → lCtxₛ e (trimSub w s) ≡ lCtxₛ (factorExt e w) s
 lCtxₛ-factorExt-trimSub-assoc nil       s          w
-  = ≡-refl
+  = refl
 lCtxₛ-factorExt-trimSub-assoc (ext e)   (s `, _)   (drop w)
   = lCtxₛ-factorExt-trimSub-assoc (ext e) s w
 lCtxₛ-factorExt-trimSub-assoc (ext e)   (s `, _)   (keep w)
@@ -87,7 +86,7 @@ lCtxₛ-factorExt-trimSub-assoc (ext#- e) (lock s _) (keep# w)
 rCtxₛ-factorExt-trimSub-assoc : (e : CExt Γ ΓL ΓR) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
    → rCtxₛ e (trimSub w s) ≡ rCtxₛ (factorExt e w) s
 rCtxₛ-factorExt-trimSub-assoc nil       s          w
-  = ≡-refl
+  = refl
 rCtxₛ-factorExt-trimSub-assoc (ext e)   (s `, t)   (drop w)
   = rCtxₛ-factorExt-trimSub-assoc (ext e) s w
 rCtxₛ-factorExt-trimSub-assoc (ext e)   (s `, t)   (keep w)
@@ -100,7 +99,7 @@ rCtxₛ-factorExt-trimSub-assoc (ext#- e) (lock s _) (keep# w)
 factorSubₛ-trimSub-comm : (e : CExt Γ ΓL ΓR) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
   → subst1 Sub (lCtxₛ-factorExt-trimSub-assoc e s w) (factorSubₛ e (trimSub w s)) ≡ trimSub (factorWk e w) (factorSubₛ (factorExt e w) s)
 factorSubₛ-trimSub-comm nil       s          w
-  = ≡-refl
+  = refl
 factorSubₛ-trimSub-comm (ext e)   (s `, _)   (drop w)
   = factorSubₛ-trimSub-comm (ext e) s w
 factorSubₛ-trimSub-comm (ext e)   (s `, _)   (keep w)
@@ -125,7 +124,7 @@ private
   ex {Γ} {a} {b} {c} = ext#- (ext[ c ] (ext#- (ext[ b ] (ext[ a ] nil))))
 
   _ : ←#₁rCtx (ex {ΓL} {c = c}) ≡ [] `, a `, b
-  _ = ≡-refl
+  _ = refl
 
 -- Given `e` that ΓL extends Γ, ΓL is a lock-free extension of `lCtxₛ e idₛ`.
 -- This means that ΓL ⊆ (lCtxₛ e idₛ), and thus applying `factorSubₛ e idₛ` weakens
@@ -149,7 +148,7 @@ coh-trimSub-wkVar : (x : Var Γ a) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
 coh-trimSub-wkVar zero (s `, x) (drop w)
   = coh-trimSub-wkVar zero s w
 coh-trimSub-wkVar zero (s `, x) (keep w)
-  = ≡-refl
+  = refl
 coh-trimSub-wkVar (succ x) (s `, x₁) (drop w)
   = coh-trimSub-wkVar (succ x) s w
 coh-trimSub-wkVar (succ x) (s `, x₁) (keep w)
@@ -157,31 +156,31 @@ coh-trimSub-wkVar (succ x) (s `, x₁) (keep w)
 
 -- `trimSub` preserves the identity
 trimSubPresId : (s : Sub Δ Γ) → trimSub idWk s ≡ s
-trimSubPresId []         = ≡-refl
+trimSubPresId []         = refl
 trimSubPresId (s `, t)   = cong1 _`,_ (trimSubPresId s)
 trimSubPresId (lock s e) = cong1 lock (trimSubPresId s)
 
 -- naturality of substVar
 nat-substVar : (v : Var Γ a) (s : Sub Δ Γ) (w : Δ ⊆ Δ')
   → substVar (wkSub w s) v ≡ wkTm w (substVar s v)
-nat-substVar zero     (s `, t) w = ≡-refl
+nat-substVar zero     (s `, t) w = refl
 nat-substVar (succ v) (s `, t) w = nat-substVar v s w
 
 -- naturality of trimSub
 nat-trimSub : (s : Sub Γ Δ) (w : Δ' ⊆ Δ) (w' : Γ ⊆ Γ')
   → wkSub w' (trimSub w s) ≡ trimSub w (wkSub w' s)
-nat-trimSub []         base      w' = ≡-refl
+nat-trimSub []         base      w' = refl
 nat-trimSub (s `, t)   (drop  w) w' = nat-trimSub s w w'
 nat-trimSub (s `, t)   (keep  w) w' = cong1 _`,_ (nat-trimSub s w w')
 nat-trimSub (lock s e) (keep# w) w' = cong1 lock (nat-trimSub s w (factorWk e w'))
 
 -- `trimSub` on the identity substitution embeds the weakening
 trimSubId : (w : Γ ⊆ Δ) → trimSub w idₛ ≡ embWk w
-trimSubId base      = ≡-refl
-trimSubId (drop w)  = ≡-˘trans
+trimSubId base      = refl
+trimSubId (drop w)  = ˘trans
   (nat-trimSub idₛ w fresh)
   (cong (wkSub fresh) (trimSubId w))
-trimSubId (keep w)  = cong (_`, var zero) (≡-˘trans
+trimSubId (keep w)  = cong (_`, var zero) (˘trans
   (nat-trimSub idₛ w fresh)
   (cong (wkSub fresh) (trimSubId w)))
 trimSubId (keep# w) = cong1 lock (trimSubId w)
@@ -202,13 +201,13 @@ module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where
     idcong₄ unbox Γ≡Γ' (extRUniq′ Γ≡Γ' e e') t≡t' (ExtIsProp _ _)
 
 cong-unbox≡ : (t≡t' : t ≡ t') → unbox t e ≡ unbox t' e
-cong-unbox≡ = cong-unbox≡′′ ≡-refl
+cong-unbox≡ = cong-unbox≡′′ refl
 
 cong-unbox2≡ : unbox t e ≡ unbox t e'
-cong-unbox2≡ = cong-unbox≡′′ ≡-refl ≡-refl
+cong-unbox2≡ = cong-unbox≡′′ refl refl
 
 cong-unbox≡′ : (t≡t' : t ≡ t') → unbox t e ≡ unbox t' e'
-cong-unbox≡′ = cong-unbox≡′′ ≡-refl
+cong-unbox≡′ = cong-unbox≡′′ refl
 
 module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where
   cong-lock≡′′ : (Γ≡Γ' : Γ ≡ Γ')
@@ -218,13 +217,13 @@ module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where
     idcong₄ lock Γ≡Γ' (extRUniq′ Γ≡Γ' e e') s≡s' (ExtIsProp _ _)
 
 cong-lock≡ : (s≡s' : s ≡ s') → lock s e ≡ lock s' e
-cong-lock≡ = cong-lock≡′′ ≡-refl
+cong-lock≡ = cong-lock≡′′ refl
 
 cong-lock2≡ : lock s e ≡ lock s e'
-cong-lock2≡ = cong-lock≡′′ ≡-refl ≡-refl
+cong-lock2≡ = cong-lock≡′′ refl refl
 
 cong-lock≡′ : (s≡s' : s ≡ s') → lock s e ≡ lock s' e'
-cong-lock≡′ = cong-lock≡′′ ≡-refl
+cong-lock≡′ = cong-lock≡′′ refl
 
 wkTmPresId : (t : Tm Γ a) → wkTm idWk t ≡ t
 wkTmPresId (var   v)   = cong  var (wkVarPresId v)
@@ -237,7 +236,7 @@ wkTmPresId (unbox t e) = let open ≡-Reasoning in begin
   unbox (wkTm (factorWk e idWk) t) (factorExt e idWk)
     ≡⟨ cong-unbox≡′′
          (lCtxPresId e)
-         (≡-trans
+         (trans
            (subst-application1′ wkTm (lCtxPresId e))
            (cong1 wkTm (factorWkPresId e)))
      ⟩
@@ -246,7 +245,7 @@ wkTmPresId (unbox t e) = let open ≡-Reasoning in begin
   unbox t e ∎
 
 wkSubPresId : (s : Sub Δ Γ) → wkSub idWk s ≡ s
-wkSubPresId []         = ≡-refl
+wkSubPresId []         = refl
 wkSubPresId (s `, t)   = cong₂ _`,_ (wkSubPresId s) (wkTmPresId t)
 wkSubPresId (lock s e) = let open ≡-Reasoning in begin
   wkSub idWk (lock s e)
@@ -254,7 +253,7 @@ wkSubPresId (lock s e) = let open ≡-Reasoning in begin
   lock (wkSub (factorWk e idWk) s) (factorExt e idWk)
     ≡⟨ cong-lock≡′′
          (lCtxPresId e)
-         (≡-trans
+         (trans
            (subst-application1′ wkSub (lCtxPresId e))
            (cong1 wkSub (factorWkPresId e)))
      ⟩
@@ -280,7 +279,7 @@ wkTmPres∙ w w' (unbox t e) = let open ≡-Reasoning in begin
     (factorExt (factorExt e w) w')
     ≡˘⟨ cong-unbox≡′′
           (lCtxPres∙ e w w')
-          (≡-trans
+          (trans
             (subst-application1′ wkTm (lCtxPres∙ e w w'))
             (cong1 wkTm (factorWkPres∙ e w w')))
       ⟩
@@ -292,7 +291,7 @@ wkTmPres∙ w w' (unbox t e) = let open ≡-Reasoning in begin
 
 wkSubPres∙ : (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') (s : Sub Δ Γ)
   → wkSub w' (wkSub w s) ≡ wkSub (w ∙ w') s
-wkSubPres∙ _w _w' []         = ≡-refl
+wkSubPres∙ _w _w' []         = refl
 wkSubPres∙ w  w'  (s `, t)   = cong₂ _`,_ (wkSubPres∙ w w' s) (wkTmPres∙ w w' t)
 wkSubPres∙ w  w'  (lock s e) = let open ≡-Reasoning in begin
   wkSub w' (wkSub w (lock s e))
@@ -306,7 +305,7 @@ wkSubPres∙ w  w'  (lock s e) = let open ≡-Reasoning in begin
     (factorExt (factorExt e w) w')
     ≡˘⟨ cong-lock≡′′
           (lCtxPres∙ e w w')
-          (≡-trans
+          (trans
             (subst-application1′ wkSub (lCtxPres∙ e w w'))
             (cong1 wkSub (factorWkPres∙ e w w')))
      ⟩
@@ -319,11 +318,11 @@ wkSubPres∙ w  w'  (lock s e) = let open ≡-Reasoning in begin
 private
   wkSubFreshLemma : {s : Sub Δ Γ} {w : Δ ⊆ Δ'}
     → wkSub fresh[ a ] (wkSub w s) ≡ wkSub (keep w) (dropₛ s)
-  wkSubFreshLemma {s = s} {w} = ≡-trans
+  wkSubFreshLemma {s = s} {w} = trans
     (wkSubPres∙ w fresh s)
-    (≡-trans˘
+    (trans˘
       (cong1 wkSub (cong drop (rightIdWk _)) )
-      (≡-trans
+      (trans
         (wkSubPres∙ _ _ _)
         (cong1 wkSub (cong drop (leftIdWk _)))))
 
@@ -333,7 +332,7 @@ nat-substTm (var   v)   s w
   = nat-substVar v s w
 nat-substTm (lam   t)   s w
   = cong lam
-    (≡-trans (cong (λ s → substTm (s `, var zero) t) wkSubFreshLemma)
+    (trans (cong (λ s → substTm (s `, var zero) t) wkSubFreshLemma)
     (nat-substTm t (keepₛ s) (keep w)))
 nat-substTm (app   t u) s w
   = cong₂ app (nat-substTm t s w) (nat-substTm u s w)
@@ -348,7 +347,7 @@ nat-substTm (unbox t e) s w
         (factorExtₛ e (wkSub w s))
         ≡⟨ cong-unbox≡′′
              (lCtxₛ-wkSub-comm e s w)
-             (≡-trans
+             (trans
                (subst-application1′ substTm {z = t} (lCtxₛ-wkSub-comm e s w))
                (cong1 substTm {y = t} (factorSubₛ-wkSub-comm e s w)))
          ⟩
@@ -364,8 +363,8 @@ nat-substTm (unbox t e) s w
 
 coh-wkSub-∙ₛ  : {Δ'' : Ctx} (s : Sub Δ Γ) (s' : Sub Δ' Δ) (w : Δ' ⊆ Δ'')
          → wkSub w (s ∙ₛ s') ≡ s ∙ₛ wkSub w s'
-coh-wkSub-∙ₛ []         _s' _w = ≡-refl
-coh-wkSub-∙ₛ (s `, t)   s'  w  = cong₂ _`,_ (coh-wkSub-∙ₛ s s' w) (≡-sym (nat-substTm t s' w))
+coh-wkSub-∙ₛ []         _s' _w = refl
+coh-wkSub-∙ₛ (s `, t)   s'  w  = cong₂ _`,_ (coh-wkSub-∙ₛ s s' w) (sym (nat-substTm t s' w))
 coh-wkSub-∙ₛ (lock s e) s'  w  = let open ≡-Reasoning in begin
   wkSub w (lock s e ∙ₛ s')
     ≡⟨⟩
@@ -380,7 +379,7 @@ coh-wkSub-∙ₛ (lock s e) s'  w  = let open ≡-Reasoning in begin
    -- applying factoring equalities
    ≡˘⟨ cong-lock≡′′
          (lCtxₛ-wkSub-comm e s' w)
-         (≡-trans
+         (trans
            (subst-application′ (s ∙ₛ_) (lCtxₛ-wkSub-comm e s' w))
            (cong (s ∙ₛ_) (factorSubₛ-wkSub-comm e s' w))) ⟩
  lock
@@ -394,7 +393,7 @@ coh-trimSub-wkTm : (t : Tm Γ a) (s : Sub Δ' Δ) (w : Γ ⊆ Δ)
 coh-trimSub-wkTm (var   v)   s w
   = coh-trimSub-wkVar v s w
 coh-trimSub-wkTm (lam   t)   s w
-  = cong lam (≡-trans
+  = cong lam (trans
     (cong (λ p → substTm (p `, var zero) t) (nat-trimSub s w fresh))
     (coh-trimSub-wkTm t (keepₛ s) (keep w)))
 coh-trimSub-wkTm (app   t u) s w
@@ -411,7 +410,7 @@ coh-trimSub-wkTm (unbox t e) s w
         -- apply factoring equalities
         ≡⟨ cong-unbox≡′′
              (lCtxₛ-factorExt-trimSub-assoc e s w)
-             (≡-trans
+             (trans
                (subst-application1′ substTm {z = t} (lCtxₛ-factorExt-trimSub-assoc e s w))
                (cong1 substTm {y = t} (factorSubₛ-trimSub-comm e s w)))
          ⟩
@@ -429,7 +428,7 @@ coh-trimSub-wkTm (unbox t e) s w
 coh-trimSub-wkSub : {Δ₁ : Ctx} (s : Sub Δ Γ) (s' : Sub Δ₁ Δ') (w : Δ ⊆ Δ')
          → s ∙ₛ trimSub w s' ≡ wkSub w s ∙ₛ s'
 coh-trimSub-wkSub []         _s' _w
-  = ≡-refl
+  = refl
 coh-trimSub-wkSub (s `, t)   s'  w
   = cong₂ _`,_ (coh-trimSub-wkSub s s' w) (coh-trimSub-wkTm t s' w)
 coh-trimSub-wkSub (lock s e) s'  w
@@ -442,7 +441,7 @@ coh-trimSub-wkSub (lock s e) s'  w
         -- apply factoring equalities
         ≡⟨ cong-lock≡′′
              (lCtxₛ-factorExt-trimSub-assoc e s' w)
-             (≡-trans
+             (trans
                (subst-application′ (s ∙ₛ_) (lCtxₛ-factorExt-trimSub-assoc e s' w))
                (cong (s ∙ₛ_) (factorSubₛ-trimSub-comm e s' w)))
          ⟩
@@ -459,37 +458,37 @@ coh-trimSub-wkSub (lock s e) s'  w
 
 lCtxₛPresTrans : ∀ {ΓLL ΓLR : Ctx} (e : CExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR) (s : Sub Δ Γ)
   → lCtxₛ e (factorSubₛ e' s) ≡ lCtxₛ (extRAssoc e e') s
-lCtxₛPresTrans _e nil        _s            = ≡-refl
+lCtxₛPresTrans _e nil        _s            = refl
 lCtxₛPresTrans e  (ext   e') (s `, _t)     = lCtxₛPresTrans e e' s
 lCtxₛPresTrans e  (ext#- e') (lock s _e'') = lCtxₛPresTrans e e' s
 
 rCtxₛPresTrans : ∀ {ΓLL ΓLR : Ctx} (e : CExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR) (s : Sub Δ Γ)
   → rCtxₛ e (factorSubₛ e' s) ,, rCtxₛ e' s ≡ rCtxₛ (extRAssoc e e') s
-rCtxₛPresTrans _e nil        _s                      = ≡-refl
+rCtxₛPresTrans _e nil        _s                      = refl
 rCtxₛPresTrans e  (ext   e') (s `, _t)               = rCtxₛPresTrans e e' s
-rCtxₛPresTrans e  (ext#- e') (lock {ΔR = ΔR} s _e'') = ≡-˘trans (,,-assoc {ΓR = ΔR}) (cong (_,, ΔR) (rCtxₛPresTrans e e' s))
+rCtxₛPresTrans e  (ext#- e') (lock {ΔR = ΔR} s _e'') = ˘trans (,,-assoc {ΓR = ΔR}) (cong (_,, ΔR) (rCtxₛPresTrans e e' s))
 
 lCtxₛPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
   → lCtxₛ e (s ∙ₛ s') ≡ lCtxₛ (factorExtₛ e s) s'
-lCtxₛPres∙ₛ nil       _s          _s' = ≡-refl
+lCtxₛPres∙ₛ nil       _s          _s' = refl
 lCtxₛPres∙ₛ (ext   e) (s `, _t)   s'  = lCtxₛPres∙ₛ e s s'
-lCtxₛPres∙ₛ (ext#- e) (lock s e') s'  = ≡-trans (lCtxₛPres∙ₛ e _ _) (lCtxₛPresTrans _ e' _)
+lCtxₛPres∙ₛ (ext#- e) (lock s e') s'  = trans (lCtxₛPres∙ₛ e _ _) (lCtxₛPresTrans _ e' _)
 
 rCtxₛPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
   → rCtxₛ e (s ∙ₛ s') ≡ rCtxₛ (factorExtₛ e s) s'
-rCtxₛPres∙ₛ nil       _s          _s' = ≡-refl
+rCtxₛPres∙ₛ nil       _s          _s' = refl
 rCtxₛPres∙ₛ (ext   e) (s `, _t)   s'  = rCtxₛPres∙ₛ e s s'
-rCtxₛPres∙ₛ (ext#- e) (lock s e') s'  = ≡-trans (cong (_,, _) (rCtxₛPres∙ₛ e _ _)) (rCtxₛPresTrans _ e' _)
+rCtxₛPres∙ₛ (ext#- e) (lock s e') s'  = trans (cong (_,, _) (rCtxₛPres∙ₛ e _ _)) (rCtxₛPresTrans _ e' _)
 
 factorSubPresTrans : ∀ {ΓLL ΓLR : Ctx} (e : CExt ΓL ΓLL ΓLR) (e' : CExt Γ ΓL ΓR) (s : Sub Δ Γ)
   → subst1 Sub (lCtxₛPresTrans e e' s) (factorSubₛ e (factorSubₛ e' s)) ≡ factorSubₛ (extRAssoc e e') s
-factorSubPresTrans _e nil        _s            = ≡-refl
+factorSubPresTrans _e nil        _s            = refl
 factorSubPresTrans e  (ext   e') (s `, _t)     = factorSubPresTrans e e' s
 factorSubPresTrans e  (ext#- e') (lock s _e'') = factorSubPresTrans e e' s
 
 factorSubPres∙ₛ : (e : CExt Γ ΓL ΓR) (s : Sub Γ' Γ) (s' : Sub Δ Γ')
   → subst1 Sub (lCtxₛPres∙ₛ e s s') (factorSubₛ e (s ∙ₛ s'))  ≡ factorSubₛ e s ∙ₛ factorSubₛ (factorExtₛ e s) s'
-factorSubPres∙ₛ nil       _s          _s' = ≡-refl
+factorSubPres∙ₛ nil       _s          _s' = refl
 factorSubPres∙ₛ (ext   e) (s `, _t)   s'  = factorSubPres∙ₛ e s s'
 factorSubPres∙ₛ (ext#- e) (lock s e') s'  = let open ≡-Reasoning in begin
   subst1 Sub
@@ -497,9 +496,9 @@ factorSubPres∙ₛ (ext#- e) (lock s e') s'  = let open ≡-Reasoning in begin
     (factorSubₛ (ext#- e) (lock s e' ∙ₛ s'))
     ≡⟨⟩
   subst1 Sub
-    (≡-trans (lCtxₛPres∙ₛ e s (factorSubₛ e' s')) (lCtxₛPresTrans (factorExtₛ e s) e' s'))
+    (trans (lCtxₛPres∙ₛ e s (factorSubₛ e' s')) (lCtxₛPresTrans (factorExtₛ e s) e' s'))
     (factorSubₛ e (s ∙ₛ factorSubₛ e' s'))
-    -- split `subst _ (≡-trans p q) ...` to `subst _ q (subst _ p ...)`
+    -- split `subst _ (trans p q) ...` to `subst _ q (subst _ p ...)`
     ≡˘⟨ subst-subst (lCtxₛPres∙ₛ e s (factorSubₛ e' s')) ⟩
   subst1 Sub
     (lCtxₛPresTrans (factorExtₛ e s) e' s')
@@ -521,22 +520,22 @@ factorSubPres∙ₛ (ext#- e) (lock s e') s'  = let open ≡-Reasoning in begin
   factorSubₛ (ext#- e) (lock s e') ∙ₛ factorSubₛ (factorExtₛ (ext#- e) (lock s e')) s'   ∎
 
 substVarPresId : (x : Var Γ a) → substVar idₛ x ≡ var x
-substVarPresId zero     = ≡-refl
-substVarPresId (succ x) = ≡-trans (nat-substVar x idₛ fresh) (≡-trans
+substVarPresId zero     = refl
+substVarPresId (succ x) = trans (nat-substVar x idₛ fresh) (trans
   (cong (wkTm fresh) (substVarPresId x))
   (cong var (wkIncr x)))
 
 -- parallel substitution (substVar) preserves substitution composition
 substVarPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (x : Var Γ a)
   → substTm s' (substVar s x) ≡ substVar (s ∙ₛ s') x
-substVarPres∙ (s `, x) s' zero      = ≡-refl
+substVarPres∙ (s `, x) s' zero      = refl
 substVarPres∙ (s `, x) s' (succ x₁) = substVarPres∙ s s' x₁
 
 private
   dropKeepLemma : (s' : Sub Δ' Δ) (s : Sub Γ Δ')
     → dropₛ (s' ∙ₛ s) ≡ dropₛ {a = a} s' ∙ₛ keepₛ s
-  dropKeepLemma s' s = ≡-trans (coh-wkSub-∙ₛ s' s fresh)
-    (≡-˘trans
+  dropKeepLemma s' s = trans (coh-wkSub-∙ₛ s' s fresh)
+    (˘trans
       (cong (s' ∙ₛ_) (trimSubPresId (dropₛ s)))
       (coh-trimSub-wkSub s' (keepₛ s) fresh))
 
@@ -544,7 +543,7 @@ substTmPres∙ : (s : Sub Γ' Γ) (s' : Sub Δ Γ') (t : Tm Γ a)
   → substTm s' (substTm s t) ≡ substTm (s ∙ₛ s') t
 substTmPres∙ s s' (var   v)  = substVarPres∙ s s' v
 substTmPres∙ s s' (lam   t)  = cong lam
-  (≡-trans˘
+  (trans˘
     (substTmPres∙ (keepₛ s) (keepₛ s') t)
     (cong (λ s → substTm (s `, var zero) t) (dropKeepLemma s s')))
 substTmPres∙ s s' (app   t u) = cong₂ app (substTmPres∙ s s' t) (substTmPres∙ s s' u)
@@ -563,7 +562,7 @@ substTmPres∙ s s' (unbox t e) = let open ≡-Reasoning in begin
     -- apply factoring equalities
     ≡˘⟨ cong-unbox≡′′
           (lCtxₛPres∙ₛ e s s')
-          (≡-trans
+          (trans
             (subst-application1′ substTm {z = t} (lCtxₛPres∙ₛ e s s'))
             (cong1 substTm {y = t} (factorSubPres∙ₛ e s s')))
       ⟩
@@ -575,7 +574,7 @@ substTmPres∙ s s' (unbox t e) = let open ≡-Reasoning in begin
 
 assocSub : ∀ (s : Sub Δ Γ) (s' : Sub Θ Δ) (s'' : Sub Ξ Θ)
   → (s ∙ₛ s') ∙ₛ s'' ≡ s ∙ₛ (s' ∙ₛ s'')
-assocSub []         _s' _s'' = ≡-refl
+assocSub []         _s' _s'' = refl
 assocSub (s `, t)   s'  s''  = cong₂ _`,_ (assocSub s s' s'') (substTmPres∙ s' s'' t)
 assocSub (lock s e) s'  s''  = let open ≡-Reasoning in begin
   (lock s e ∙ₛ s') ∙ₛ s''
@@ -591,7 +590,7 @@ assocSub (lock s e) s'  s''  = let open ≡-Reasoning in begin
     -- apply factoring equalities
     ≡˘⟨ cong-lock≡′′
           (lCtxₛPres∙ₛ e s' s'')
-          (≡-trans
+          (trans
             (subst-application′ (s ∙ₛ_) (lCtxₛPres∙ₛ e s' s''))
             (cong (s ∙ₛ_) (factorSubPres∙ₛ e _ _ )))
       ⟩
@@ -602,14 +601,14 @@ assocSub (lock s e) s'  s''  = let open ≡-Reasoning in begin
   lock s e ∙ₛ (s' ∙ₛ s'') ∎
 
 leftIdSub : (s : Sub Γ Γ') → idₛ ∙ₛ s ≡ s
-leftIdSub []         = ≡-refl
+leftIdSub []         = refl
 leftIdSub (s `, t)   = let open ≡-Reasoning in begin
   idₛ ∙ₛ (s `, t)
     ≡⟨⟩
   wkSub fresh idₛ ∙ₛ (s `, t) `, t
     ≡˘⟨ cong (_`, _) (coh-trimSub-wkSub idₛ (s `, t) fresh) ⟩
   idₛ ∙ₛ trimSub fresh (s `, t) `, t
-    ≡⟨ cong (_`, _) (≡-trans (leftIdSub _) (trimSubPresId _)) ⟩
+    ≡⟨ cong (_`, _) (trans (leftIdSub _) (trimSubPresId _)) ⟩
   (s `, t) ∎
 leftIdSub (lock s e) = let open ≡-Reasoning in begin
   lock (idₛ ∙ₛ s) (extRAssoc nil e)
@@ -621,16 +620,16 @@ wkSubId : (w : Γ ⊆ Δ) → wkSub w idₛ ≡ embWk w
 private
   -- just a helper to reduce redundancy, nothing too interesting
   auxLemma : (w : Γ ⊆ Δ) → wkSub (drop[ a ] (w ∙ idWk)) idₛ ≡ dropₛ (embWk w)
-  auxLemma w = ≡-˘trans (wkSubPres∙ w fresh idₛ) (cong (wkSub fresh) (wkSubId w))
+  auxLemma w = ˘trans (wkSubPres∙ w fresh idₛ) (cong (wkSub fresh) (wkSubId w))
 
-wkSubId base      = ≡-refl
-wkSubId (drop  w) = ≡-˘trans
+wkSubId base      = refl
+wkSubId (drop  w) = ˘trans
   (cong (λ w' → wkSub (drop w') idₛ) (rightIdWk w))
   (auxLemma w)
-wkSubId (keep  w) = cong (_`, var zero) (≡-trans
+wkSubId (keep  w) = cong (_`, var zero) (trans
   (wkSubPres∙ fresh (keep w) idₛ)
-  (≡-trans
-    (cong1 wkSub (cong drop (≡-trans˘ (leftIdWk _) (rightIdWk _))))
+  (trans
+    (cong1 wkSub (cong drop (trans˘ (leftIdWk _) (rightIdWk _))))
     (auxLemma w)))
 wkSubId (keep# w) = cong1 lock (wkSubId w)
 
@@ -638,33 +637,33 @@ wkSubId (keep# w) = cong1 lock (wkSubId w)
 
 keepFreshLemma : {w : Γ ⊆ Γ'} {t : Tm Γ a}
   → wkTm fresh[ b ] (wkTm w t) ≡ wkTm (keep w) (wkTm fresh t)
-keepFreshLemma = ≡-trans˘
+keepFreshLemma = trans˘
   (wkTmPres∙ _ _ _)
-  (≡-trans
+  (trans
     (wkTmPres∙ _ _ _)
-    (cong1 wkTm (cong drop (≡-trans˘ (leftIdWk _) (rightIdWk _)))))
+    (cong1 wkTm (cong drop (trans˘ (leftIdWk _) (rightIdWk _)))))
 
 sliceCompLemma : (w : Γ ⊆ Δ) (e : LFExt Γ (ΓL #) ΓR) (t : Tm (ΓL #) a)
   → wkTm (LFExtToWk (wkLFExt e w)) (wkTm (keep# (sliceLeft e w)) t) ≡      wkTm w (wkTm (LFExtToWk e) t)
-sliceCompLemma w e t = ≡-trans˘
+sliceCompLemma w e t = trans˘
   (wkTmPres∙ _ _ _)
-  (≡-trans
+  (trans
     (wkTmPres∙ _ _ _)
     (cong1 wkTm (slicingLemma w e)))
 
 beta-wk-lemma : (w  : Γ ⊆ Δ) (u : Tm Γ a) (t : Tm (Γ `, a) b)
   → substTm (idₛ `, wkTm w u) (wkTm (keep w) t) ≡ wkTm w (substTm (idₛ `, u) t)
-beta-wk-lemma w u t = ≡-˘trans
+beta-wk-lemma w u t = ˘trans
   (coh-trimSub-wkTm t _ (keep w))
-  (≡-trans
+  (trans
     (cong
       (λ p → substTm (p `, wkTm w u) t)
-      (≡-trans˘ (trimSubId w) (wkSubId w)))
+      (trans˘ (trimSubId w) (wkSubId w)))
     (nat-substTm t _ _))
 
 -- factorising the identity substituion yields a weakening that only drops
 factorSubₛIdWkIsFactorSubₛId : (e : CExt Γ ΓL ΓR) → factorSubₛ e idₛ ≡ embWk (LFExtToWk (factorSubₛIdWk e))
-factorSubₛIdWkIsFactorSubₛId nil             = ≡-refl
+factorSubₛIdWkIsFactorSubₛId nil             = refl
 factorSubₛIdWkIsFactorSubₛId (ext#- e)       = factorSubₛIdWkIsFactorSubₛId e
 factorSubₛIdWkIsFactorSubₛId (ext {a = a} e) = let open ≡-Reasoning in begin
   factorSubₛ e (wkSub fresh idₛ)
@@ -729,12 +728,12 @@ wkTmPres⟶ w (exp-fun _)
 wkTmPres⟶ w (red-box t e)
   = step-≡
     (red-box _ _)
-    (≡-trans
-      (≡-˘trans
+    (trans
+      (˘trans
         (coh-trimSub-wkTm t _ _)
         (cong
           (λ s → substTm (lock s (factorExt e w)) t)
-          (≡-trans˘
+          (trans˘
             (trimSubId (factorWk e w))
             (wkSubId _))))
       (nat-substTm t _ _))
@@ -761,7 +760,7 @@ wkTmPres⟶ w (shift-unbox t w' e)
           -- factorisation preserves transitivity
           ≡⟨ cong-unbox≡′′
                (lCtxPresTrans (upLFExt w') e w)
-               (≡-trans
+               (trans
                  (subst-application1′ wkTm (lCtxPresTrans (upLFExt w') e w))
                  (cong1 wkTm (factorWkPresTrans (upLFExt w') e w)))
            ⟩
@@ -771,7 +770,7 @@ wkTmPres⟶ w (shift-unbox t w' e)
           -- apply equalities for absorption of upLFExt
           ≡˘⟨ cong-unbox≡′′
                 (lCtxAbsorbsUpLFExt w' (factorWk e w))
-                (≡-trans
+                (trans
                   (subst-application1′ wkTm (lCtxAbsorbsUpLFExt w' (factorWk e w)))
                   (cong1 wkTm (factorWkAbsorbsUpLFExt w' (factorWk e w))))
             ⟩
@@ -818,7 +817,7 @@ wkSubPres⟶ w (shift-lock⟶ₛ {s = s} w' {e}) = RUtil.≡-step-≡ _⟶ₛ_
       -- factorisation preserves transitivity
       ≡⟨ cong-lock≡′′
            (lCtxPresTrans (upLFExt w') e w)
-           (≡-trans
+           (trans
              (subst-application1′ wkSub (lCtxPresTrans (upLFExt w') e w))
              (cong1 wkSub (factorWkPresTrans (upLFExt w') e w)))
        ⟩
@@ -828,7 +827,7 @@ wkSubPres⟶ w (shift-lock⟶ₛ {s = s} w' {e}) = RUtil.≡-step-≡ _⟶ₛ_
       -- apply equalities for absorption of upLFExt
       ≡˘⟨ cong-lock≡′′
             (lCtxAbsorbsUpLFExt w' (factorWk e w))
-            (≡-trans
+            (trans
               (subst-application1′ wkSub (lCtxAbsorbsUpLFExt w' (factorWk e w)))
               (cong1 wkSub (factorWkAbsorbsUpLFExt w' (factorWk e w))))
         ⟩
@@ -973,7 +972,7 @@ substTmPres⟶ (unbox t e) r = h e r t
           unbox (wkTm (factorWk (factorExtₛ e σ) (LFExtToWk w)) (substTm (factorSubₛ e σ) t)) (subst1 (CExt _) (lCtxₛ-wkSub-comm e σ (LFExtToWk w)) e'')
         ≡˘⟨ cong1 unbox (nat-substTm t (factorSubₛ e σ) (factorWk (factorExtₛ e σ) (LFExtToWk w))) ⟩
           unbox (substTm (wkSub (factorWk (factorExtₛ e σ) (LFExtToWk w)) (factorSubₛ e σ)) t) (subst1 (CExt _) (lCtxₛ-wkSub-comm e σ (LFExtToWk w)) e'')
-        ≡˘⟨ dcong₃ (λ _Δ s e → unbox (substTm s t) e) (lCtxₛ-wkSub-comm e σ (LFExtToWk w)) (factorSubₛ-wkSub-comm e σ (LFExtToWk w)) ≡-refl ⟩
+        ≡˘⟨ dcong₃ (λ _Δ s e → unbox (substTm s t) e) (lCtxₛ-wkSub-comm e σ (LFExtToWk w)) (factorSubₛ-wkSub-comm e σ (LFExtToWk w)) refl ⟩
           unbox (substTm (factorSubₛ e (wkSub (LFExtToWk w) σ)) t) e''
         ∎
 

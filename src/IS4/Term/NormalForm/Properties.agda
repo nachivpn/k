@@ -3,9 +3,8 @@ module IS4.Term.NormalForm.Properties where
 
 open import Relation.Binary.PropositionalEquality
   using    (_≡_ ; subst₂ ; cong ; cong₂ ; module ≡-Reasoning)
-  renaming (refl to ≡-refl ; sym to ≡-sym)
+  renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
-open import HEUtil
 open import PEUtil
 
 open import IS4.Term.Base
@@ -59,25 +58,21 @@ nat-embNe w (unbox n e) = cong1 unbox (nat-embNe (factorWk e w) n)
 wkNePresId : (n : Ne Γ a) → wkNe idWk n ≡ n
 wkNfPresId : (n : Nf Γ a) → wkNf idWk n ≡ n
 
-wkNePresId         (var        v)   = cong  var (wkVarPresId v)
-wkNePresId         (app        n m) = cong₂ app (wkNePresId n) (wkNfPresId m)
-wkNePresId {Γ} {a} (unbox {ΓL} n e) = let open ≡-Reasoning in begin
+wkNePresId (var   v)   = cong  var (wkVarPresId v)
+wkNePresId (app   n m) = cong₂ app (wkNePresId n) (wkNfPresId m)
+wkNePresId (unbox n e) = let open ≡-Reasoning in begin
   wkNe idWk (unbox n e)
     ≡⟨⟩
   unbox (wkNe (factorWk e idWk) n) (factorExt e idWk)
-    ≅⟨ xcong
-      (λ ΓL → Ne ΓL (□ a)) (CExt Γ)
-      (lCtxPresId e) (rCtxPresId e)
-      unbox
-      factorWkPresId-under-wkNe
-      (≡-subst₂-addable (CExt Γ) _ _ (factorExt _ _)) ⟩
-  unbox (wkNe idWk n) (subst₂ (CExt Γ) (lCtxPresId e) (rCtxPresId e) (factorExt e idWk))
-    ≡⟨ cong-unbox≡′ (wkNePresId n) ⟩
+    ≡⟨ cong-unbox≡′′
+         (lCtxPresId e)
+         (≡-trans
+           (subst-application1′ wkNe (lCtxPresId e))
+           (cong1 wkNe (factorWkPresId e)))
+     ⟩
+  unbox (wkNe idWk n) e
+    ≡⟨ cong1 unbox (wkNePresId n) ⟩
   unbox n e ∎
-    where
-      factorWkPresId-under-wkNe : wkNe (factorWk e idWk) n ≅ wkNe idWk n
-      factorWkPresId-under-wkNe = ≅-cong (ΓL ⊆_) (lCtxPresId e) (λ w → wkNe w n)
-        (≅-trans (≡-subst-addable _ _ _) (≡-to-≅ (factorWkPresId e)))
 
 wkNfPresId (up  n) = cong up  (wkNePresId n)
 wkNfPresId (lam n) = cong lam (wkNfPresId n)
@@ -99,20 +94,16 @@ wkNePres∙ {Γ'' = Γ''} {a} w w' (unbox {ΓL} n e) = let open ≡-Reasoning in
     ≡⟨ cong-unbox≡′ (wkNePres∙ _ _ n) ⟩
   unbox
     (wkNe (factorWk e w ∙ factorWk (factorExt e w) w') n)
-    (subst₂ (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w')))
-    ≅⟨ xcong
-      (λ ΓL → Ne ΓL (□ a)) (CExt Γ'')
-      (≡-sym (lCtxPres∙ e w w')) (≡-sym (rCtxPres∙ e w w'))
-      unbox
-      factorWkPres∙-under-wkNe
-      (≡-subst₂-removable (CExt Γ'') (lCtxPres∙ e w w') (rCtxPres∙ e w w') (factorExt e (w ∙ w'))) ⟩
+    (factorExt (factorExt e w) w')
+    ≡˘⟨ cong-unbox≡′′
+         (lCtxPres∙ e w w')
+         (≡-trans
+           (subst-application1′ wkNe (lCtxPres∙ e w w'))
+           (cong1 wkNe (factorWkPres∙ e w w')))
+      ⟩
   unbox (wkNe (factorWk e (w ∙ w')) n) (factorExt e (w ∙ w'))
     ≡⟨⟩
   wkNe (w ∙ w') (unbox n e) ∎
-    where
-      factorWkPres∙-under-wkNe :  wkNe (factorWk e w ∙ factorWk (factorExt e w) w') n ≅ wkNe (factorWk e (w ∙ w')) n
-      factorWkPres∙-under-wkNe = ≅-cong (ΓL ⊆_) (≡-sym (lCtxPres∙ e w w')) (λ w → wkNe w n)
-        (≅-trans (≡-to-≅ (≡-sym (factorWkPres∙ e w w'))) (≡-subst-removable _ _ _))
 
 wkNfPres∙ w w' (up  n) = cong up  (wkNePres∙ w         w'         n)
 wkNfPres∙ w w' (lam n) = cong lam (wkNfPres∙ (keep  w) (keep  w') n)

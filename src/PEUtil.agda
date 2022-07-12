@@ -72,6 +72,13 @@ module _ {a} {b} {c} {d} {e} where
           → f {w₁} {x₁} y₁ z₁ ≡ f {w₂} {x₂} y₂ z₂
   idcong₄ _f refl refl refl refl = refl
 
+module _ {a} {b} {c} {d} {e} where
+  dcong₄ : ∀ {A : Set a} {B : A → Set b} {C : A → Set c} {D : A → Set d} {E : Set e}
+           (f : (w : A) → B w → C w → D w → E) {w₁ w₂ x₁ x₂ y₁ y₂ z₁ z₂}
+         → (p : w₁ ≡ w₂) → subst B p x₁ ≡ x₂ → subst C p y₁ ≡ y₂ → subst D p z₁ ≡ z₂
+         → f w₁ x₁ y₁ z₁ ≡ f w₂ x₂ y₂ z₂
+  dcong₄ _f refl refl refl refl = refl
+
 subst-sym : ∀ {a p} {A : Set a} {P : A → Set p}
             {x₁ x₂ : A} {y₁ : P x₁} {y₂ : P x₂}
             (eq : x₁ ≡ x₂)
@@ -88,6 +95,12 @@ module _ {a p q} {A : Set a} {P : A → Set p} {Q : A → Set q}
   subst˘-application′ : ∀ {x₁ x₂ y} → (eq : x₂ ≡ x₁)
                       → subst˘ Q eq (g y) ≡ g (subst˘ P eq y)
   subst˘-application′ refl = refl
+
+module _ {a p} {A : Set a} {P : A → Set p}
+         (g : {x : A} → P x) where
+  subst-application′′ : ∀ {x₁ x₂} → (eq : x₁ ≡ x₂)
+                      → subst P eq g ≡ g
+  subst-application′′ refl = refl
 
 module _ {a p b q} {A : Set a} {P : A → Set p} {B : Set b} {Q : A → Set q}
          (g : {x : A} → P x → B → Q x) where

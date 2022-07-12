@@ -996,7 +996,7 @@ substTmPresId (unbox t e) = fact-unbox≈ t e
       ≈⟨ ⟶-to-≈ (shift-unbox _ _ _) ⟩
     unbox (wkTm (LFExtToWk (factorSubₛIdWk e)) t) (factorExtₛ e idₛ)
       -- rewrite wkTm to substTm
-      ≈⟨ cong-unbox1≈ (coh-wkTm-substTm t _) ⟩
+      ≈⟨ cong-unbox≈ (coh-wkTm-substTm t _) ⟩
     unbox (substTm (embWk (LFExtToWk (factorSubₛIdWk e))) t) (factorExtₛ e idₛ)
       -- show that the subst is the factorisation of the id subst
       ≡⟨ cong₂ unbox (cong₂ substTm {u = t} (≡-sym (factorSubₛIdWkIsFactorSubₛId e)) ≡-refl) ≡-refl ⟩
@@ -1061,7 +1061,7 @@ substTmPres⟶ (unbox t e) r = h e r t
           {e''  : CExt Θ _ ΔR'}
         → unbox (substTm (factorSubₛ e σ)  t) e'
         ≈ unbox (substTm (factorSubₛ e σ') t) e''
-    h nil        σ⟶ₛσ'                   t = cong-unbox≈ (substTmPres⟶ t σ⟶ₛσ')
+    h nil        σ⟶ₛσ'                   t = cong-unbox≈′ (substTmPres⟶ t σ⟶ₛσ')
     h (ext e)    (cong-`,⟶ₛ1 σ⟶σ')       t = h e σ⟶σ' t
     h (ext e)    (cong-`,⟶ₛ2 t≈t')       t = cong-unbox2≈
     h (ext#- e) (cong-lock⟶ₛ σ⟶σ')       t = h e σ⟶σ' t

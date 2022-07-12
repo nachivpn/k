@@ -17,6 +17,7 @@ open import Relation.Binary.PropositionalEquality
   renaming (refl to ≡-refl ; sym to ≡-sym ; trans to ≡-trans)
 
 open import PUtil
+open import PEUtil
 
 open import IS4.Term.Base
 open import IS4.Term.Reduction as Reduction
@@ -102,17 +103,18 @@ cong-app≈ t≈t' u≈u' = ≈-trans (cong-app1≈ t≈t') (cong-app2≈ u≈u'
 cong-box≈ : ∀ (t≈t' : t ≈ t') → box t ≈ box t'
 cong-box≈ = cong-⟶-to-cong-≈ Reduction.cong-box
 
-cong-unbox1≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e
-cong-unbox1≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
+cong-unbox≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e
+cong-unbox≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
 
-cong-unbox2≈ : ∀ {t : Tm Γ (□ a)} {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ ΓR'} → unbox t e ≈ unbox t e'
-cong-unbox2≈ {t = t} {e} {e'} = subst (λ (_ , e') → unbox t e ≈ unbox t e') (Σ-≡,≡→≡ (extRUniq e e' , ExtIsProp′ e e')) ≈-refl
+module _ {t : Tm ΓL (□ a)} {e : CExt Γ ΓL ΓR} {e' : CExt Γ ΓL ΓR'} where
+  cong-unbox2≈ : unbox t e ≈ unbox t e'
+  cong-unbox2≈ = ≡-to-≈ (dcong₂ (λ _ΓR → unbox t) (extRUniq e e') (ExtIsProp′ e e'))
 
-cong-unbox≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e'
-cong-unbox≈ t≈t' = ≈-trans (cong-unbox1≈ t≈t') cong-unbox2≈
+cong-unbox≈′ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e'
+cong-unbox≈′ t≈t' = ≈-trans (cong-unbox≈ t≈t') cong-unbox2≈
 
-dcong-unbox≈ : ∀ (Γ≡Γ' : Γ ≡ Γ') (t≈t' : subst (λ Γ → Tm Γ (□ a)) Γ≡Γ' t ≈ t') → unbox t e ≈ unbox t' e'
-dcong-unbox≈ ≡-refl = cong-unbox≈
+cong-unbox≈′′ : ∀ (Γ≡Γ' : Γ ≡ Γ') (t≈t' : subst1 Tm Γ≡Γ' t ≈ t') → unbox t e ≈ unbox t' e'
+cong-unbox≈′′ ≡-refl = cong-unbox≈′
 
 shift-unbox≈ : ∀ (t : Tm Γ (□ a)) (w : LFExt Γ' Γ ΓR) → unbox t e ≈ unbox (wkTm (LFExtToWk w) t) e'
 shift-unbox≈ t w = ≈-trans cong-unbox2≈ (⟶-to-≈ (Reduction.shift-unbox t w _))
@@ -162,8 +164,18 @@ cong-`,2≈ₛ t≈t' = ⟶ₛ-to-≈ₛ (cong-`,⟶ₛ2 t≈t')
 cong-`,≈ₛ : (σ≈σ' : σ ≈ₛ σ') → (t≈t' : t ≈ t') → (σ `, t) ≈ₛ (σ' `, t')
 cong-`,≈ₛ σ≈σ' t≈t' = ≈ₛ-trans (cong-`,1≈ₛ σ≈σ') (cong-`,2≈ₛ t≈t')
 
-cong-lock≈ₛ : (σ≈σ' : σ ≈ₛ σ') → lock σ e ≈ₛ lock σ' e
+cong-lock≈ₛ : ∀ (σ≈σ' : σ ≈ₛ σ') → lock σ e ≈ₛ lock σ' e
 cong-lock≈ₛ = cong-⟶ₛ-to-cong-≈ₛ cong-lock⟶ₛ
+
+module _ {σ : Sub ΓL Δ} {e : CExt Γ ΓL ΓR} {e' : CExt Γ ΓL ΓR'} where
+  cong-lock2≈ₛ : lock σ e ≈ₛ lock σ e'
+  cong-lock2≈ₛ = ≈ₛ-reflexive (dcong₂ (λ _ΓR → lock σ) (extRUniq e e') (ExtIsProp′ e e'))
+
+cong-lock≈ₛ′ : ∀ (σ≈σ' : σ ≈ₛ σ') → lock σ e ≈ₛ lock σ' e'
+cong-lock≈ₛ′ σ≈σ' = ≈ₛ-trans (cong-lock≈ₛ σ≈σ') cong-lock2≈ₛ
+
+cong-lock≈ₛ′′ : ∀ (Γ≡Γ' : Γ ≡ Γ') (σ≈σ' : subst1 Sub Γ≡Γ' σ ≈ₛ σ') → lock σ e ≈ₛ lock σ' e'
+cong-lock≈ₛ′′ ≡-refl = cong-lock≈ₛ′
 
 shift-lock≈ₛ : (w : LFExt Δ' Δ ΔR) → lock σ (extRAssoc (upLFExt w) e) ≈ₛ lock (wkSub (LFExtToWk w) σ) e
 shift-lock≈ₛ w = ⟶ₛ-to-≈ₛ (shift-lock⟶ₛ w)

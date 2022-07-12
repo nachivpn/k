@@ -225,7 +225,7 @@ module _ {Γ : Ctx} {a : Ty} where
   unbox-natural t e w with ←#IsPre# e | #→IsPost# e
   unbox-natural t e w | refl | refl = cong-unbox≡ (←#IsPre# w)
     (trans (cong˘ (subst (λ Γ → Tm Γ (□ a)) (←#IsPre# w)) (wkTmPresId t))
-      (trans (subst-application′ (Γ ⊆_) (λ w → wkTm w t) (←#IsPre# w))
+      (trans (subst-application′ (λ w → wkTm w t) (←#IsPre# w))
         (cong˘ (λ w → wkTm w t) (sliceLeftDrop e w))))
 
 unbox-universal : (t : Tm Γ (□ a))

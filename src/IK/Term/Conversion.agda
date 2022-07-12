@@ -51,10 +51,10 @@ Tm-setoid Γ a = setoid (_⟶_ {Γ} {a})
 module _ {Γ : Ctx} {a : Ty} where
   open Setoid (Tm-setoid Γ a) public
     using    (_≈_)
-    renaming (refl to ≈-refl ; reflexive to ≡-to-≈ ; sym to ≈-sym ; trans to ≈-trans ; isEquivalence to ≈-equiv)
+    renaming (refl to ≈-refl ; reflexive to ≈-reflexive ; sym to ≈-sym ; trans to ≈-trans ; isEquivalence to ≈-equiv)
 
-≡˘-to-≈ : t' ≡ t → t ≈ t'
-≡˘-to-≈ t'≡t = ≡-to-≈ (≡-sym t'≡t)
+≈-reflexive˘ : t' ≡ t → t ≈ t'
+≈-reflexive˘ t'≡t = ≈-reflexive (≡-sym t'≡t)
 
 ⟶-to-≈ : t ⟶ t' → t ≈ t'
 ⟶-to-≈ p = inj₁ p ◅ ε
@@ -104,7 +104,7 @@ cong-unbox≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
 
 module _ {t : Tm ΓL (□ a)} {e : LFExt Γ (ΓL  #) ΓR} {e' : LFExt Γ (ΓL #) ΓR'} where
   cong-unbox2≈ : unbox t e ≈ unbox t e'
-  cong-unbox2≈ = ≡-to-≈ (dcong₂ (λ _ΓR → unbox t) (extRUniq e e') (ExtIsProp′ e e'))
+  cong-unbox2≈ = ≈-reflexive (dcong₂ (λ _ΓR → unbox t) (extRUniq e e') (ExtIsProp′ e e'))
 
 cong-unbox≈′ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e'
 cong-unbox≈′ t≈t' = ≈-trans (cong-unbox≈ t≈t') cong-unbox2≈

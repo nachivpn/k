@@ -36,7 +36,7 @@ private
 step-≅ : ∀ (x {y z} : A) → y ≡ z → x ≅ y → x ≡ z
 step-≅ _ y≡z x≅y = ≡-trans (≅-to-≡ x≅y) y≡z
 
-syntax step-≅ x y≡z x≡y = x ≅⟨ x≡y ⟩ y≡z
+syntax step-≅ x y≡z x≅y = x ≅⟨ x≅y ⟩ y≡z
 
 -- Custom combinator to prove syntactic lemmas about unbox, lock, etc.
 module _

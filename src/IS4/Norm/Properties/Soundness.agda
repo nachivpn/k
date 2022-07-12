@@ -176,7 +176,7 @@ private
     → (sLδ : Lₛ Δ s δ)
     → Lₛ ΔL (factorSubₛ e s) (subst (λ Γ → Sub' Γ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
   factorSubPresLₛ nil       sLδ            = sLδ
-  factorSubPresLₛ (ext e)   (sLδ `, _tLx)  = factorSubPresLₛ e sLδ
+  factorSubPresLₛ (ext   e) (sLδ `, _tLx)  = factorSubPresLₛ e sLδ
   factorSubPresLₛ (ext#- e) (lock sLδ _e') = factorSubPresLₛ e sLδ
 
   factorExtₛ'∼factorExtₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
@@ -205,7 +205,7 @@ private
           ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
         substTm (lock idₛ e) (substTm (wkSub (keep# w) (lock s new)) t)
           ≡⟨ substTmPres∙ _ _ t ⟩
-        substTm ((wkSub (keep# w) (lock s new)) ∙ₛ (lock idₛ e) ) t
+        substTm (wkSub (keep# w) (lock s new) ∙ₛ (lock idₛ e) ) t
           ≡⟨⟩
         substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
           ≈⟨ substTmPres≈ t lockLemma ⟩
@@ -290,7 +290,7 @@ fund (box t)          {_Γ} {s}     sLδ
   = λ w e → L-prepend (unbox-box-reduces w s e t) (fund t (lock (wkSubPresLₛ w sLδ) e))
 fund (unbox {ΔL} t e) {Γ}  {s} {δ} sLδ
   = L-cast
-      (cong₂ unbox (sym (wkTmPresId (substTm (factorSubₛ e s) t))) (factorExtₛ'∼factorExtₛ e sLδ))
+      (cong-unbox≡′ (sym (wkTmPresId (substTm (factorSubₛ e s) t))))
       (sameEval e s δ sLδ t)
       (fund t
         {s = factorSubₛ e s}

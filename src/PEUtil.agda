@@ -1,7 +1,11 @@
 {-# OPTIONS --safe --without-K #-}
 module PEUtil where
 
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; sym ; trans ; cong ; subst ; subst₂)
+open import Relation.Binary.Definitions
+  using (Decidable)
+
+open import Relation.Binary.PropositionalEquality
+  using (_≡_ ; refl ; sym ; trans ; cong ; subst ; subst₂)
 
 ≡[]-syntax = _≡_ ; syntax ≡[]-syntax {A = A} a b = a ≡[ A ] b
 
@@ -16,23 +20,29 @@ module _ {a} {A : Set a} {b} {B : Set b} {x y : A} where
   cong˘ : (f : A → B) → y ≡ x → f x ≡ f y
   cong˘ f y≡x = cong f (sym y≡x)
 
-module _ {a} {A : Set a} {b} where
-  subst˘ : (B : A → Set b) {x y : A} → y ≡ x → B x → B y
-  subst˘ B y≡x b = subst B (sym y≡x) b
-
 module _ {a} {b} {c} where
   cong1 : ∀ {A : Set a} {B : Set b} {C : Set c}
-           (f : A → B → C) {x₁ x₂ y}
-         → (p : x₁ ≡ x₂)
-         → f x₁ y ≡ f x₂ y
+            (f : A → B → C) {x₁ x₂ y}
+        → (p : x₁ ≡ x₂)
+        → f x₁ y ≡ f x₂ y
   cong1 _f refl = refl
+
+  cong1˘ : ∀ {A : Set a} {B : Set b} {C : Set c}
+             (f : A → B → C) {x₁ x₂ y}
+         → (p : x₂ ≡ x₁)
+         → f x₁ y ≡ f x₂ y
+  cong1˘ _f refl = refl
 
 module _ {a} {b} {c} where
   cong2 : ∀ {A : Set a} {B : Set b} {C : Set c}
-           (f : A → B → C) {x y₁ y₂}
-         → (p : y₁ ≡ y₂)
-         → f x y₁ ≡ f x y₂
+            (f : A → B → C) {x y₁ y₂}
+        → (p : y₁ ≡ y₂)
+        → f x y₁ ≡ f x y₂
   cong2 _f refl = refl
+
+module _ {a} {A : Set a} {p} (P : A → Set p) where
+  subst˘ : ∀ {x₁ x₂} → x₂ ≡ x₁ → P x₁ → P x₂
+  subst˘ x₂≡x₁ = subst P (sym x₂≡x₁)
 
 module _ {a} {A : Set a} {b} {B : Set b} {r} (R : A → B → Set r) where
   subst1 : ∀ {x₁ x₂ y} → x₁ ≡ x₂ → R x₁ y → R x₂ y
@@ -69,20 +79,36 @@ subst-sym : ∀ {a p} {A : Set a} {P : A → Set p}
           → y₁ ≡ subst P (sym eq) y₂
 subst-sym refl y₁≡y₂ = y₁≡y₂
 
-subst-application′ : ∀ {a b₁ b₂} {A : Set a}
-                    (B₁ : A → Set b₁) {B₂ : A → Set b₂}
-                    {x₁ x₂ : A} {y : B₁ x₁}
-                    (g : {x : A} → B₁ x → B₂ x)
-                    (eq : x₁ ≡ x₂) →
-                    subst B₂ eq (g y) ≡ g (subst B₁ eq y)
-subst-application′ _ _ refl = refl
+module _ {a p q} {A : Set a} {P : A → Set p} {Q : A → Set q}
+         (g : {x : A} → P x → Q x) where
+  subst-application′ : ∀ {x₁ x₂ y} → (eq : x₁ ≡ x₂)
+                     → subst Q eq (g y) ≡ g (subst P eq y)
+  subst-application′ refl = refl
 
-open import Relation.Binary.Definitions using (Decidable)
+  subst˘-application′ : ∀ {x₁ x₂ y} → (eq : x₂ ≡ x₁)
+                      → subst˘ Q eq (g y) ≡ g (subst˘ P eq y)
+  subst˘-application′ refl = refl
+
+module _ {a p b q} {A : Set a} {P : A → Set p} {B : Set b} {Q : A → Set q}
+         (g : {x : A} → P x → B → Q x) where
+  subst-application1′ : ∀ {x₁ x₂ y z} → (eq : x₁ ≡ x₂)
+                      → subst Q eq (g y z) ≡ g (subst P eq y) z
+  subst-application1′ refl = refl
+
+  subst˘-application1′ : ∀ {x₁ x₂ y z} → (eq : x₂ ≡ x₁)
+                       → subst˘ Q eq (g y z) ≡ g (subst˘ P eq y) z
+  subst˘-application1′ refl = refl
+
+module _ {a} (A : Set a) where
+  K : Set a
+  K = {a : A} → (p : a ≡ a) → p ≡ refl
 
 module Decidable⇒K {a} {A : Set a} (_≟_ : Decidable (_≡_ {A = A})) where
   open import Axiom.UniquenessOfIdentityProofs using (module Decidable⇒UIP)
 
   open Decidable⇒UIP _≟_ public
+    using    ()
+    renaming (≡-irrelevant to Decidable⇒UIP)
 
-  K : {a : A} → (p : a ≡ a) → p ≡ refl
-  K p = ≡-irrelevant p refl
+  Decidable⇒K : K A
+  Decidable⇒K p = Decidable⇒UIP p refl

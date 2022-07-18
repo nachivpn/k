@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Norm.Properties.Soundness where
 
 open import Data.Unit    using (⊤ ; tt)
@@ -7,7 +7,6 @@ open import Data.Product using (Σ ; _×_ ; _,_ ; -,_)
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; refl ; sym ; trans ; subst ; subst₂ ; cong ; cong₂ ; module ≡-Reasoning)
 
-open import HEUtil
 open import PEUtil
 
 open import IS4.Norm.Base
@@ -176,97 +175,27 @@ private
     → (sLδ : Lₛ Δ s δ)
     → Lₛ ΔL (factorSubₛ e s) (subst (λ Γ → Sub' Γ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
   factorSubPresLₛ nil       sLδ            = sLδ
-  factorSubPresLₛ (ext e)   (sLδ `, _tLx)  = factorSubPresLₛ e sLδ
+  factorSubPresLₛ (ext   e) (sLδ `, _tLx)  = factorSubPresLₛ e sLδ
   factorSubPresLₛ (ext#- e) (lock sLδ _e') = factorSubPresLₛ e sLδ
 
-  factorExtₛ'∼factorExtₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
-    → (e : CExt Δ ΔL ΔR)
-    → (sLδ : Lₛ Δ s δ)
-    → factorExtₛ e s ≡ subst₂ (CExt Γ) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)
-  factorExtₛ'∼factorExtₛ _e _sLδ = ExtIsProp _ _
-
-  module _ (w : Γ ⊆ Γ') (s : Sub Γ Δ) (e : CExt Θ Γ' ΓR') where
-    lockLemma : lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e) ≈ₛ lock (wkSub w s) e
-    lockLemma = ≈ₛ-trans
-      (cong-lock≈ₛ (≈ₛ-sym (rightIdSub _)))
-      (≈ₛ-reflexive
-        (trans
-          (cong2 lock extLeftUnit)
-          (≅-to-≡ (≅-cong (CExt _ _) ,,-leftUnit (lock _) (≡-subst-removable (CExt _ _) _ e)))))
-
-    module _ (t : Tm (Δ #) a) where
-      unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ≈ substTm (lock (wkSub w s) e) t
-      unbox-box-reduces = begin
-        unbox (wkTm w (substTm s (box t))) e
-          ≡⟨⟩
-        unbox (box (wkTm (keep# w) (substTm (lock s new) t))) e
-          ≈⟨ ⟶-to-≈ (red-box _ _) ⟩
-        substTm (lock idₛ e) (wkTm (keep# w) (substTm (lock s new) t))
-          ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
-        substTm (lock idₛ e) (substTm (wkSub (keep# w) (lock s new)) t)
-          ≡⟨ substTmPres∙ _ _ t ⟩
-        substTm ((wkSub (keep# w) (lock s new)) ∙ₛ (lock idₛ e) ) t
-          ≡⟨⟩
-        substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
-          ≈⟨ substTmPres≈ t lockLemma ⟩
-        substTm (lock (wkSub w s) e) t ∎
-        where
-          open import Relation.Binary.Reasoning.Setoid (Tm-setoid Θ a)
-
-  module _ (e : CExt Δ ΔL ΔR) (s : Sub Γ Δ) (δ : Sub' Γ Δ) (sLδ : Lₛ Δ s δ) where
-    remSubstFromIdWk : subst₂ _⊆_ (lCtxₛ'∼lCtxₛ e sLδ) (lCtxₛ'∼lCtxₛ e sLδ) idWk[ lCtxₛ' e δ ] ≡ idWk[ lCtxₛ e s ]
-    remSubstFromIdWk rewrite lCtxₛ'∼lCtxₛ {s = s} {δ} e sLδ = refl
-
-    module _ (t : Tm ΔL (□ a)) where
-      sameEval : eval t _ .apply _ _ ≡ eval t _ .apply _ _
-      sameEval = begin
-        eval t
-          (factorSubₛ' e δ)
-          .apply
-          idWk[ lCtxₛ' e δ ]
-          (-, factorExtₛ' e δ)
-          -- add substs
-          ≅⟨ evalt-cong≅ (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ)
-            (≡-subst-addable _ _ _)
-            (≡-subst₂-addable _ _ _ _)
-            (≡-subst₂-addable _ _ _ _) ⟩
-        eval t
-          (subst (λ Δ₁ → Sub' Δ₁ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
-          .apply
-          (subst₂ (_⊆_) (lCtxₛ'∼lCtxₛ e sLδ) (lCtxₛ'∼lCtxₛ e sLδ) idWk[ lCtxₛ' e δ ])
-          (-, subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ))
-          -- remove subst₂ from idWk
-          ≡⟨ evalt-cong≡ refl remSubstFromIdWk refl ⟩
-        eval t
-          (subst (λ Δ₁ → Sub' Δ₁ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ))
-          .apply
-          idWk[ lCtxₛ e s ]
-          (-, subst₂ (CExt _) (lCtxₛ'∼lCtxₛ e sLδ) (rCtxₛ'∼rCtxₛ e sLδ) (factorExtₛ' e δ)) ∎
-        where
-          open ≡-Reasoning
-
-          -- ≅-congruence for `eval t`
-          evalt-cong≅ : {Δ ΔL1 ΔL2 ΔR1 ΔR2 : Ctx}
-            → (_ : ΔL1 ≡ ΔL2)       (_ : ΔR1 ≡ ΔR2)
-            → {s1 : Sub' ΔL1 ΔL}    {s2 : Sub' ΔL2 ΔL}
-            → {w1 : ΔL1 ⊆ ΔL1}      {w2 : ΔL2 ⊆ ΔL2}
-            → {e1 : CExt Δ ΔL1 ΔR1} {e2 : CExt Δ ΔL2 ΔR2} →
-            s1 ≅ s2 →
-            w1 ≅ w2 →
-            e1 ≅ e2 →
-            eval t s1 .apply w1 (-, e1) ≅ eval t s2 .apply w2 (-, e2)
-          evalt-cong≅ refl refl ≅-refl ≅-refl ≅-refl = ≅-refl
-
-          -- ≡-congruence for `eval t`
-          evalt-cong≡ : {Δ ΔL1 ΔR : Ctx}
-            → {s1 s2 : Sub' ΔL1 ΔL}
-            → {w1 w2 : ΔL1 ⊆ ΔL1}
-            → {e1 e2 : CExt Δ ΔL1 ΔR}
-            → s1 ≡ s2
-            → w1 ≡ w2
-            → e1 ≡ e2
-            → eval t s1 .apply w1 (-, e1) ≡ eval t s2 .apply w2 (-, e2)
-          evalt-cong≡ refl refl refl = refl
+  module _ (w : Γ ⊆ Γ') (s : Sub Γ Δ) (t : Tm (Δ #) a) (e : CExt Θ Γ' ΓR') where
+    unbox-box-reduces : unbox (wkTm w (substTm s (box t))) e ≈ substTm (lock (wkSub w s) e) t
+    unbox-box-reduces = begin
+      unbox (wkTm w (substTm s (box t))) e
+        ≡⟨⟩
+      unbox (box (wkTm (keep# w) (substTm (lock s new) t))) e
+        ≈⟨ ⟶-to-≈ (red-box _ _) ⟩
+      substTm (lock idₛ e) (wkTm (keep# w) (substTm (lock s new) t))
+        ≡⟨ cong (substTm _) (sym (nat-substTm t _ _))  ⟩
+      substTm (lock idₛ e) (substTm (wkSub (keep# w) (lock s new)) t)
+        ≡⟨ substTmPres∙ _ _ t ⟩
+      substTm (wkSub (keep# w) (lock s new) ∙ₛ (lock idₛ e) ) t
+        ≡⟨⟩
+      substTm (lock (wkSub w s ∙ₛ idₛ) (extRAssoc nil e)) t
+        ≈˘⟨ substTmPres≈ t (cong-lock≈ₛ′ (rightIdSub (wkSub w s))) ⟩
+      substTm (lock (wkSub w s) e) t ∎
+      where
+        open import Relation.Binary.Reasoning.Setoid (Tm-setoid Θ a)
 
 -- The Fundamental theorem, for terms
 
@@ -287,11 +216,15 @@ fund (app t u)        {_Γ} {s}     sLδ
       refl
       (fund t sLδ idWk (fund u sLδ))
 fund (box t)          {_Γ} {s}     sLδ
-  = λ w e → L-prepend (unbox-box-reduces w s e t) (fund t (lock (wkSubPresLₛ w sLδ) e))
+  = λ w e → L-prepend (unbox-box-reduces w s t e) (fund t (lock (wkSubPresLₛ w sLδ) e))
 fund (unbox {ΔL} t e) {Γ}  {s} {δ} sLδ
   = L-cast
-      (cong₂ unbox (sym (wkTmPresId (substTm (factorSubₛ e s) t))) (factorExtₛ'∼factorExtₛ e sLδ))
-      (sameEval e s δ sLδ t)
+      (cong-unbox≡′ (sym (wkTmPresId (substTm (factorSubₛ e s) t))))
+      (dcong₄ (λ Γ δ w r → eval t {Γ} δ .apply {Γ} w r)
+        (lCtxₛ'∼lCtxₛ e sLδ)
+        refl
+        (subst-application′′ idWk (lCtxₛ'∼lCtxₛ e sLδ))
+        (trans (subst-application′ -,_ (lCtxₛ'∼lCtxₛ e sLδ)) (dcong₂ _,_ (rCtxₛ'∼rCtxₛ e sLδ) (ExtIsProp _ _))))
       (fund t
         {s = factorSubₛ e s}
         {δ = subst (λ Δ → Sub' Δ ΔL) (lCtxₛ'∼lCtxₛ e sLδ) (factorSubₛ' e δ)}

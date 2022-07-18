@@ -21,4 +21,4 @@ module _ {a} {b} {A : Set a} {B : A → Set b} {p₁ p₂ : Σ A B} where
 ×-≡,≡→≡ = ×-≡,≡↔≡ .Inverse.f
 
 Σ×-≡,≡,≡→≡ : {A : Set} {B B' : A → Set} {p₁@(a₁ , b₁ , b₁') p₂@(a₂ , b₂ , b₂') : ∃ λ (a : A) → B a × B' a} → (∃ λ (p : a₁ ≡ a₂) → subst B p b₁ ≡ b₂ × subst B' p b₁' ≡ b₂') → p₁ ≡ p₂
-Σ×-≡,≡,≡→≡ {A} {_B} {_B'} {p₁} {p₂} (p , q , q') = Σ-≡,≡→≡ (p , ×-≡,≡→≡ (˘trans (subst-application′ _ proj₁ p) q , ˘trans (subst-application′ _ proj₂ p) q'))
+Σ×-≡,≡,≡→≡ {A} {_B} {_B'} {p₁} {p₂} (p , q , q') = Σ-≡,≡→≡ (p , ×-≡,≡→≡ (˘trans (subst-application′ proj₁ p) q , ˘trans (subst-application′ proj₂ p) q'))

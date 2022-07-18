@@ -1,6 +1,8 @@
 {-# OPTIONS --safe --without-K #-}
 module IK.Term.Conversion where
 
+open import PEUtil
+
 open import IK.Term.Base
 open import IK.Term.Reduction
   as Reduction
@@ -49,10 +51,10 @@ Tm-setoid Γ a = setoid (_⟶_ {Γ} {a})
 module _ {Γ : Ctx} {a : Ty} where
   open Setoid (Tm-setoid Γ a) public
     using    (_≈_)
-    renaming (refl to ≈-refl ; reflexive to ≡-to-≈ ; sym to ≈-sym ; trans to ≈-trans ; isEquivalence to ≈-equiv)
+    renaming (refl to ≈-refl ; reflexive to ≈-reflexive ; sym to ≈-sym ; trans to ≈-trans ; isEquivalence to ≈-equiv)
 
-≡˘-to-≈ : t' ≡ t → t ≈ t'
-≡˘-to-≈ t'≡t = ≡-to-≈ (≡-sym t'≡t)
+≈-reflexive˘ : t' ≡ t → t ≈ t'
+≈-reflexive˘ t'≡t = ≈-reflexive (≡-sym t'≡t)
 
 ⟶-to-≈ : t ⟶ t' → t ≈ t'
 ⟶-to-≈ p = inj₁ p ◅ ε
@@ -96,14 +98,18 @@ cong-app≈ t≈t' u≈u' = ≈-trans (cong-app1≈ t≈t') (cong-app2≈ u≈u'
 cong-box≈ : ∀ (t≈t' : t ≈ t') → box t ≈ box t'
 cong-box≈ = cong-⟶-to-cong-≈ Reduction.cong-box
 
-cong-unbox1≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e
-cong-unbox1≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
+cong-unbox≈ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e
+cong-unbox≈ = cong-⟶-to-cong-≈ Reduction.cong-unbox
 
-cong-unbox2≈ : ∀ (e≡e' : e ≡ e') → unbox t e ≈ unbox t e'
-cong-unbox2≈ e≡e' = ≡-to-≈ (cong₂ unbox ≡-refl e≡e')
+module _ {t : Tm ΓL (□ a)} {e : LFExt Γ (ΓL  #) ΓR} {e' : LFExt Γ (ΓL #) ΓR'} where
+  cong-unbox2≈ : unbox t e ≈ unbox t e'
+  cong-unbox2≈ = ≈-reflexive (dcong₂ (λ _ΓR → unbox t) (extRUniq e e') (ExtIsProp′ e e'))
 
-cong-unbox≈ : ∀ (t≈t' : t ≈ t') (e≡e' : e ≡ e') → unbox t e ≈ unbox t' e'
-cong-unbox≈ t≈t' e≡e' = ≈-trans (cong-unbox1≈ t≈t') (cong-unbox2≈ e≡e')
+cong-unbox≈′ : ∀ (t≈t' : t ≈ t') → unbox t e ≈ unbox t' e'
+cong-unbox≈′ t≈t' = ≈-trans (cong-unbox≈ t≈t') cong-unbox2≈
+
+cong-unbox≈′′ : ∀ (Γ≡Γ' : Γ ≡ Γ') (t≈t' : subst1 Tm Γ≡Γ' t ≈ t') → unbox t e ≈ unbox t' e'
+cong-unbox≈′′ ≡-refl = cong-unbox≈′
 
 --------------------
 -- Derived equations

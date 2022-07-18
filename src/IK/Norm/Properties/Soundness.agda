@@ -25,12 +25,12 @@ eval-complete {t = t} {t'} f with f {_} {idₛ'}
 ... | p = ≈-trans
   (≈-trans
     (⟶*-to-≈ (trace t))
-    (≡-to-≈ (cong embNf (cong reify p))))
+    (≈-reflexive (cong embNf (cong reify p))))
   (≈-sym (⟶*-to-≈ (trace t')))
 
 norm-sound : norm t ≡ norm u → t ≈ u
 norm-sound {t = t} {u} t'≡u' = ≈-trans
   (⟶*-to-≈ (trace t))
   (≈-trans
-    (≡-to-≈ (cong embNf t'≡u'))
+    (≈-reflexive (cong embNf t'≡u'))
     (≈-sym (⟶*-to-≈ (trace u))))

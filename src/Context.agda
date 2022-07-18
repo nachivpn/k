@@ -86,7 +86,9 @@ Ctx-Decidable (Γ #)   (Δ #)     with Ctx-Decidable Γ Δ
 ... | yes Γ≡Δ                   = yes (cong _# Γ≡Δ)
 ... | no  ¬Γ≡Δ                  = no  λ { refl → ¬Γ≡Δ refl }
 
-open Decidable⇒K Ctx-Decidable using () renaming (K to Ctx-K ; ≡-irrelevant to Ctx-irrelevant) public
+open Decidable⇒K Ctx-Decidable public
+  using    ()
+  renaming (Decidable⇒K to Ctx-K ; Decidable⇒UIP to Ctx-irrelevant)
 
 -------------
 -- Weakenings
@@ -256,6 +258,11 @@ pattern ext[_] a w = ext {a = a} w
 -- The modal accessibility relation _◁_ for λ_IK defined in Figure 4
 -- in the paper can equivalently be defined by Δ ◁ Γ = ∃ ΔR. LFExt Γ
 -- (Δ #) ΔR.
+--
+-- Lock-free context extensions are also used to represent sequences
+-- w : Γ ⊆ Γ `, a₁ `, … `, aₙ of drops in the "shift-unbox" conversion
+-- rule unbox t (w · e) ≈ unbox (wkTm w t) e (cf. discussion below
+-- Theorem 7 in the paper).
 LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 
@@ -387,7 +394,7 @@ private
 ,,-injective-right {Δ} {Γ #}   {Γ' #}     p = cong _# (,,-injective-right (#-injective p))
 
 extRUniq : Ext θ Γ ΓL ΓR → Ext θ Γ ΓL ΓR' → ΓR ≡ ΓR'
-extRUniq e e' = ,,-injective-right (trans (sym (extIs,, e)) (extIs,, e'))
+extRUniq e e' = ,,-injective-right (˘trans (extIs,, e) (extIs,, e'))
 
 extRUniq′ : ΓL ≡ ΓL' → Ext θ Γ ΓL ΓR → Ext θ Γ ΓL' ΓR' → ΓR ≡ ΓR'
 extRUniq′ refl = extRUniq
@@ -441,7 +448,7 @@ _∙Ext_ = extRAssoc
 ,,-leftUnit {Γ `, a} = cong (_`, _) ,,-leftUnit
 ,,-leftUnit {Γ #}    = cong _# ,,-leftUnit
 
-extLeftUnit : extRAssoc nil e ≡ subst (CExt _ _) (sym ,,-leftUnit) e
+extLeftUnit : extRAssoc nil e ≡ subst˘ (CExt _ _) ,,-leftUnit e
 extLeftUnit = ExtIsProp _ _
 
 -------------------------------------
@@ -520,10 +527,10 @@ sliceLeftPres∙ (keep# w) (keep# w') nil     = refl
 -- and the other to right, must not change its composition.
 slicingLemma : (w : Γ ⊆ Γ') → (e : LFExt Γ (ΓL #) ΓR)
   → LFExtToWk e ∙ w ≡ (keep# (sliceLeft e w) ∙ sliceRight e w)
-slicingLemma (drop w)  nil     = cong drop (slicingLemma w nil)
-slicingLemma (drop w)  (ext e) = cong drop (slicingLemma w (ext e))
-slicingLemma (keep w)  (ext e) = cong drop (slicingLemma w e)
-slicingLemma (keep# w) nil     = cong keep# (trans (leftIdWk w) (sym (rightIdWk w)))
+slicingLemma (drop  w) nil     = cong drop  (slicingLemma w nil)
+slicingLemma (drop  w) (ext e) = cong drop  (slicingLemma w (ext e))
+slicingLemma (keep  w) (ext e) = cong drop  (slicingLemma w e)
+slicingLemma (keep# w) nil     = cong keep# (trans˘ (leftIdWk w) (rightIdWk w))
 
 private
   sliceLeftId' : (e : LFExt Γ (ΓL #) ΓR)
@@ -754,37 +761,37 @@ factorDropsWk {ΓR' = ΓR' `, _} (ext#- e) (ext e') = factorDropsWk {ΓR' = ΓR'
 
 -- factorDropsWk is indeed a special case of factorWk
 factorDropsWkIsfactorWk : (e : CExt Γ ΓL ΓR) → (e' : LFExt Γ' Γ ΓR') → LFExtToWk (factorDropsWk e e') ≡ factorWk e (LFExtToWk e')
-factorDropsWkIsfactorWk nil       nil      = refl
-factorDropsWkIsfactorWk nil       (ext e') = refl
-factorDropsWkIsfactorWk (ext e)   nil      = factorDropsWkIsfactorWk e nil
-factorDropsWkIsfactorWk (ext e)   (ext e') = factorDropsWkIsfactorWk (ext e) e'
-factorDropsWkIsfactorWk (ext#- e) nil      = factorDropsWkIsfactorWk e nil
-factorDropsWkIsfactorWk (ext#- e) (ext e') = factorDropsWkIsfactorWk (ext#- e) e'
+factorDropsWkIsfactorWk nil       nil       = refl
+factorDropsWkIsfactorWk nil       (ext _e') = refl
+factorDropsWkIsfactorWk (ext   e) nil       = factorDropsWkIsfactorWk e         nil
+factorDropsWkIsfactorWk (ext   e) (ext e')  = factorDropsWkIsfactorWk (ext   e) e'
+factorDropsWkIsfactorWk (ext#- e) nil       = factorDropsWkIsfactorWk e         nil
+factorDropsWkIsfactorWk (ext#- e) (ext e')  = factorDropsWkIsfactorWk (ext#- e) e'
 
 -- Note: factorDropsExt is not need as it has the same type as factorDrops and ExtIsProp
 
 factorisationLemma : (e : LFExt Γ ΓL ΓR) → (w : Γ ⊆ Γ')
   → LFExtToWk e ∙ w ≡ factorWk e w ∙ LFExtToWk (factorExt e w)
-factorisationLemma nil    w = trans (leftIdWk _) (sym (rightIdWk _))
+factorisationLemma nil     w        = trans˘ (leftIdWk w) (rightIdWk w)
 factorisationLemma (ext e) (drop w) = cong drop (factorisationLemma (ext e) w)
-factorisationLemma (ext e) (keep w) = cong drop (factorisationLemma e w)
+factorisationLemma (ext e) (keep w) = cong drop (factorisationLemma e      w)
 
 -- Properties about absorption of upLFExt
 
 lCtxAbsorbsUpLFExt : (e : LFExt Γ ΓL ΓR) (w : Γ ⊆ Γ') → lCtx {θ = ff} e w ≡ lCtx {θ = tt} (upLFExt e) w
-lCtxAbsorbsUpLFExt nil      w       = refl
+lCtxAbsorbsUpLFExt nil     _w       = refl
 lCtxAbsorbsUpLFExt (ext e) (drop w) = lCtxAbsorbsUpLFExt (ext e) w
-lCtxAbsorbsUpLFExt (ext e) (keep w) = lCtxAbsorbsUpLFExt e w
+lCtxAbsorbsUpLFExt (ext e) (keep w) = lCtxAbsorbsUpLFExt e       w
 
 rCtxAbsorbsUpLFExt : (e : LFExt Γ ΓL ΓR) (w : Γ ⊆ Γ') → rCtx {θ = ff} e w ≡ rCtx {θ = tt} (upLFExt e) w
-rCtxAbsorbsUpLFExt nil      w       = refl
+rCtxAbsorbsUpLFExt nil     _w       = refl
 rCtxAbsorbsUpLFExt (ext e) (drop w) = cong (_`, _) (rCtxAbsorbsUpLFExt (ext e) w)
-rCtxAbsorbsUpLFExt (ext e) (keep w) = cong (_`, _) (rCtxAbsorbsUpLFExt e w)
+rCtxAbsorbsUpLFExt (ext e) (keep w) = cong (_`, _) (rCtxAbsorbsUpLFExt e       w)
 
 factorWkAbsorbsUpLFExt : (e : LFExt Γ ΓL ΓR) (w : Γ ⊆ Γ') → subst (_ ⊆_) (lCtxAbsorbsUpLFExt e w) (factorWk e w) ≡ factorWk (upLFExt e) w
-factorWkAbsorbsUpLFExt nil     w        = refl
+factorWkAbsorbsUpLFExt nil     _w       = refl
 factorWkAbsorbsUpLFExt (ext e) (drop w) = factorWkAbsorbsUpLFExt (ext e) w
-factorWkAbsorbsUpLFExt (ext e) (keep w) = factorWkAbsorbsUpLFExt e w
+factorWkAbsorbsUpLFExt (ext e) (keep w) = factorWkAbsorbsUpLFExt e       w
 
 factorExtAbsorbsUpLFExt : (e : LFExt Γ ΓL ΓR) (w : Γ ⊆ Γ') → subst₂ (CExt _) (lCtxAbsorbsUpLFExt e w) (rCtxAbsorbsUpLFExt e w) (upLFExt (factorExt e w)) ≡ factorExt (upLFExt e) w
 factorExtAbsorbsUpLFExt _ _ = ExtIsProp _ _
@@ -815,6 +822,7 @@ module Substitution
   Sub- Δ Γ = Sub Γ Δ
 
   variable
+    s s' s'' : Sub Δ Γ
     σ σ' σ'' : Sub Δ Γ
     τ τ' τ'' : Sub Δ Γ
 

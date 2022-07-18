@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --with-K #-}
+{-# OPTIONS --safe --without-K #-}
 module IS4.Norm.Properties.Completeness where
 
 open import Relation.Binary.PropositionalEquality using (_≡_)

@@ -16,4 +16,4 @@ Fitch-style modal lambda calculi feature necessity modalities in a typed lambda 
 
 ### Artifacts
 
-* Agda mechanization ([github repo](https://github.com/nachivpn/k))
+* Agda mechanization ([github repo](https://github.com/nachivpn/k)) ([highlighted and hyperlinked code](html/Everything.html))

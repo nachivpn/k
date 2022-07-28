@@ -6,7 +6,7 @@ Fitch-style modal lambda calculi feature necessity modalities in a typed lambda 
 
 ### Papers & abstracts
 
-* Normalization for Fitch-Style Modal Calculi ([pdf](https://nachivpn.me/nfmc.pdf))    
+* Normalization for Fitch-Style Modal Calculi ([pdf](https://nachivpn.me/nfmc.pdf), [arxiv](https://arxiv.org/abs/2207.12807))    
     ICFP 2022 (to appear)    
     Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas
   

@@ -45,15 +45,15 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 
 + Section 3
 
-  - Type syntax → `src/Type.agda`
-  - Context syntax → lines 31-34 in `src/Context.agda`
-  - Order-preserving embeddings (OPEs) (Fig. 3) → lines 95-100 in `src/Context.agda`
+  - Type syntax → `src/Type/Base.agda`
+  - Context syntax → lines 22-25 in `src/Context/Base.agda`
+  - Order-preserving embeddings (OPEs) (Fig. 3) → lines 68-72 in `src/Context/Base.agda`
 
 + Section 3.1 (&lambda;<sub>IK</sub>)
 
   - Section 3.1.1
-    + Modal accessibility relation (Fig. 4) → lines 259-260 and 246-249 in `src/Context.agda`
-    + Substitutions (Fig. 6) → lines 796-883 in `src/Context.agda`
+    + Modal accessibility relation (Fig. 4) → lines 188-191 and 169-172 in `src/Context/Base.agda`
+    + Substitutions (Fig. 6) → lines 367-370 in `src/Context/Base.agda`
     + Intrinsically typed syntax (Fig. 5), weakening and substitution → `src/IK/Term/Base.agda`
     + Equational theory (Fig. 7) → `src/IK/Term/Conversion.agda`
 
@@ -71,8 +71,8 @@ function for the calculi &lambda;<sub>IK</sub> (`src/IK/`) and &lambda;<sub>IS4<
 + Section 3.2 (&lambda;<sub>IS4</sub>)
 
   - Section 3.2.1
-    + Modal accessibility relation (Fig. 10) → lines 267-268 and 246-249 in `src/Context.agda`
-    + Substitutions (Fig. 11.) → lines 796-883 in `src/Context.agda`
+    + Modal accessibility relation (Fig. 10) → lines 198-201 and 169-172 in `src/Context/Base.agda`
+    + Substitutions (Fig. 11.) → lines 367-370 in `src/Context/Base.agda`
     + Intrinsically typed syntax (Fig. 11), weakening and substitution → `src/IS4/Term.agda`
     + Equational theory (Fig. 12) → `src/IS4/Term/Conversion.agda`
 
@@ -135,8 +135,14 @@ Some modules are shared among the mechanizations of
 &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>. They contain code
 that is (or is parameterized to be) calculi-independent.
 
-- `Type.agda`: Syntax of types (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
-- `Context.agda`: Syntax of contexts, weakenings/OPEs, substitutions, and properties (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
+- `Type.agda`*
+- `Type/` (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
+  + `Base.agda`: Syntax of types
+  + `Properties.agda`: Decidability of syntactic equality of types
+- `Context.agda`*
+- `Context/` (common to &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>)
+  + `Base.agda`: Syntax of contexts, weakenings/OPEs, modal accessibility relations, substitutions
+  + `Properties.agda`: Decidability of syntactic equality of contexts, properties of operations on contexts, weakenings/OPEs and modal accessibility relations
 - `IK/`
   + `Term.agda`*
   + `Term/`

@@ -15,61 +15,32 @@ open import IS4.Term as Term hiding (factorWk)
 
 import Semantics.Presheaf.Evaluation.IS4
 
-_R_ = λ Γ Δ → ∃ λ Γ' → CExt Δ Γ Γ'
+factor : ∀ (Γ◁Δ : Γ ◁IS4 Δ) (w : Δ ⊆ Δ') → ∃ λ Γ' → Γ ⊆ Γ' × Γ' ◁IS4 Δ'
+factor (_ , Γ◁Δ) w = -, Term.factorWk Γ◁Δ w , -, factorExt Γ◁Δ w
 
-variable
-  r r' r'' : Γ R Δ
-
-pattern nilR    = _ , nil
-pattern extR  e = _ , ext e
-pattern ext#R e = _ , ext#- e
-pattern newR    = _ , ext#- nil
-
-private
-  R-refl : Reflexive _R_
-  R-refl = nilR
-
-  R-trans : Transitive _R_
-  R-trans (_ , ΓRΔ) (_ , ΔRΘ) = -, extRAssoc ΓRΔ ΔRΘ
-
-  R-irrel : Irrelevant _R_
-  R-irrel (ΔR , ΓRΔ) (ΔR' , ΓRΔ') = Σ-≡,≡→≡ (extRUniq ΓRΔ ΓRΔ' , ExtIsProp _ _)
-
-  R-trans-assoc : ∀ (r : Γ R Δ) (r' : Δ R Θ) (r'' : Θ R Ξ) → R-trans r (R-trans r' r'') ≡ R-trans (R-trans r r') r''
-  R-trans-assoc _ _ _ = R-irrel _ _
-
-  R-refl-unit-left : ∀ (r : Γ R Δ) → R-trans r R-refl ≡ r
-  R-refl-unit-left _ = R-irrel _ _
-
-  R-refl-unit-right : ∀ (r : Γ R Δ) → R-trans R-refl r ≡ r
-  R-refl-unit-right _ = R-irrel _ _
-
-factor : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') → ∃ λ Γ' → Γ ⊆ Γ' × Γ' R Δ'
-factor (_ , ΓRΔ) w = -, Term.factorWk ΓRΔ w , -, factorExt ΓRΔ w
-
-factorWk : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') → Γ ⊆ _
+factorWk : ∀ (Γ◁Δ : Γ ◁IS4 Δ) (w : Δ ⊆ Δ') → Γ ⊆ _
 factorWk r w = factor r w .proj₂ .proj₁
 
-factorR : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') → _ R Δ'
-factorR r w = factor r w .proj₂ .proj₂
+factor◁ : ∀ (Γ◁Δ : Γ ◁IS4 Δ) (w : Δ ⊆ Δ') → _ ◁IS4 Δ'
+factor◁ r w = factor r w .proj₂ .proj₂
 
 private
-  factor-pres-id : ∀ (r : Γ R Δ) → factor r idWk ≡ (-, idWk , r)
-  factor-pres-id (_ , ΓRΔ) = Σ×-≡,≡,≡→≡ (lCtxPresId ΓRΔ , factorWkPresId ΓRΔ , R-irrel _ _)
+  factor-pres-id : ∀ (Γ◁Δ : Γ ◁IS4 Δ) → factor Γ◁Δ idWk ≡ (-, idWk , Γ◁Δ)
+  factor-pres-id (_ , Γ◁Δ) = Σ×-≡,≡,≡→≡ (lCtxPresId Γ◁Δ , factorWkPresId Γ◁Δ , ◁IS4-irrel _ _)
 
-  factor-pres-∙ : ∀ (r : Γ R Δ) (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') → factor r (w ∙ w') ≡ (-, factorWk r w ∙ factorWk (factorR r w) w' , factorR (factorR r w) w')
-  factor-pres-∙ (_ , ΓRΔ) w w' = Σ×-≡,≡,≡→≡ (lCtxPres∙ ΓRΔ w w' , factorWkPres∙ ΓRΔ w w' , R-irrel _ _)
+  factor-pres-∙ : ∀ (Γ◁Δ : Γ ◁IS4 Δ) (w : Δ ⊆ Δ') (w' : Δ' ⊆ Δ'') → factor Γ◁Δ (w ∙ w') ≡ (-, factorWk Γ◁Δ w ∙ factorWk (factor◁ Γ◁Δ w) w' , factor◁ (factor◁ Γ◁Δ w) w')
+  factor-pres-∙ (_ , Γ◁Δ) w w' = Σ×-≡,≡,≡→≡ (lCtxPres∙ Γ◁Δ w w' , factorWkPres∙ Γ◁Δ w w' , ◁IS4-irrel _ _)
 
-  factor-pres-refl : ∀ (w : Γ ⊆ Γ') → factor R-refl w ≡ (-, w , R-refl)
-  factor-pres-refl w = Σ-≡,≡→≡ (lCtxPresRefl {θ = tt} w , ×-≡,≡→≡ (factorWkPresRefl {θ = tt} w , R-irrel _ _))
+  factor-pres-refl : ∀ (w : Γ ⊆ Γ') → factor ◁IS4-refl w ≡ (-, w , ◁IS4-refl)
+  factor-pres-refl w = Σ-≡,≡→≡ (lCtxPresRefl {θ = tt} w , ×-≡,≡→≡ (factorWkPresRefl {θ = tt} w , ◁IS4-irrel _ _))
 
-  factor-pres-trans : ∀ (r : Γ R Δ) (r' : Δ R Θ) (w : Θ ⊆ Θ') → factor (R-trans r r') w ≡ (-, factorWk r (factorWk r' w) , R-trans (factorR r (factorWk r' w)) (factorR r' w))
-  factor-pres-trans (_ , ΓRΔ) (_ , ΔRΘ) w = Σ×-≡,≡,≡→≡ (lCtxPresTrans ΓRΔ ΔRΘ w , factorWkPresTrans ΓRΔ ΔRΘ w , R-irrel _ _)
+  factor-pres-trans : ∀ (Γ◁Δ : Γ ◁IS4 Δ) (Δ◁Θ : Δ ◁IS4 Θ) (w : Θ ⊆ Θ') → factor (◁IS4-trans Γ◁Δ Δ◁Θ) w ≡ (-, factorWk Γ◁Δ (factorWk Δ◁Θ w) , ◁IS4-trans (factor◁ Γ◁Δ (factorWk Δ◁Θ w)) (factor◁ Δ◁Θ w))
+  factor-pres-trans (_ , Γ◁Δ) (_ , Δ◁Θ) w = Σ×-≡,≡,≡→≡ (lCtxPresTrans Γ◁Δ Δ◁Θ w , factorWkPresTrans Γ◁Δ Δ◁Θ w , ◁IS4-irrel _ _)
 
 module PresheafEvaluationIS4 = Semantics.Presheaf.Evaluation.IS4
                                  Ctx
                                  _⊆_ _∙_ (λ w w' w'' → ≡-sym (assocWk w w' w'')) idWk rightIdWk leftIdWk
-                                 _R_ R-trans R-trans-assoc R-refl R-refl-unit-left R-refl-unit-right
+                                 _◁IS4_ ◁IS4-trans ◁IS4-trans-assoc ◁IS4-refl ◁IS4-refl-unit-left ◁IS4-refl-unit-right
                                  factor factor-pres-id factor-pres-∙ factor-pres-refl factor-pres-trans
 
 open PresheafEvaluationIS4 public

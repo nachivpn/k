@@ -7,17 +7,22 @@ module Context.Properties (Ty : Set) (Ty-Decidable : Decidable (_≡_ {A = Ty}))
 
 open import Data.Empty
   using (⊥ ; ⊥-elim)
+open import Data.Product
+  using (_,_)
 open import Data.Unit
   using (⊤ ; tt)
 
 open import Relation.Nullary
   using (_because_ ; yes ; no)
 
+open import Relation.Binary.Definitions
+  using (Irrelevant)
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; _≢_ ; refl ; sym ; trans ; subst ; subst₂ ; cong ; cong₂)
 
 open import Context.Base Ty
 
+open import PUtil
 open import PEUtil
 
 private
@@ -336,6 +341,22 @@ wkLFExtPresId e = wkLFExtDrop e nil
 
 sliceRightId : (e : LFExt Γ (←# Γ #) (#→ Γ)) → sliceRight e idWk ≡ LFExtToWk e
 sliceRightId e rewrite wkLFExtPresId e = refl
+
+-----------------------------------
+-- Operations on general extensions
+-----------------------------------
+
+◁IS4-irrel : Irrelevant _◁IS4_
+◁IS4-irrel (ΔR , Γ◁Δ) (ΔR' , Γ◁Δ') = Σ-≡,≡→≡ (extRUniq Γ◁Δ Γ◁Δ' , ExtIsProp _ _)
+
+◁IS4-trans-assoc : ∀ (Γ◁Δ : Γ ◁IS4 Δ) (Δ◁Θ : Δ ◁IS4 Θ) (Θ◁Ξ : Θ ◁IS4 Ξ) → ◁IS4-trans Γ◁Δ (◁IS4-trans Δ◁Θ Θ◁Ξ) ≡ ◁IS4-trans (◁IS4-trans Γ◁Δ Δ◁Θ) Θ◁Ξ
+◁IS4-trans-assoc _ _ _ = ◁IS4-irrel _ _
+
+◁IS4-refl-unit-left : ∀ (Γ◁Δ : Γ ◁IS4 Δ) → ◁IS4-trans Γ◁Δ ◁IS4-refl ≡ Γ◁Δ
+◁IS4-refl-unit-left _ = ◁IS4-irrel _ _
+
+◁IS4-refl-unit-right : ∀ (Γ◁Δ : Γ ◁IS4 Δ) → ◁IS4-trans ◁IS4-refl Γ◁Δ ≡ Γ◁Δ
+◁IS4-refl-unit-right _ = ◁IS4-irrel _ _
 
 --------------------------------------------
 -- Factorisation laws for general extensions

@@ -188,6 +188,8 @@ pattern ext#-    e = ext# tt      e
 LFExt : Ctx → Ctx → Ctx → Set
 LFExt = Ext ff
 
+_◁IK_ = λ Δ Γ → Σ Ctx λ ΔR → LFExt Γ (Δ #) ΔR
+
 -- Arbitrary context extension (possibly w/ locks, Ext flag set to tt)
 --
 -- The modal accessibility relation _◁_ for λ_IS4 defined in Figure 10
@@ -195,6 +197,16 @@ LFExt = Ext ff
 -- ΔR.
 CExt : Ctx → Ctx → Ctx → Set
 CExt = Ext tt
+
+_◁IS4_ = λ Δ Γ → Σ Ctx λ ΔR → CExt Γ Δ ΔR
+
+pattern nil◁    = _ , nil
+pattern ext◁  e = _ , ext     e
+pattern ext#◁ e = _ , ext# tt e
+
+-- extension that "generates a new context frame"
+pattern new◁IK  = _ , nil
+pattern new◁IS4 = _ , ext# tt nil
 
 variable
   e e' e'' : Ext θ Γ ΓL ΓR
@@ -262,40 +274,34 @@ sliceRight e w = LFExtToWk (wkLFExt e w)
 -- Operations on general extensions
 -----------------------------------
 
+◁IS4-refl : Reflexive _◁IS4_
+◁IS4-refl = nil◁
+
+◁IS4-trans : Transitive _◁IS4_
+◁IS4-trans (_ , Γ◁Δ) (_ , Δ◁Ε) = _ , extRAssoc Γ◁Δ Δ◁Ε
+
 private
-  _⊑_ = λ Γ Δ → ∃ λ Γ' → CExt Δ Γ Γ'
-
-  pattern nil⊑      = _ , nil
-  pattern ext⊑    e = _ , ext e
-  pattern ext#⊑ f e = _ , ext# f e
-
-  ⊑-refl : Reflexive _⊑_
-  ⊑-refl = nil⊑
-
-  ⊑-trans : Transitive _⊑_
-  ⊑-trans (_ , Γ⊑Δ) (_ , Δ⊑Ε) = _ , extRAssoc Γ⊑Δ Δ⊑Ε
-
   -- we don't use factor1 anymore
-  factor1 : (Γ⊑Δ : Γ ⊑ Δ) → (Γ'⊆Γ : Γ' ⊆ Γ) → ∃ λ Δ' → Δ' ⊆ Δ × Γ' ⊑ Δ'
-  factor1 nil⊑          Γ'⊆Γ
-    = _ , Γ'⊆Γ , nil⊑
-  factor1 (ext⊑    Γ⊑Δ) Γ'⊆Γ with factor1 (_ , Γ⊑Δ) Γ'⊆Γ
-  ... | Δ' , Δ'⊆Δ , Γ'⊑Δ'
-    = Δ' , drop Δ'⊆Δ , Γ'⊑Δ'
-  factor1 (ext#⊑ _ Γ⊑Δ) Γ'⊆Γ with factor1 (_ , Γ⊑Δ) Γ'⊆Γ
-  ... | Δ' , Δ'⊆Δ , Γ'⊑Δ'
-    = Δ' # , keep# Δ'⊆Δ , ⊑-trans Γ'⊑Δ' (ext#⊑ tt extRId)
+  factor1 : Γ ◁IS4 Δ → Γ' ⊆ Γ → ∃ λ Δ' → Δ' ⊆ Δ × Γ' ◁IS4 Δ'
+  factor1 nil◁        Γ'⊆Γ
+    = _ , Γ'⊆Γ , nil◁
+  factor1 (ext◁  Γ◁Δ) Γ'⊆Γ with factor1 (_ , Γ◁Δ) Γ'⊆Γ
+  ... | Δ' , Δ'⊆Δ , Γ'◁Δ'
+    = Δ' , drop Δ'⊆Δ , Γ'◁Δ'
+  factor1 (ext#◁ Γ◁Δ) Γ'⊆Γ with factor1 (_ , Γ◁Δ) Γ'⊆Γ
+  ... | Δ' , Δ'⊆Δ , Γ'◁Δ'
+    = Δ' # , keep# Δ'⊆Δ , ◁IS4-trans Γ'◁Δ' (ext#◁ extRId)
 
   -- not used directly, but serves as a specification of
   -- what is expected from factorExt and factorWk
-  factor2 : (Γ⊑Δ : Γ ⊑ Δ) → (Δ⊆Δ' : Δ ⊆ Δ') → ∃ λ Γ' → Γ ⊆ Γ' × Γ' ⊑ Δ'
-  factor2 nil⊑          Δ⊆Δ'
-    = _ , Δ⊆Δ' , nil⊑
-  factor2 (ext⊑    Γ⊑Δ) Δ⊆Δ'
-    = factor2 (_ , Γ⊑Δ) (fresh ∙ Δ⊆Δ')
-  factor2 (ext#⊑ _ Γ⊑Δ) Δ⊆Δ' with factor2 (_ , Γ⊑Δ) (sliceLeft extRId Δ⊆Δ')
-  ... | Γ' , Γ⊆Γ' , Γ'⊑Δ'
-    = Γ' , Γ⊆Γ' , ⊑-trans Γ'⊑Δ' (⊑-trans (ext#⊑ tt extRId) (_ , upLFExt (wkLFExt extRId Δ⊆Δ')))
+  factor2 : Γ ◁IS4 Δ → Δ ⊆ Δ' → ∃ λ Γ' → Γ ⊆ Γ' × Γ' ◁IS4 Δ'
+  factor2 nil◁        Δ⊆Δ'
+    = _ , Δ⊆Δ' , nil◁
+  factor2 (ext◁  Γ◁Δ) Δ⊆Δ'
+    = factor2 (_ , Γ◁Δ) (fresh ∙ Δ⊆Δ')
+  factor2 (ext#◁ Γ◁Δ) Δ⊆Δ' with factor2 (_ , Γ◁Δ) (sliceLeft extRId Δ⊆Δ')
+  ... | Γ' , Γ⊆Γ' , Γ'◁Δ'
+    = Γ' , Γ⊆Γ' , ◁IS4-trans Γ'◁Δ' (◁IS4-trans (ext#◁ extRId) (_ , upLFExt (wkLFExt extRId Δ⊆Δ')))
 
 -- "Left" context of factoring (see type of factorWk and factorExt)
 -- lCtx e w == proj₁ (factor2 (_ , e) w)

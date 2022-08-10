@@ -24,20 +24,10 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Patch agda-stdlib version to match 1.7.1 (Docker image)
-        working-directory: ./artifact
-        run: |
-            patch k.agda-lib <<EOF
-              3c3
-              <   standard-library-1.7
-              ---
-              >   standard-library-1.7.1
-              EOF
-
       - name: Run agda to generate html with Docker
         uses: addnab/docker-run-action@v3
         with:
-          image: sourcedennis/agda-mini:2.6.2.1-1.7.1
+          image: sourcedennis/agda-mini:2.6.2.2-1.7.1
           options: -v ${{ github.workspace }}/artifact:/tmp
           run: |
             cd /tmp

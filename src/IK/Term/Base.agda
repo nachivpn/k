@@ -65,7 +65,7 @@ leftWkTm (unbox t e) = unbox (leftWkTm t) (leftWkLFExt e)
 pattern new      = nil
 pattern new[_] Γ = nil {Γ}
 
-open Substitution Tm var wkTm (λ Γ ΓL ΓR → LFExt Γ (ΓL #) ΓR) new (λ {Δ' = Δ'} _e _w → ←# Δ') sliceLeft (λ {Δ' = Δ'} _e _w → #→ Δ') wkLFExt public
+open Substitution Tm var wkTm (λ Γ ΓL ΓR → LFExt Γ (ΓL #) ΓR) new (λ {_Δ} {_Γ} {_ΓR} {Δ'} _e _w → ←# Δ') sliceLeft (λ {_Δ} {_Γ} {_ΓR} {Δ'} _e _w → #→ Δ') wkLFExt public
   renaming (module Composition to SubstitutionComposition)
 
 -- "Left" context of factoring with a substitution (see factorSubₛ and factorExtₛ)

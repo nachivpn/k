@@ -253,7 +253,7 @@ private
   lemma2 : {b c : Tm' Γ (□ a)}
     → b ≋ c
     → b ≋ box' (unbox' c new)
-  lemma2 {c = c} b≋c rewrite let box' y = c in wkTm'PresId y
+  lemma2 {c = c} b≋c rewrite (let box' y = c in wkTm'PresId y)
       = b≋c
 
 -- soundness of evaluation wrt single-step reduction

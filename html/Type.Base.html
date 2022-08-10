@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>Type.Base</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Symbol">{-#</a> <a id="5" class="Keyword">OPTIONS</a> <a id="13" class="Pragma">--safe</a> <a id="20" class="Pragma">--without-K</a> <a id="32" class="Symbol">#-}</a>
+<a id="36" class="Keyword">module</a> <a id="43" href="Type.Base.html" class="Module">Type.Base</a> <a id="53" class="Keyword">where</a>
+
+<a id="60" class="Keyword">infixr</a> <a id="67" class="Number">7</a> <a id="69" href="Type.Base.html#107" class="InductiveConstructor Operator">_⇒_</a>
+
+<a id="74" class="Keyword">data</a> <a id="Ty"></a><a id="79" href="Type.Base.html#79" class="Datatype">Ty</a> <a id="82" class="Symbol">:</a> <a id="84" href="Agda.Primitive.html#326" class="Primitive">Set</a> <a id="88" class="Keyword">where</a>
+  <a id="Ty.ι"></a><a id="96" href="Type.Base.html#96" class="InductiveConstructor">ι</a>   <a id="100" class="Symbol">:</a> <a id="102" href="Type.Base.html#79" class="Datatype">Ty</a>
+  <a id="Ty._⇒_"></a><a id="107" href="Type.Base.html#107" class="InductiveConstructor Operator">_⇒_</a> <a id="111" class="Symbol">:</a> <a id="113" class="Symbol">(</a><a id="114" href="Type.Base.html#114" class="Bound">a</a> <a id="116" class="Symbol">:</a> <a id="118" href="Type.Base.html#79" class="Datatype">Ty</a><a id="120" class="Symbol">)</a> <a id="122" class="Symbol">→</a> <a id="124" class="Symbol">(</a><a id="125" href="Type.Base.html#125" class="Bound">b</a> <a id="127" class="Symbol">:</a> <a id="129" href="Type.Base.html#79" class="Datatype">Ty</a><a id="131" class="Symbol">)</a> <a id="133" class="Symbol">→</a> <a id="135" href="Type.Base.html#79" class="Datatype">Ty</a>
+  <a id="Ty.□_"></a><a id="140" href="Type.Base.html#140" class="InductiveConstructor Operator">□_</a>  <a id="144" class="Symbol">:</a> <a id="146" class="Symbol">(</a><a id="147" href="Type.Base.html#147" class="Bound">a</a> <a id="149" class="Symbol">:</a> <a id="151" href="Type.Base.html#79" class="Datatype">Ty</a><a id="153" class="Symbol">)</a> <a id="155" class="Symbol">→</a> <a id="157" href="Type.Base.html#79" class="Datatype">Ty</a>
+
+<a id="161" class="Keyword">variable</a>
+  <a id="172" href="Type.Base.html#172" class="Generalizable">a</a> <a id="174" href="Type.Base.html#174" class="Generalizable">b</a> <a id="176" href="Type.Base.html#176" class="Generalizable">c</a> <a id="178" href="Type.Base.html#178" class="Generalizable">d</a> <a id="180" class="Symbol">:</a> <a id="182" href="Type.Base.html#79" class="Datatype">Ty</a>
+</pre></body></html>

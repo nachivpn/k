@@ -1,7 +1,7 @@
-# Normalization for Fitch-style Modal Calculi (Artifact)
+# Normalization for Fitch-Style Modal Calculi (Artifact)
 
 This repository contains the artifact accompanying the paper
-*Normalization for Fitch-style Modal Calculi*.
+*Normalization for Fitch-Style Modal Calculi*.
 
 ## Dependencies
 

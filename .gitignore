@@ -4,3 +4,7 @@
 
 *.agdai
 _build/
+
+*.html
+*.qcow*
+*.tar*

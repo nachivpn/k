@@ -1,0 +1,96 @@
+# ICFP 2022 Artifact
+
+Name: Normalization for Fitch-Style Modal Calculi
+
+
+## Artifact Instructions
+
+This artifact contains the Agda mechanization of the normalization function for
+the Fitch-style modal calculi &lambda;<sub>IK</sub> and &lambda;<sub>IS4</sub>
+as described in the article.
+
+The Agda code is located in the directory `PROJECT_ARCHIVE_ROOT_NAME/` in the user home directory
+inside the VM.
+
+Instructions are given in the file `PROJECT_ARCHIVE_ROOT_NAME/README.md` inside the VM.  The
+section "Dependencies" in the README can be skipped since all dependencies are
+already provided by the VM.
+
+The Agda code can be interactively navigated inside the VM using Emacs:
+
+```
+emacs PROJECT_ARCHIVE_ROOT_NAME/src/Everything.agda
+```
+
+
+## QEMU Instructions
+
+[QEMU](https://www.qemu.org/) is a hosted virtual machine monitor that can
+emulate a host processor via dynamic binary translation. On common host
+platforms QEMU can also use a host provided virtualization layer, which is
+faster than dynamic binary translation.
+
+
+### Installation
+
+#### OSX
+
+```
+brew install qemu
+```
+
+
+#### Debian and Ubuntu Linux
+
+```
+apt-get install qemu-kvm
+```
+
+On x86 laptops and server machines you may need to enable the "Intel
+Virtualization Technology" setting in your BIOS, as some manufacturers leave
+this disabled by default. See `Debugging.md` for details.
+
+
+#### Arch Linux
+
+```
+pacman -Sy qemu
+```
+
+See the [Arch wiki](https://wiki.archlinux.org/title/QEMU) for more info.
+
+
+### Startup
+
+The artifact provides a `start_vm.sh` script to start the VM on Unix-like
+systems. Running this script will open a graphical console on the host machine,
+and create a virtualized network interface. On Linux you may need to run it
+with `sudo` to start the VM. If the VM does not start then check
+`Debugging.md`.
+
+Once the VM has started you can login to the guest system from the host.
+Whenever you are asked for a password, the answer is the name of the respective
+user. The default username is `user`.
+
+```
+ssh -p 5555 -o SendEnv='LANG LC_*' user@localhost
+```
+
+You can also copy files to and from the host using `scp`.
+
+```
+scp -P 5555 user@localhost:FILE .
+scp -P 5555 FILE user@localhost:.
+```
+
+See `Debugging.md` if you have problems logging into the artifact via
+SSH or for advice on resolving other potential problems.
+
+
+### Shutdown
+
+To shutdown the guest system cleanly, login to it via SSH and use:
+
+```
+sudo shutdown now
+```

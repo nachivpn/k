@@ -6,12 +6,14 @@ module IK.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import Type as Type using (Ty ; Ty-Decidable)
+open import Type        as Type using (Ty)
+import Context.Base  Ty as Context
+import Variable.Base Ty as Variable
+import Substitution     as Substitution
 
-open import Context Ty Ty-Decidable as Context
-
-open Context public
-open Type    public
+open Type     public
+open Context  public
+open Variable public
 
 -------------------------------------
 -- Variables, terms and substitutions
@@ -63,7 +65,7 @@ leftWkTm (unbox t e) = unbox (leftWkTm t) (leftWkLFExt e)
 pattern new      = nil
 pattern new[_] Γ = nil {Γ}
 
-open Substitution Tm var wkTm (λ Γ ΓL ΓR → LFExt Γ (ΓL #) ΓR) new (λ {_Δ} {_Γ} {_ΓR} {Δ'} _e _w → ←# Δ') sliceLeft (λ {_Δ} {_Γ} {_ΓR} {Δ'} _e _w → #→ Δ') wkLFExt public
+open Substitution Ty Tm var wkTm (λ Γ ΓL ΓR → LFExt Γ (ΓL #) ΓR) new (λ {_Δ} {_Γ} {_ΓR} {Δ'} _e _w → ←# Δ') sliceLeft (λ {_Δ} {_Γ} {_ΓR} {Δ'} _e _w → #→ Δ') wkLFExt public
   renaming (module Composition to SubstitutionComposition)
 
 -- "Left" context of factoring with a substitution (see factorSubₛ and factorExtₛ)

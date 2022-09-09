@@ -51,7 +51,11 @@ Ty-Decidable (◻ a)   (◻ b)   with Ty-Decidable a b
 ... | yes a≡b                = yes (cong ◻_ a≡b)
 ... | no  ¬a≡b               = no  λ { refl → ¬a≡b refl }
 
-open import Context Ty Ty-Decidable hiding (ext#) public
+import Context  Ty Ty-Decidable as Context hiding (ext#)
+import Variable Ty              as Variable
+
+open Context  public
+open Variable public
 
 ------------------------------------
 -- Variables, terms and substituions

@@ -51,7 +51,12 @@ Ty-Decidable (T a)   (T b)   with Ty-Decidable a b
 ... | yes a≡b                = yes (cong T a≡b)
 ... | no  ¬a≡b               = no  λ { refl → ¬a≡b refl }
 
-open import Context Ty Ty-Decidable hiding (ext#) public
+import Context      Ty Ty-Decidable as Context hiding (ext#)
+import Variable     Ty              as Variable
+import Substitution                 as Substitution
+
+open Context  public
+open Variable public
 
 ------------------------------------
 -- Variables, terms and substituions
@@ -108,7 +113,7 @@ new = ext#- nil
 
 new[_] = λ Γ → new {Γ}
 
-open Substitution Tm var wkTm CExt new lCtx factorWk rCtx factorExt public
+open Substitution Ty Tm var wkTm CExt new lCtx factorWk rCtx factorExt public
   renaming (module Composition to SubstitutionComposition)
 
 -- "Left" context of factoring with a substitution (see factorExtₛ)

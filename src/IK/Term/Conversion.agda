@@ -7,6 +7,8 @@ open import IK.Term.Base
 open import IK.Term.Reduction
   as Reduction
 
+open import Context.Properties Ty Ty-Decidable
+
 import Data.Sum as Sum
 
 open import Relation.Nullary

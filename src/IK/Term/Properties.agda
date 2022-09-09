@@ -14,6 +14,12 @@ open import PEUtil
 open import IK.Term.Base
 open import IK.Term.Reduction
 
+open import Context.Properties  Ty Ty-Decidable as ContextProperties
+open import Variable.Properties Ty              as VariableProperties
+
+open ContextProperties  public
+open VariableProperties public
+
 --------------------
 -- Substitution laws
 --------------------

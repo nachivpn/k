@@ -49,8 +49,7 @@ open import Relation.Binary using (Reflexive; Symmetric; Transitive; IsEquivalen
 
 import Relation.Binary.Reasoning.Setoid as EqReasoning
 
-open import Type
-open import Context Ty Ty-Decidable
+open import IK.Term
 
 -- XXX: make parameters
 ≈̇-equiv : ∀ (P Q : Ctx') → IsEquivalence (_≈̇_ {P} {Q})

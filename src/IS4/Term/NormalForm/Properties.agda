@@ -9,6 +9,9 @@ open import PEUtil
 open import IS4.Term.Base
 open import IS4.Term.NormalForm.Base
 
+open import Context.Properties  Ty Ty-Decidable
+open import Variable.Properties Ty
+
 private
   module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where
     cong-unbox≡′′ : {n : Ne Γ (□ a)} {n' : Ne Γ' (□ a)}

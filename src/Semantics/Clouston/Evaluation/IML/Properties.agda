@@ -77,8 +77,7 @@ open import Relation.Binary using (IsEquivalence; Setoid)
 
 import Relation.Binary.Reasoning.Setoid as EqReasoning
 
-open import Type
-open import Context Ty Ty-Decidable
+open import IK.Term
 
 open import Semantics.Clouston.Evaluation.IML.Base
     Ctx' _→̇_ _≈̇_ ≈̇-refl ≈̇-sym ≈̇-trans _∘_ id'[_]

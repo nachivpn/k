@@ -13,6 +13,12 @@ open import IS4.Term.Base
 open import IS4.Term.Conversion
 open import IS4.Term.Reduction
 
+open import Context.Properties  Ty Ty-Decidable as ContextProperties
+open import Variable.Properties Ty              as VariableProperties
+
+open ContextProperties  public
+open VariableProperties public
+
 ----------------------
 -- Substitution lemmas
 ----------------------

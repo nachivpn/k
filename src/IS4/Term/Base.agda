@@ -6,12 +6,14 @@ module IS4.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import Type as Type using (Ty ; Ty-Decidable)
+open import Type        as Type using (Ty)
+import Context.Base  Ty as Context hiding (ext#)
+import Variable.Base Ty as Variable
+import Substitution     as Substitution
 
-import Context Ty Ty-Decidable as Context
-
-open Context public hiding (ext#)
-open Type    public
+open Type     public
+open Context  public
+open Variable public
 
 -------------------------------------
 -- Variables, terms and substitutions
@@ -62,7 +64,7 @@ new = ext#- nil
 
 new[_] = λ Γ → new {Γ}
 
-open Substitution Tm var wkTm CExt new lCtx factorWk rCtx factorExt public
+open Substitution Ty Tm var wkTm CExt new lCtx factorWk rCtx factorExt public
   renaming (module Composition to SubstitutionComposition)
 
 -- "Left" context of factoring with a substitution (see factorSubₛ and factorExtₛ)

@@ -3,6 +3,8 @@ module Everything where
 
 import Type
 import Context
+import Variable
+import Substitution
 
 import IK.Term
 import IK.Term.Conversion

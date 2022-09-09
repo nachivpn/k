@@ -14,11 +14,15 @@ open import PEUtil
 open import IK.Term.Base
 open import IK.Term.Reduction
 
-open import Context.Properties  Ty Ty-Decidable as ContextProperties
-open import Variable.Properties Ty              as VariableProperties
+open import Context.Properties          Ty Ty-Decidable as ContextProperties
+open import Weakening.Properties        Ty              as WeakeningProperties
+open import ContextExtension.Properties Ty Ty-Decidable as ContextExtensionProperties
+open import Variable.Properties         Ty              as VariableProperties
 
-open ContextProperties  public
-open VariableProperties public
+open ContextProperties          public
+open WeakeningProperties        public
+open ContextExtensionProperties public
+open VariableProperties         public
 
 --------------------
 -- Substitution laws

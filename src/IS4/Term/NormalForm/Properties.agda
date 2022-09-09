@@ -9,8 +9,8 @@ open import PEUtil
 open import IS4.Term.Base
 open import IS4.Term.NormalForm.Base
 
-open import Context.Properties  Ty Ty-Decidable
-open import Variable.Properties Ty
+open import ContextExtension.Properties Ty Ty-Decidable
+open import Variable.Properties         Ty
 
 private
   module _ {e : CExt Δ Γ ΓR} {e' : CExt Δ Γ' ΓR'} where

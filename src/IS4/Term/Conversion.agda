@@ -22,7 +22,7 @@ open import PEUtil
 open import IS4.Term.Base
 open import IS4.Term.Reduction as Reduction
 
-open import Context.Properties Ty Ty-Decidable
+open import ContextExtension.Properties Ty Ty-Decidable
 
 open Sum                   public using (inj₁ ; inj₂)
 open ReflexiveTransitive   public using (ε ; _◅_)

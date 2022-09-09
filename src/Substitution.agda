@@ -1,7 +1,8 @@
 {-# OPTIONS --safe --without-K #-}
 
-import Context.Base  as Context
-import Variable.Base as Variable
+import Context.Base   as Context
+import Weakening.Base as Weakening
+import Variable.Base  as Variable
 
 -------------------------------------------------------------------------------------
 -- Substitutions (parameterized by terms `Tm` and modal accessibility relation `Acc`)
@@ -9,8 +10,9 @@ import Variable.Base as Variable
 
 module Substitution
   (Ty          : Set)
-  (let open Context  Ty using (Ctx ; _# ; _⊆_))
-  (let open Variable Ty using (Var))
+  (let open Context   Ty using (Ctx ; _#))
+  (let open Weakening Ty using (_⊆_))
+  (let open Variable  Ty using (Var))
   (Tm          : (Γ : Ctx) → (a : Ty) → Set)
   (var         : {Γ : Ctx} → {a : Ty} → (v : Var Γ a) → Tm Γ a)
   (wkTm        : {Γ' Γ : Ctx} → {a : Ty} → (w : Γ ⊆ Γ') → (t : Tm Γ a) → Tm Γ' a)
@@ -24,8 +26,9 @@ module Substitution
   where
 
   -- "Cannot use generalized variable from let-opened module"
-  open Context  Ty hiding (Ctx ; _#)
-  open Variable Ty hiding (Var)
+  open Context   Ty hiding (Ctx ; _#)
+  open Weakening Ty hiding (_⊆_)
+  open Variable  Ty hiding (Var)
 
   private
     variable

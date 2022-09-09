@@ -1,7 +1,8 @@
 {-# OPTIONS --safe --without-K #-}
 module Variable.Base (Ty : Set) where
 
-open import Context.Base Ty
+open import Context.Base   Ty
+open import Weakening.Base Ty
 
 private
   variable

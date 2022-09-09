@@ -3,6 +3,8 @@ module Everything where
 
 import Type
 import Context
+import Weakening
+import ContextExtension
 import Variable
 import Substitution
 

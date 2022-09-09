@@ -6,14 +6,18 @@ module IS4.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import Type        as Type using (Ty)
-import Context.Base  Ty as Context hiding (ext#)
-import Variable.Base Ty as Variable
-import Substitution     as Substitution
+open import Type                 as Type using (Ty)
+import Context.Base           Ty as Context
+import Weakening.Base         Ty as Weakening
+import ContextExtension.Base  Ty as ContextExtension hiding (ext#)
+import Variable.Base          Ty as Variable
+import Substitution              as Substitution
 
-open Type     public
-open Context  public
-open Variable public
+open Type             public
+open Context          public
+open Weakening        public
+open ContextExtension public
+open Variable         public
 
 -------------------------------------
 -- Variables, terms and substitutions

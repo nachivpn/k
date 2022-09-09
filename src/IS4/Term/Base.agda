@@ -6,10 +6,6 @@ module IS4.Term.Base where
 -- "Fitch-Style Modal Lambda Calculi" by Ranald Clouston (2018)
 --
 
-open import Data.Product using (∃ ; _×_ ; _,_ ; -,_ ; proj₁ ; proj₂)
-
-open import Relation.Binary.PropositionalEquality using (sym ; subst)
-
 open import Type as Type using (Ty ; Ty-Decidable)
 
 import Context Ty Ty-Decidable as Context

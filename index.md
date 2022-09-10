@@ -6,14 +6,17 @@ Fitch-style modal lambda calculi feature necessity modalities in a typed lambda 
 
 ### Papers & Abstracts
 
-* Normalization for Fitch-Style Modal Calculi ([local](https://nachivpn.me/nfmc.pdf), [arXiv](https://doi.org/10.48550/arXiv.2207.12807), [PACMPL](https://doi.org/10.1145/3547649))  
-  [ICFP 2022](https://icfp22.sigplan.org/) (**Distinguished paper**)   
-  Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas
+* Normalization for Fitch-Style Modal Calculi  
+  [ICFP 2022](https://icfp22.sigplan.org/) (**Distinguished paper award**)  
+  Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas  
+  Article: [Authors' version](https://nachivpn.me/nfmc.pdf), [arXiv](https://doi.org/10.48550/arXiv.2207.12807), [PACMPL](https://doi.org/10.1145/3547649)  
 
-* Semantic Analysis of Normalization by Evaluation for Fitch-Style Modal Calculi (extended abstract) ([local](https://nachivpn.me/types21.pdf), [YouTube](https://www.youtube.com/watch?v=2OJBBWLYTQA))  
+* Semantic Analysis of Normalization by Evaluation for Fitch-Style Modal Calculi (extended abstract)  
   [TYPES 2021](https://types21.liacs.nl/)  
-  Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas
+  Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas  
+  Article: [Authors' version](https://nachivpn.me/types21.pdf); Talk video: [YouTube](https://www.youtube.com/watch?v=2OJBBWLYTQA)
 
 ### Artifacts
 
-* Agda mechanization ([github repo](https://github.com/nachivpn/k)) ([highlighted and hyperlinked code](html/Everything.html))
+* Agda mechanization  
+  Source: [Browseable code](html/Everything.html), [Github repo](https://github.com/nachivpn/k)

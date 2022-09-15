@@ -36,6 +36,7 @@ import IR.Term
 
 import Semantics.Clouston.Evaluation.IML
 import Semantics.Clouston.Evaluation.IS4
+import Semantics.Clouston.Evaluation.IR
 
 import Semantics.Presheaf.Base
 import Semantics.Presheaf.CartesianClosure

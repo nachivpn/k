@@ -42,6 +42,7 @@ import Semantics.Presheaf.Base
 import Semantics.Presheaf.CartesianClosure
 import Semantics.Presheaf.Evaluation.IML
 import Semantics.Presheaf.Evaluation.IS4
+import Semantics.Presheaf.Evaluation.IR
 import Semantics.Presheaf.Necessity
 
 import IS4.Norm

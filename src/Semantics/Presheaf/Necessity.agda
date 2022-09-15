@@ -161,6 +161,31 @@ module IS4
     η'-unit-right = λ {𝒫} → η'-unit-right[ 𝒫 ]
     μ'-assoc      = λ {𝒫} → μ'-assoc[ 𝒫 ]
 
+module IR
+  (R-sub       : ∀ {Γ Δ : C} (r : Γ R Δ) → Γ ⊆ Δ)
+  (factor-comm : ∀ {Γ Δ Δ' : C} (r : Γ R Δ) (w : Δ ⊆ Δ') → ⊆-trans (factorWk r w) (R-sub (factorR r w)) ≡ ⊆-trans (R-sub r) w)
+  where
+    ε'[_] : (𝒫 : Psh) → ✦' 𝒫 →̇ 𝒫
+    ε'[_] 𝒫 = record
+      { fun     = λ {Γ} (elem (_ , r , p)) → wk[ 𝒫 ] (R-sub r) p
+      ; pres-≋  = λ { (proof (refl , refl , p≋p')) → wk[ 𝒫 ]-pres-≋ (R-sub _) p≋p' }
+      ; natural = λ w (elem (_ , r , p)) → let open EqReasoning ≋[ 𝒫 ]-setoid in begin
+          wk[ 𝒫 ] w (wk[ 𝒫 ] (R-sub r) p)
+            ≈˘⟨ wk[ 𝒫 ]-pres-trans (R-sub r) w p ⟩
+          wk[ 𝒫 ] (⊆-trans (R-sub r) w) p
+            ≡˘⟨ cong (λ hole → wk[ 𝒫 ] hole p) (factor-comm r w) ⟩
+          wk[ 𝒫 ] (⊆-trans (factorWk r w) (R-sub (factorR r w))) p
+            ≈⟨ wk[ 𝒫 ]-pres-trans (factorWk r w) (R-sub (factorR r w)) p ⟩
+          wk[ 𝒫 ] (R-sub (factorR r w)) (wk[ 𝒫 ] (factorWk r w) p)
+            ∎
+      }
+
+    abstract
+      ε'-nat : ∀ (φ : 𝒫 →̇ 𝒬) → ε'[ 𝒬 ] ∘ ✦'-map φ ≈̇ φ ∘ ε'[ 𝒫 ]
+      ε'-nat φ = record { proof = λ (elem (_ , r , p)) → φ .natural (R-sub r) p }
+
+    ε' = λ {𝒫} → ε'[ 𝒫 ]
+
 module _ (𝒫 : Psh) where
   -- Fam : (Γ : C) → Set where
   -- Fam = λ Γ → {Δ : C} → (r : Γ R Δ) → 𝒫 ₀ Δ

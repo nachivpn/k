@@ -10,7 +10,7 @@ open import Type                as Type using (Ty)
 import Context.Base          Ty as Context
 import Weakening.Base        Ty as Weakening
 import ContextExtension.Base Ty as ContextExtension
-import Variable.Base         Ty as Variable
+import LocalVariable.Base    Ty as Variable
 import Substitution             as Substitution
 
 open Type             public

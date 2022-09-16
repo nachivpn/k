@@ -16,7 +16,7 @@ open import IS4.Term.Reduction
 open import Context.Properties          Ty Ty-Decidable as ContextProperties
 open import Weakening.Properties        Ty              as WeakeningProperties
 open import ContextExtension.Properties Ty Ty-Decidable as ContextExtensionProperties
-open import Variable.Properties         Ty              as VariableProperties
+open import LocalVariable.Properties    Ty              as VariableProperties
 
 open ContextProperties          public
 open WeakeningProperties        public

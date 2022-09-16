@@ -5,7 +5,7 @@ import Type
 import Context
 import Weakening
 import ContextExtension
-import Variable
+import LocalVariable
 import Substitution
 
 import IK.Term
@@ -28,6 +28,11 @@ import IS4.Term
 import IS4.Term.Conversion
 import IS4.Term.NormalForm
 import IS4.Term.Reduction
+
+import IR.ContextExtension
+import IR.Variable
+import IR.Renaming
+import IR.Term
 
 import Semantics.Clouston.Evaluation.IML
 import Semantics.Clouston.Evaluation.IS4

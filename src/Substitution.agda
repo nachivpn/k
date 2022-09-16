@@ -1,8 +1,8 @@
 {-# OPTIONS --safe --without-K #-}
 
-import Context.Base   as Context
-import Weakening.Base as Weakening
-import Variable.Base  as Variable
+import Context.Base       as Context
+import Weakening.Base     as Weakening
+import LocalVariable.Base as Variable
 
 -------------------------------------------------------------------------------------
 -- Substitutions (parameterized by terms `Tm` and modal accessibility relation `Acc`)

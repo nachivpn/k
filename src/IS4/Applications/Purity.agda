@@ -54,7 +54,7 @@ Ty-Decidable (T a)   (T b)   with Ty-Decidable a b
 import Context          Ty Ty-Decidable as Context
 import Weakening        Ty              as Weakening
 import ContextExtension Ty Ty-Decidable as ContextExtension hiding (ext#)
-import Variable         Ty              as Variable
+import LocalVariable    Ty              as Variable
 import Substitution                     as Substitution
 
 open Context          public

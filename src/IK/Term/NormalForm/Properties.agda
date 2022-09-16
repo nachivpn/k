@@ -7,7 +7,7 @@ open import IK.Term.Base
 open import IK.Term.NormalForm.Base
 
 open import ContextExtension.Properties Ty Ty-Decidable
-open import Variable.Properties         Ty
+open import LocalVariable.Properties    Ty
 
 wkNePresId : (n : Ne Γ a) → wkNe idWk n ≡ n
 wkNfPresId : (n : Nf Γ a) → wkNf idWk n ≡ n

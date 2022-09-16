@@ -1,5 +1,5 @@
 {-# OPTIONS --safe --without-K #-}
-module Variable.Base (Ty : Set) where
+module LocalVariable.Base (Ty : Set) where
 
 open import Context.Base   Ty
 open import Weakening.Base Ty

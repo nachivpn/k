@@ -1,11 +1,11 @@
 {-# OPTIONS --safe --without-K #-}
-module Variable.Properties (Ty : Set) where
+module LocalVariable.Properties (Ty : Set) where
 
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl ; cong)
 
-open import Context.Base   Ty
-open import Weakening.Base Ty
-open import Variable.Base  Ty
+open import Context.Base       Ty
+open import Weakening.Base     Ty
+open import LocalVariable.Base Ty
 
 private
   variable

@@ -5,7 +5,7 @@ open import Relation.Binary.Definitions
   using (Decidable)
 
 open import Relation.Binary.PropositionalEquality
-  using (_≡_ ; refl ; sym ; trans ; cong ; subst ; subst₂)
+  using (_≡_ ; refl ; sym ; trans ; cong ; cong₂ ; subst ; subst₂)
 
 ≡[]-syntax = _≡_ ; syntax ≡[]-syntax {A = A} a b = a ≡[ A ] b
 
@@ -16,29 +16,57 @@ module _ {a} {A : Set a} {x y z : A} where
   ˘trans : y ≡ x → y ≡ z → x ≡ z
   ˘trans y≡x y≡z = trans (sym y≡x) y≡z
 
+  ˘trans˘ : y ≡ x → z ≡ y → x ≡ z
+  ˘trans˘ y≡x z≡y = trans (sym y≡x) (sym z≡y)
+
 module _ {a} {A : Set a} {b} {B : Set b} {x y : A} where
   cong˘ : (f : A → B) → y ≡ x → f x ≡ f y
   cong˘ f y≡x = cong f (sym y≡x)
 
+module _ {a} {A : Set a} {b} {B : Set b} {c} {C : Set c} {x x' : A} {y y' : B} where
+  cong₂˘ : (f : A → B → C) → x ≡ x' → y' ≡ y → f x y ≡ f x' y'
+  cong₂˘ f x≡x' y'≡y = cong₂ f x≡x' (sym y'≡y)
+
 module _ {a} {b} {c} where
   cong1 : ∀ {A : Set a} {B : Set b} {C : Set c}
-            (f : A → B → C) {x₁ x₂ y}
+            (f : A → B → C) {x₁ x₂}
         → (p : x₁ ≡ x₂)
+        → (y : B)
         → f x₁ y ≡ f x₂ y
-  cong1 _f refl = refl
+  cong1 _f refl _y = refl
+
+  cong1- : ∀ {A : Set a} {B : Set b} {C : Set c}
+             (f : A → B → C) {x₁ x₂ y}
+         → (p : x₁ ≡ x₂)
+         → f x₁ y ≡ f x₂ y
+  cong1- f p = cong1 f p _
 
   cong1˘ : ∀ {A : Set a} {B : Set b} {C : Set c}
-             (f : A → B → C) {x₁ x₂ y}
+             (f : A → B → C) {x₁ x₂}
          → (p : x₂ ≡ x₁)
+         → (y : B)
          → f x₁ y ≡ f x₂ y
-  cong1˘ _f refl = refl
+  cong1˘ _f refl _y = refl
+
+  cong1˘- : ∀ {A : Set a} {B : Set b} {C : Set c}
+              (f : A → B → C) {x₁ x₂ y}
+          → (p : x₂ ≡ x₁)
+          → f x₁ y ≡ f x₂ y
+  cong1˘- f p = cong1˘ f p _
 
 module _ {a} {b} {c} where
   cong2 : ∀ {A : Set a} {B : Set b} {C : Set c}
-            (f : A → B → C) {x y₁ y₂}
+            (f : A → B → C) {y₁ y₂}
+        → (x : A)
         → (p : y₁ ≡ y₂)
         → f x y₁ ≡ f x y₂
-  cong2 _f refl = refl
+  cong2 _f _x refl = refl
+
+  cong2- : ∀ {A : Set a} {B : Set b} {C : Set c}
+             (f : A → B → C) {x y₁ y₂}
+         → (p : y₁ ≡ y₂)
+         → f x y₁ ≡ f x y₂
+  cong2- f p = cong2 f _ p
 
 module _ {a} {A : Set a} {p} (P : A → Set p) where
   subst˘ : ∀ {x₁ x₂} → x₂ ≡ x₁ → P x₁ → P x₂

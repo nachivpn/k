@@ -131,12 +131,12 @@ private
   beta-lemma : (w : Γ ⊆ Γ') (s : Sub Γ Δ) (t : Tm (Δ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ⟶* substTm (wkSub w s `, u) t
   beta-lemma w s t u = ≡-single-≡
-    (cong1 app (cong lam (trans
+    (cong1- app (cong lam (trans
       (sym (nat-subsTm t (keepₛ s) (keep w)))
       (cong (λ p → substTm (p `, var0) t)
         (trans
           (wkSubPres∙ fresh (keep w) s)
-          (cong1 wkSub (cong drop (leftIdWk w))))))))
+          (cong1- wkSub (cong drop (leftIdWk w))))))))
     red-fun
     (trans
       (substTmPres∙ _ _ t )
@@ -168,7 +168,7 @@ fund (lam t)       {_Γ} {s} sLδ {_Γ'} {u}
   = λ w uLx → L-prepend (beta-lemma w s t u)
       (fund t {s = wkSub w s `, u} (wkSubPresLₛ w sLδ `, uLx))
 fund (app t u)     {_Γ} {s} sLδ
-  = L-cast (cong1 app (sym (wkTmPresId (substTm s t))))
+  = L-cast (cong1- app (sym (wkTmPresId (substTm s t))))
       (fund t sLδ idWk (fund u sLδ))
 fund (box t)       {_Γ} {s}        sRδ
   = L-prepend (box-beta-lemma (substTm (keep#ₛ s) t)) (fund t (lock sRδ new))

@@ -80,7 +80,7 @@ L-build {a = a ⇒ b}     tLf
 L-build {a = □ a}   {t} tLb
   = ≈-trans
       (⟶-to-≈ (exp-box _))
-      (cong-box≈ (L-build (L-cast (cong1 unbox (sym (wkTmPresId t))) refl (tLb idWk new))))
+      (cong-box≈ (L-build (L-cast (cong1- unbox (sym (wkTmPresId t))) refl (tLb idWk new))))
 
 L-reflect {a = ι}     n
   = ≈-refl
@@ -101,9 +101,9 @@ wkTmPresL : {t : Tm Γ a} {x : Tm' Γ a}
 wkTmPresL {a = ι}     {x = x} w tLn
   = ≈-trans (wkTmPres≈ w tLn) (≈-reflexive (nat-embNf w (reify ι x)))
 wkTmPresL {a = a ⇒ b} {t = t} w tLf
-  = λ w' y → L-cast (cong1 app (wkTmPres∙ w w' t)) refl (tLf (w ∙ w') y)
+  = λ w' y → L-cast (cong1- app (wkTmPres∙ w w' t)) refl (tLf (w ∙ w') y)
 wkTmPresL {a = □ a}   {t = t} w tLb
-  = λ w' e → L-cast (cong1 unbox (wkTmPres∙ w w' t)) refl (tLb (w ∙ w') e)
+  = λ w' e → L-cast (cong1- unbox (wkTmPres∙ w w' t)) refl (tLb (w ∙ w') e)
 
 -- Lₛ is invariant under weakening
 wkSubPresLₛ : {s : Sub Γ Δ} {δ : Sub' Γ Δ}
@@ -137,12 +137,12 @@ private
 
   beta-lemma : (w : Γ ⊆ Γ') (s : Sub Γ Δ) (t : Tm (Δ `, a) b) (u : Tm Γ' a)
     → app (wkTm w (substTm s (lam t))) u ≈ substTm (wkSub w s `, u) t
-  beta-lemma w s t u = ≈-trans (≈-reflexive (cong1 app (cong lam (trans
+  beta-lemma w s t u = ≈-trans (≈-reflexive (cong1- app (cong lam (trans
     (sym (nat-substTm t (keepₛ s) (keep w)))
     (cong (λ p → substTm (p `, var0) t)
       (trans
         (wkSubPres∙ fresh (keep w) s)
-        (cong1 wkSub (cong drop (leftIdWk w)))))))))
+        (cong1- wkSub (cong drop (leftIdWk w)))))))))
     (≈-trans
       (⟶-to-≈ (red-fun _ _))
       (≈-trans
@@ -212,7 +212,7 @@ fund (lam t)          {_Γ} {s}     sLδ {_Γ'} {u}
       (fund t {s = wkSub w s `, u} (wkSubPresLₛ w sLδ `, uLx))
 fund (app t u)        {_Γ} {s}     sLδ
   = L-cast
-      (cong1 app (sym (wkTmPresId (substTm s t))))
+      (cong1- app (sym (wkTmPresId (substTm s t))))
       refl
       (fund t sLδ idWk (fund u sLδ))
 fund (box t)          {_Γ} {s}     sLδ

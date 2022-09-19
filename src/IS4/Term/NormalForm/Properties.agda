@@ -54,8 +54,8 @@ nat-embNf w (lam n) = cong lam (nat-embNf (keep w) n)
 nat-embNf w (box n) = cong box (nat-embNf (keep# w) n)
 
 nat-embNe w (var   v)   = refl
-nat-embNe w (app   n m) = cong₂ app   (nat-embNe w n) (nat-embNf w m)
-nat-embNe w (unbox n e) = cong1 unbox (nat-embNe (factorWk e w) n)
+nat-embNe w (app   n m) = cong₂  app   (nat-embNe w n) (nat-embNf w m)
+nat-embNe w (unbox n e) = cong1- unbox (nat-embNe (factorWk e w) n)
 
 wkNePresId : (n : Ne Γ a) → wkNe idWk n ≡ n
 wkNfPresId : (n : Nf Γ a) → wkNf idWk n ≡ n
@@ -70,10 +70,10 @@ wkNePresId (unbox n e) = let open ≡-Reasoning in begin
          (lCtxPresId e)
          (trans
            (subst-application1′ wkNe (lCtxPresId e))
-           (cong1 wkNe (factorWkPresId e)))
+           (cong1- wkNe (factorWkPresId e)))
      ⟩
   unbox (wkNe idWk n) e
-    ≡⟨ cong1 unbox (wkNePresId n) ⟩
+    ≡⟨ cong1- unbox (wkNePresId n) ⟩
   unbox n e ∎
 
 wkNfPresId (up  n) = cong up  (wkNePresId n)
@@ -101,7 +101,7 @@ wkNePres∙ {Γ'' = Γ''} {a} w w' (unbox {ΓL} n e) = let open ≡-Reasoning in
          (lCtxPres∙ e w w')
          (trans
            (subst-application1′ wkNe (lCtxPres∙ e w w'))
-           (cong1 wkNe (factorWkPres∙ e w w')))
+           (cong1- wkNe (factorWkPres∙ e w w')))
       ⟩
   unbox (wkNe (factorWk e (w ∙ w')) n) (factorExt e (w ∙ w'))
     ≡⟨⟩

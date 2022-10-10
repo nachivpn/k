@@ -9,8 +9,7 @@ Different applications may demand different modal operations, and the Fitch-styl
 * Normalization for Fitch-Style Modal Calculi  
   [ICFP 2022](https://icfp22.sigplan.org/) (<span style="color:IndianRed">Distinguished paper award</span>)  
   Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas  
-  Article: [Authors' version](https://nachivpn.me/nfmc.pdf), [arXiv](https://doi.org/10.48550/arXiv.2207.12807), [PACMPL](https://doi.org/10.1145/3547649)  
-
+  Article: [Authors' version](https://nachivpn.me/nfmc.pdf), [arXiv](https://doi.org/10.48550/arXiv.2207.12807), [PACMPL](https://doi.org/10.1145/3547649); Talk video: [YouTube](https://youtu.be/f8U47q8dARI)  
 * Semantic Analysis of Normalization by Evaluation for Fitch-Style Modal Calculi (extended abstract)  
   [TYPES 2021](https://types21.liacs.nl/)  
   Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas  

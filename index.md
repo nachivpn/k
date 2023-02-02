@@ -6,6 +6,10 @@ Different applications may demand different modal operations, and the Fitch-styl
 
 ### Papers & Abstracts
 
+* Fitch-Style Applicative Functors (Extended Abstract)  
+  Draft 2023  
+  Nachiappan Valliappan, Fabian Ruch  
+  Article: [Authors' version](https://nachivpn.me/r.pdf)  
 * Normalization for Fitch-Style Modal Calculi  
   [ICFP 2022](https://icfp22.sigplan.org/) (<span style="color:IndianRed">Distinguished paper award</span>)  
   Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas  

@@ -4,8 +4,12 @@ In type systems, a modality can be broadly construed as a unary type constructor
 
 Different applications may demand different modal operations, and the Fitch-style technique provides us with a uniform recipe to design modal calculi. Fitch-style modal calculi feature necessity modalities in a lambda calculus by extending the typing context with a delimiting &quot;lock&quot; operator (denoted by 🔒). The characteristic lock operator simplifies formulating calculi that incorporate different modal operations and these calculi have excellent computational properties. Each variant demands, however, different, tedious and seemingly ad hoc treatment to prove meta-theoretic properties such as normalization. In this project, we identify the possible-world semantics of Fitch-style calculi and use it to develop normalization. The possible-world semantics enables a uniform treatment of various Fitch-style calculi by isolating their differences to a specific parameter that identifies the modal fragment. We showcase several consequences of normalization for proving meta-theoretic properties of Fitch-style calculi based on different interpretations of the necessity modality in programming languages, such as capability safety, noninterference and a form of binding-time correctness.
 
-### Papers & Abstracts
+### Publications & Abstracts
 
+* A Parametric Fitch-Style Modal Lambda Calculus  
+  Master's Thesis 2023  
+  Axel Forsman  
+  Thesis: [Chalmers ODR](https://odr.chalmers.se/items/8c46ffc3-36e7-49f5-8770-aa95e4abcd81)
 * Fitch-Style Applicative Functors (Extended Abstract)  
   Draft 2023  
   Nachiappan Valliappan, Fabian Ruch  
@@ -17,7 +21,7 @@ Different applications may demand different modal operations, and the Fitch-styl
 * Semantic Analysis of Normalization by Evaluation for Fitch-Style Modal Calculi (extended abstract)  
   [TYPES 2021](https://types21.liacs.nl/)  
   Nachiappan Valliappan, Fabian Ruch, Carlos Tomé Cortiñas  
-  Article: [Authors' version](https://nachivpn.me/types21.pdf); Talk video: [YouTube](https://www.youtube.com/watch?v=2OJBBWLYTQA)
+  Article: [Authors' version](https://nachivpn.me/types21.pdf); Talk video: [YouTube](https://www.youtube.com/watch?v=2OJBBWLYTQA)  
 
 ### Artifacts
 
